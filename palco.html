@@ -352,7 +352,7 @@ function conectar(){
   es.onmessage = e => { try { const d = JSON.parse(e.data); if (d.cmd == "stop") parar(); else if (d.text) falar(d.text); } catch (_) {} };
 }
 async function testar(){ aviso("Testando…");
-  try { const d = await (await fetch(cfg.url + "/ping")).json(); aviso(d.kokoro ? "Servidor ok, voz Kokoro pronta." : "Servidor ok, mas sem Kokoro: vai usar a voz do navegador."); }
+  try { const d = await (await fetch(cfg.url + "/ping")).json(); const vs = [d.kokoro && "Kokoro", ...(d.piper || []).map(n => n + " (treinada)")].filter(Boolean); aviso(vs.length ? "Servidor ok, vozes prontas: " + vs.join(", ") + "." : "Servidor ok, mas sem voz: vai usar a voz do navegador."); }
   catch (e) { aviso("Não achei o servidor. Ele está rodando no Termux?"); } }
 const CMD = () => { const b = location.origin + "/Tamaki_Personagem/"; return "cd ~ && curl -fsSL " + b + "instalar-voz.sh -o instalar-voz.sh && bash instalar-voz.sh " + b; };
 
@@ -793,17 +793,17 @@ const PAINEIS = {
     const V = cfg.voz, E = cfg.ed, m = cfg.motor, senha = (k, rot) => `<label class="f"><b>${rot}</b><input type="password" data-ch="${k}" value="${esc(chaves[k] || "")}" autocomplete="off" placeholder="cole aqui"></label>`;
     let c = subs("v", subV, [["motor", "Voz"], ["editor", "Editor de voz"], ["termux", "Boca e Termux"]]);
     if (subV == "motor") {
-      c += `<div class="g">${sl("c", "motor", "Motor de voz", [["azure", "Azure · vozes neurais"], ["eleven", "ElevenLabs · a mais natural"], ["termux", "Kokoro no Termux"], ["browser", "Voz do aparelho"]], m)}`;
+      c += `<div class="g">${sl("c", "motor", "Motor de voz", [["azure", "Azure · vozes neurais"], ["eleven", "ElevenLabs · a mais natural"], ["termux", "Termux · Kokoro ou voz treinada"], ["browser", "Voz do aparelho"]], m)}`;
       if (m == "azure") { const at = vozesAz.find(v => v.id == V.azVoz);
         c += senha("az", "Chave do Azure") + tx("ch", "azReg", "Região do Azure", chaves.azReg || "brazilsouth") + sl("v", "azVoz", "Voz", vozesAz.map(v => [v.id, v.n]), V.azVoz)
           + (at && at.est && at.est.length ? sl("v", "azEstilo", "Jeito de falar", [["", "Normal"], ...at.est.map(x => [x, x])], V.azEstilo) : ""); }
       else if (m == "eleven") c += senha("el", "Chave do ElevenLabs") + (vozesEl.length ? sl("v", "elVoz", "Voz", vozesEl.map(v => [v.id, v.n]), V.elVoz) : "")
           + sl("v", "elModelo", "Modelo", [["eleven_multilingual_v2", "Multilíngue v2 (melhor)"], ["eleven_flash_v2_5", "Flash v2.5 (mais rápido)"]], V.elModelo)
           + rg("v", "elEst", "Estabilidade", 0, 1, .01, V.elEst) + rg("v", "elSim", "Semelhança", 0, 1, .01, V.elSim) + rg("v", "elStyle", "Exagero / emoção", 0, 1, .01, V.elStyle);
-      else if (m == "termux") c += sl("c", "voice", "Voz do Kokoro", [["pf_dora", "Dora (feminina)"], ["pm_alex", "Alex (masculina)"], ["pm_santa", "Santa (masculina)"]], cfg.voice) + rg("c", "speed", "Velocidade do Kokoro", .6, 1.5, .05, cfg.speed);
+      else if (m == "termux") c += sl("c", "voice", "Voz do Termux", [["piper", "Tamaki treinada (Piper)"], ["pf_dora", "Dora · Kokoro (feminina)"], ["pm_alex", "Alex · Kokoro (masculina)"], ["pm_santa", "Santa · Kokoro (masculina)"]], cfg.voice) + rg("c", "speed", "Velocidade", .6, 1.5, .05, cfg.speed);
       else c += sl("v", "navVoz", "Voz do aparelho", [["", "Automática (português)"], ...vozesNav().map(v => [v.voiceURI, v.name + " · " + v.lang])], V.navVoz);
       c += rg("c", "pause", "Pausa entre frases (s)", 0, 1.5, .05, cfg.pause) + `<div class="btns"><button class="bt pri" data-a="ouvir">▶ Ouvir a voz</button>${m == "azure" || m == "eleven" ? '<button class="bt" data-a="vozes">Carregar vozes</button>' : ""}</div></div>
-        <p class="dica" id="msg">${{azure: "Vozes neurais da Microsoft, bem mais naturais. O plano grátis dá 500 mil caracteres por mês. A chave fica só neste aparelho.", eleven: "A voz mais natural, mas é paga: no plano grátis não pode usar comercialmente. A chave fica só neste aparelho.", termux: "O Kokoro em português é limitado e soa mais robótico. O Editor de voz ajuda a suavizar.", browser: "Depende das vozes instaladas no aparelho. Não passa pelo editor, não entra na gravação e não pode ser baixada."}[m]}</p>`;
+        <p class="dica" id="msg">${{azure: "Vozes neurais da Microsoft, bem mais naturais. O plano grátis dá 500 mil caracteres por mês. A chave fica só neste aparelho.", eleven: "A voz mais natural, mas é paga: no plano grátis não pode usar comercialmente. A chave fica só neste aparelho.", termux: "Grátis e sem internet. A Tamaki treinada (Piper) é a sua voz própria: treine no notebook e rode voz --importar no Termux. O Kokoro em português soa mais robótico; o Editor de voz ajuda a suavizar. Para gravar as frases do treino: <a href=\"" + location.origin + "/Tamaki_Personagem/gravador.html\" target=\"_blank\" rel=\"noopener\">Gravador de voz</a>.", browser: "Depende das vozes instaladas no aparelho. Não passa pelo editor, não entra na gravação e não pode ser baixada."}[m]}</p>`;
     } else if (subV == "editor") {
       c += `<div class="btns" style="margin-bottom:6px">${PRESETS.map(([k, n]) => `<button class="bt" data-preset="${k}">${n}</button>`).join("")}<button class="bt pri" data-a="ouvir">▶ Ouvir</button><button class="bt" data-a="baixarfala">Baixar fala (.wav)</button>${ck("ed", "comp", "Voz mais cheia", E.comp)}</div><div class="g">
         ${rg("ed", "tom", "Tom (semitons)", -6, 6, .1, E.tom)}${rg("ed", "vel", "Velocidade", .7, 1.4, .01, E.vel)}${rg("ed", "variar", "Variação natural", 0, 1, .01, E.variar)}${rg("ed", "pausa", "Pausas entre frases (×)", .3, 3, .05, E.pausa)}
