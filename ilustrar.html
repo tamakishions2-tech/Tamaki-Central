@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b1b1b">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="icon-192.png">
+<title>Tamaki · Ilustrar</title>
+<style>
+:root{--bg:#121212;--bar:#1b1b1b;--pn:#242424;--ln:#313131;--tx:#f4f1e8;--mut:#a7a39a;--am:#f2b51d;--ok:#5cc58a;--er:#ef6b6b;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+body{padding:14px 14px calc(24px + env(safe-area-inset-bottom,0px));max-width:980px;margin:0 auto}
+h1{margin:0 0 2px;font:700 1.5rem Georgia,serif}
+.mut{color:var(--mut);font-size:.88rem;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--am);outline-offset:2px}
+.pn{background:var(--pn);border:1px solid var(--ln);border-radius:16px;padding:14px;margin-top:12px}
+.pn h2{margin:0 0 10px;font-size:1.05rem}
+label{display:grid;gap:4px;font-size:.82rem;color:var(--mut)}
+input,textarea,select{width:100%;background:#0d0d0d;color:var(--tx);border:1px solid var(--ln);border-radius:10px;padding:10px;font:inherit}
+textarea{resize:vertical;min-height:90px}
+.g{display:grid;gap:10px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bt{background:#1b1b1b;border:1px solid var(--ln);border-radius:12px;padding:10px 14px;min-height:44px}
+.bt.pri{background:var(--am);border-color:var(--am);color:#151515;font-weight:700}
+.bt:disabled{opacity:.5;cursor:default}
+.big{width:100%;font-size:1.05rem;min-height:52px}
+.chip{display:inline-flex;gap:6px;align-items:center;background:#1b1b1b;border:1px solid var(--ln);border-radius:999px;padding:7px 12px;font-size:.88rem;cursor:pointer}
+.chip:has(input:checked){border-color:var(--am);color:var(--am)}
+.chip input{width:auto;margin:0;accent-color:var(--am)}
+#estado{display:inline-flex;align-items:center;gap:8px;font-size:.88rem}
+#estado i{width:10px;height:10px;border-radius:50%;background:var(--mut)}
+#estado.ok i{background:var(--ok)} #estado.er i{background:var(--er)}
+details summary{cursor:pointer;color:var(--am);font-weight:600;padding:4px 0}
+.tuto ol{margin:8px 0 0;padding-left:20px;color:var(--mut)} .tuto b{color:var(--tx)}
+#prog{display:none;margin-top:10px}
+#prog .barra{height:8px;border-radius:8px;background:#0d0d0d;overflow:hidden}
+#prog .barra div{height:100%;width:0;background:var(--am);transition:width .4s}
+#prog.on{display:block}
+#gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+#gal button{padding:0;border:1px solid var(--ln);border-radius:12px;overflow:hidden;background:#0d0d0d;aspect-ratio:3/4}
+#gal img{width:100%;height:100%;object-fit:cover;display:block}
+#vazio{color:var(--mut);font-size:.9rem}
+dialog{background:var(--pn);color:var(--tx);border:1px solid var(--ln);border-radius:18px;padding:12px;width:min(760px,96vw);max-height:94vh}
+dialog::backdrop{background:#000c}
+#dImg{display:block;max-width:100%;max-height:62vh;margin:0 auto;border-radius:10px}
+#dInfo{font-size:.82rem;color:var(--mut);white-space:pre-wrap;word-break:break-word;margin:10px 0;max-height:16vh;overflow:auto}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#000;border:1px solid var(--am);border-radius:12px;padding:10px 16px;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90vw}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<h1>🖌️ Ilustrar</h1>
+<p class="mut">Gera ilustrações na GPU grátis do Kaggle. Tudo fica só com você: o servidor é seu, protegido por senha, e as imagens ficam guardadas neste aparelho.</p>
+
+<section class="pn">
+  <div class="row" style="justify-content:space-between">
+    <h2 style="margin:0">Conexão com o Kaggle</h2>
+    <span id="estado" role="status"><i></i><span>Desconectado</span></span>
+  </div>
+  <details class="tuto" id="tuto">
+    <summary>Como ligar o servidor (passo a passo)</summary>
+    <ol>
+      <li>Entre em <b>kaggle.com</b> e verifique seu celular (Settings › Phone verification). Sem isso não há internet nem GPU.</li>
+      <li>Crie um notebook novo (<b>Create › New Notebook</b>) e importe o arquivo <b>kaggle/ilustrador_kaggle.ipynb</b> deste repositório (File › Import Notebook). Ou cole o conteúdo de <b>kaggle/servidor_ilustracoes.py</b> numa célula.</li>
+      <li>No painel da direita: <b>Accelerator = GPU T4 x2</b> e <b>Internet = On</b>.</li>
+      <li>Rode a célula. Quando aparecer <b>▶ Abrir o Ilustrador já conectado</b>, clique: esta página abre com endereço e senha preenchidos.</li>
+      <li>Deixe a aba do Kaggle aberta enquanto desenha. Ao terminar, <b>Stop session</b> (a cota grátis é de cerca de 30 h de GPU por semana).</li>
+    </ol>
+  </details>
+  <div class="g2" style="margin-top:10px">
+    <label>Endereço do servidor<input id="url" placeholder="https://xxxx.trycloudflare.com" autocomplete="off" spellcheck="false"></label>
+    <label>Senha<input id="senha" type="password" autocomplete="off"></label>
+  </div>
+  <div class="row" style="margin-top:10px"><button class="bt" id="testar">Testar conexão</button><span class="mut" id="info"></span></div>
+</section>
+
+<section class="pn g">
+  <h2 style="margin:0">O que desenhar</h2>
+  <label>Descrição (em inglês funciona melhor; tags separadas por vírgula)
+    <textarea id="prompt" placeholder="1girl, solo, black hair, amber eyes, school uniform, smiling, cherry blossoms, soft lighting"></textarea></label>
+  <div class="row">
+    <label class="chip"><input type="checkbox" id="qual" checked> Tags de qualidade</label>
+    <button class="bt" id="colar" type="button">📋 Colar prompt</button>
+  </div>
+  <details>
+    <summary>Ajustes</summary>
+    <div class="g" style="margin-top:8px">
+      <label>O que evitar (negativo)<textarea id="neg" style="min-height:60px"></textarea></label>
+      <div class="g2">
+        <label>Formato<select id="formato">
+          <option value="832x1216">Retrato (832×1216)</option>
+          <option value="1216x832">Paisagem (1216×832)</option>
+          <option value="1024x1024">Quadrado (1024×1024)</option>
+          <option value="768x1344">Celular (768×1344)</option>
+          <option value="1344x768">Cinema (1344×768)</option>
+        </select></label>
+        <label>Quantas imagens<select id="qtd"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
+        <label>Passos <small>(mais = mais detalhe, mais lento)</small><input id="passos" type="number" min="10" max="60" value="28"></label>
+        <label>Fidelidade ao texto (CFG)<input id="cfg" type="number" min="1" max="15" step="0.5" value="5"></label>
+        <label>Semente <small>(-1 = aleatória)</small><input id="semente" type="number" value="-1"></label>
+      </div>
+      <button class="bt" id="padrao" type="button">Voltar ao padrão</button>
+    </div>
+  </details>
+  <button class="bt pri big" id="gerar">✨ Gerar</button>
+  <div id="prog" aria-live="polite"><div class="barra"><div></div></div><p class="mut" id="progTx" style="margin-top:6px"></p></div>
+</section>
+
+<section class="pn">
+  <div class="row" style="justify-content:space-between;margin-bottom:10px">
+    <h2 style="margin:0">Minhas ilustrações <span class="mut" id="nGal"></span></h2>
+    <button class="bt" id="baixarTudo">⬇️ Baixar todas</button>
+  </div>
+  <div id="gal"></div>
+  <p id="vazio">Nenhuma ilustração ainda.</p>
+</section>
+
+<dialog id="dlg">
+  <img id="dImg" alt="">
+  <div id="dInfo"></div>
+  <div class="row">
+    <button class="bt pri" data-a="baixar">⬇️ Baixar</button>
+    <button class="bt" data-a="reusar">🔁 Reusar ajustes</button>
+    <button class="bt" data-a="bib">📚 Biblioteca</button>
+    <button class="bt" data-a="editor">🎞️ Editor</button>
+    <button class="bt" data-a="apagar">🗑️ Apagar</button>
+    <button class="bt" data-a="fechar" style="margin-left:auto">Fechar</button>
+  </div>
+</dialog>
+<div id="toast" role="status"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const QUAL = "masterpiece, high score, great score, absurdres";
+const NEG = "lowres, bad anatomy, bad hands, extra digits, fewer digits, missing fingers, text, watermark, signature, jpeg artifacts, worst quality, low quality, blurry, cropped";
+const ls = {get: (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+            set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+let tt; function toast(m){ const t = $("#toast"); t.textContent = m; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("on"), 2600); }
+
+/* ---------- conexão ---------- */
+// O link do notebook chega como ilustrar.html#url=...&senha=... ; guardamos e limpamos a barra de endereço.
+(() => { const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get("url")) { ls.set("ilu-url", h.get("url")); ls.set("ilu-senha", h.get("senha") || ""); history.replaceState(null, "", location.pathname + location.search); } })();
+$("#url").value = ls.get("ilu-url", ""); $("#senha").value = ls.get("ilu-senha", "");
+$("#url").onchange = () => ls.set("ilu-url", $("#url").value.trim());
+$("#senha").onchange = () => ls.set("ilu-senha", $("#senha").value);
+const base = () => $("#url").value.trim().replace(/\/+$/, "");
+function estado(tipo, txt){ const e = $("#estado"); e.className = tipo; e.lastElementChild.textContent = txt; }
+async function api(cam, corpo){
+  if (!base()) throw new Error("Cole o endereço do servidor do Kaggle");
+  let r;
+  try { r = await fetch(base() + cam, {method: corpo ? "POST" : "GET", headers: Object.assign({"X-Senha": $("#senha").value}, corpo ? {"Content-Type": "application/json"} : {}), body: corpo ? JSON.stringify(corpo) : undefined}); }
+  catch (e) { throw new Error("Servidor fora do ar. A sessão do Kaggle ainda está rodando?"); }
+  if (r.status == 401) throw new Error("Senha errada");
+  if (r.status == 530 || r.status == 502) throw new Error("O túnel caiu: rode a célula do Kaggle de novo");
+  if (!r.ok) throw new Error("Erro do servidor (" + r.status + ")");
+  return r.json();
+}
+async function testar(silencioso){
+  estado("", "Testando…");
+  try { const s = await api("/status"); estado("ok", "Conectado");
+    $("#info").textContent = s.modelo.split("/").pop() + " · " + s.gpus.join(" + ") + (s.ocupado ? " · ocupado" : "");
+    $("#tuto").open = false; return true; }
+  catch (e) { estado("er", e.message); $("#info").textContent = ""; if (!silencioso) toast(e.message); $("#tuto").open = true; return false; }
+}
+$("#testar").onclick = () => { ls.set("ilu-url", base()); ls.set("ilu-senha", $("#senha").value); testar(); };
+if (base()) testar(true); else $("#tuto").open = true;
+
+/* ---------- ajustes ---------- */
+const CAMPOS = ["prompt", "neg", "formato", "qtd", "passos", "cfg", "semente"];
+function padrao(){ $("#neg").value = NEG; $("#formato").value = "832x1216"; $("#qtd").value = "2"; $("#passos").value = 28; $("#cfg").value = 5; $("#semente").value = -1; $("#qual").checked = true; }
+padrao();
+const salvo = ls.get("ilu-ajustes", null);
+if (salvo) { for (const k of CAMPOS) if (salvo[k] != null) $("#" + k).value = salvo[k]; $("#qual").checked = salvo.qual !== false; }
+const guardar = () => ls.set("ilu-ajustes", Object.assign(Object.fromEntries(CAMPOS.map(k => [k, $("#" + k).value])), {qual: $("#qual").checked}));
+document.addEventListener("change", e => { if (e.target.closest("section")) guardar(); });
+$("#prompt").oninput = guardar;
+$("#padrao").onclick = () => { padrao(); guardar(); };
+$("#colar").onclick = async () => { try { const t = await navigator.clipboard.readText(); if (t) { $("#prompt").value = t; guardar(); } } catch (e) { toast("O navegador não deixou ler a área de transferência"); } };
+
+/* ---------- galeria (IndexedDB) ---------- */
+function db(){ return new Promise((ok, no) => { const r = indexedDB.open("tamaki-ilustrar", 1); r.onupgradeneeded = () => r.result.createObjectStore("imgs", {keyPath: "id"}); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }); }
+async function loja(modo, f){ const d = await db(); return new Promise((ok, no) => { const t = d.transaction("imgs", modo), q = f(t.objectStore("imgs")); t.oncomplete = () => { ok(q && q.result); d.close(); }; t.onerror = () => no(t.error); }); }
+let lista = [], urls = [];
+async function mostrar(){
+  lista = ((await loja("readonly", s => s.getAll())) || []).sort((a, b) => b.criado - a.criado);
+  urls.forEach(u => URL.revokeObjectURL(u)); urls = lista.map(x => URL.createObjectURL(x.blob));
+  $("#gal").innerHTML = lista.map((x, i) => `<button data-i="${i}" title="${esc(x.prompt)}"><img src="${urls[i]}" alt="${esc(x.prompt.slice(0, 80))}" loading="lazy"></button>`).join("");
+  $("#vazio").hidden = !!lista.length; $("#nGal").textContent = lista.length ? "(" + lista.length + ")" : "";
+}
+mostrar();
+const b64blob = b => { const s = atob(b), a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return new Blob([a], {type: "image/png"}); };
+const nomeDe = x => "ilustracao-" + new Date(x.criado).toISOString().slice(0, 19).replace(/[:T]/g, "-") + "-" + x.semente + ".png";
+function baixar(x){ const a = document.createElement("a"), u = URL.createObjectURL(x.blob); a.href = u; a.download = nomeDe(x); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }
+$("#baixarTudo").onclick = async () => { if (!lista.length) return toast("Nada para baixar"); for (const x of lista) { baixar(x); await new Promise(r => setTimeout(r, 350)); } };
+
+/* ---------- gerar ---------- */
+let gerando = false;
+$("#gerar").onclick = async () => {
+  if (gerando) return;
+  const texto = $("#prompt").value.trim(); if (!texto) { $("#prompt").focus(); return toast("Escreva o que desenhar"); }
+  const [w, h] = $("#formato").value.split("x").map(Number);
+  const ped = {prompt: $("#qual").checked ? texto + ", " + QUAL : texto, negativo: $("#neg").value.trim(), largura: w, altura: h,
+               passos: +$("#passos").value || 28, cfg: +$("#cfg").value || 5, semente: Math.trunc(+$("#semente").value), quantidade: +$("#qtd").value};
+  if (!Number.isFinite(ped.semente)) ped.semente = -1;
+  gerando = true; $("#gerar").disabled = true; $("#gerar").textContent = "Gerando…";
+  const prog = $("#prog"), barra = prog.querySelector(".barra div"), tx = $("#progTx"), t0 = Date.now();
+  prog.classList.add("on"); barra.style.width = "3%"; tx.textContent = "Enviando…";
+  try {
+    const {id} = await api("/gerar", ped);
+    let t, falhas = 0;
+    for (;;) {
+      await new Promise(r => setTimeout(r, 2000));
+      try { t = await api("/tarefa/" + id); falhas = 0; } catch (e) { if (++falhas > 4) throw e; continue; }
+      const s = Math.round((Date.now() - t0) / 1000);
+      barra.style.width = Math.max(3, (t.feitas / t.total) * 100) + "%";
+      tx.textContent = (t.estado == "na fila" ? "Na fila (outra geração está rodando)" : `Desenhando… ${t.feitas}/${t.total} prontas`) + ` · ${s} s`;
+      if (t.estado == "erro") throw new Error("O servidor falhou: " + t.erro);
+      if (t.estado == "pronto") break;
+    }
+    const agora = Date.now();
+    await loja("readwrite", s => { t.imagens.forEach((im, i) => s.put({id: agora.toString(36) + "-" + i, criado: agora + i, blob: b64blob(im.png), semente: im.semente,
+      prompt: texto, qual: $("#qual").checked, negativo: ped.negativo, largura: w, altura: h, passos: ped.passos, cfg: ped.cfg})); });
+    await mostrar(); estado("ok", "Conectado");
+    toast(`${t.imagens.length} ilustração(ões) em ${Math.round((Date.now() - t0) / 1000)} s`);
+  } catch (e) { toast(e.message); estado("er", e.message); }
+  gerando = false; $("#gerar").disabled = false; $("#gerar").textContent = "✨ Gerar"; prog.classList.remove("on");
+};
+$("#prompt").addEventListener("keydown", e => { if (e.key == "Enter" && (e.ctrlKey || e.metaKey)) $("#gerar").click(); });
+
+/* ---------- ver uma imagem ---------- */
+let aberta = null;
+$("#gal").onclick = e => { const b = e.target.closest("[data-i]"); if (!b) return; const i = +b.dataset.i; aberta = lista[i];
+  $("#dImg").src = urls[i]; $("#dImg").alt = aberta.prompt;
+  $("#dInfo").textContent = `${aberta.prompt}\n\nSemente ${aberta.semente} · ${aberta.largura}×${aberta.altura} · ${aberta.passos} passos · CFG ${aberta.cfg}`;
+  $("#dlg").showModal(); };
+// Biblioteca e Editor da Central usam as mesmas caixas que a aba Efeitos.
+function porEm(nome, item){ return new Promise((ok, no) => { const r = indexedDB.open(nome, 1);
+  r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains("itens")) r.result.createObjectStore("itens", {keyPath: "id"}); };
+  r.onerror = () => no(r.error);
+  r.onsuccess = () => { const d = r.result, t = d.transaction("itens", "readwrite"); t.objectStore("itens").put(item); t.oncomplete = () => { d.close(); ok(); }; t.onerror = () => no(t.error); }; }); }
+const itemComum = (x, pre) => ({id: pre + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), origem: "ilustrar", tipo: "imagem",
+  nome: x.prompt.slice(0, 40) || "Ilustração", texto: x.prompt, mime: "image/png", tamanho: x.blob.size, criado: Date.now(), blob: x.blob});
+$("#dlg").onclick = async e => {
+  if (e.target === $("#dlg")) return $("#dlg").close();
+  const a = e.target.closest("[data-a]")?.dataset.a; if (!a || !aberta) return;
+  if (a == "fechar") $("#dlg").close();
+  if (a == "baixar") baixar(aberta);
+  if (a == "reusar") { $("#prompt").value = aberta.prompt; $("#qual").checked = aberta.qual !== false; $("#neg").value = aberta.negativo; $("#formato").value = aberta.largura + "x" + aberta.altura;
+    $("#passos").value = aberta.passos; $("#cfg").value = aberta.cfg; $("#semente").value = aberta.semente; guardar(); $("#dlg").close(); $("#prompt").scrollIntoView({behavior: "smooth"}); toast("Ajustes e semente copiados: mude um detalhe e gere de novo"); }
+  if (a == "bib") { try { await porEm("tamaki-biblioteca", itemComum(aberta, "b")); try { const c = new BroadcastChannel("tamaki-biblioteca"); c.postMessage({novo: 1}); c.close(); } catch (_) {} toast("Guardada na Biblioteca"); } catch (_) { toast("Não deu para guardar na Biblioteca"); } }
+  if (a == "editor") { try { const it = itemComum(aberta, "c"); await porEm("tamaki-caixa", it); ls.set("tamaki-caixa-aviso", {t: Date.now(), id: it.id}); toast("Enviada: no Editor, toque em Recebidos"); } catch (_) { toast("Não deu para enviar ao Editor"); } }
+  if (a == "apagar" && confirm("Apagar esta ilustração deste aparelho?")) { await loja("readwrite", s => s.delete(aberta.id)); $("#dlg").close(); mostrar(); }
+};
+</script>
+</body>
+</html>

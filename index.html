@@ -162,6 +162,7 @@ const BASE = {
   efeitos: {i: "🎧", n: "Efeitos", src: "efeitos.html"},
   editor: {i: "🎞️", n: "Editor", src: "editor.html"},
   biblioteca: {i: "📚", n: "Biblioteca", src: "biblioteca.html"},
+  ilustrar: {i: "🖌️", n: "Ilustrar", src: "ilustrar.html"},
   escrita: {i: "✍️", n: "Escrita", src: "projetos/biblioteca-escrita/"},
   reuniao: {i: "🤝", n: "Reunião"}
 };
@@ -450,7 +451,7 @@ const CAB = ["=== INSTRUÇÕES PARA O CLAUDE ===",
   "Se eu pedir algo em HTML, entregue um único arquivo HTML completo e autocontido, também em bloco de código.",
   "",
   "=== COMO ATENDER PEDIDOS NOVOS ===",
-  "A Central é um site no GitHub Pages: https://tamakishions2-tech.github.io/Tamaki-Central/ (repositório Tamaki-Central: index.html = Central, palco.html = Palco, palco-animacao.html = Palco Animação (atriz, poses e camadas do rosto), motion.html = Motion, decupagem.html = Decupagem, efeitos.html = Efeitos (sons e efeitos visuais gerados do zero; caixa comum IndexedDB 'tamaki-caixa'), projetos/biblioteca-escrita/ = Escrita). Universo (/universo/) e Ficha da Tamaki (/Tamaki_Personagem/) são outros repositórios: nunca mande arquivos para eles sem eu pedir.",
+  "A Central é um site no GitHub Pages: https://tamakishions2-tech.github.io/Tamaki-Central/ (repositório Tamaki-Central: index.html = Central, palco.html = Palco, palco-animacao.html = Palco Animação (atriz, poses e camadas do rosto), motion.html = Motion, decupagem.html = Decupagem, efeitos.html = Efeitos (sons e efeitos visuais gerados do zero; caixa comum IndexedDB 'tamaki-caixa'), ilustrar.html = Ilustrar (gera ilustrações num servidor meu no Kaggle; notebook em kaggle/), projetos/biblioteca-escrita/ = Escrita). Universo (/universo/) e Ficha da Tamaki (/Tamaki_Personagem/) são outros repositórios: nunca mande arquivos para eles sem eu pedir.",
   "Visual: fundo #121212, painéis #1b1b1b e #242424, destaque amarelo #f2b51d, texto #f4f1e8, cantos arredondados, tudo cabendo na tela sem rolar a página, funcionando no celular e no tablet (Galaxy A11).",
   "1) NICHO NOVO (aba nova): entregue UM arquivo HTML completo e autocontido, em bloco de código. Eu adiciono pela aba ＋ Adicionar da barra (Colar o código). Guarde os dados em localStorage ou IndexedDB com um prefixo próprio. Dados que já existem no mesmo endereço e podem ser lidos: IndexedDB \"universo\" (loja \"s\", chave \"s\"), localStorage \"tamaki\", \"palco-cfg\", \"motion-proj\" e \"kurogane:data\".",
   "2) MOTION NOVO: entregue só um bloco JavaScript que chama Motion.registrar({...}). Eu colo em Motion › ＋ Adicionar › Novo tipo. Formato:",

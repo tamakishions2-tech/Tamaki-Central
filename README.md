@@ -9,6 +9,18 @@ App que junta todos os projetos, um por aba, sem rolar a página.
 | Escrita, Novel, Jogos | Pastas dentro deste repositório (`projetos/`) |
 | Reunião | Junta Universo, Ficha da Tamaki, Biblioteca de Escrita e visual novel numa nota só |
 
+## Ilustrar (GPU grátis do Kaggle)
+
+A aba **Ilustrar** (`ilustrar.html`) gera ilustrações num servidor só seu, rodando num notebook do Kaggle.
+
+1. No Kaggle, verifique o celular (sem isso não há GPU nem internet).
+2. Crie um notebook e importe `kaggle/ilustrador_kaggle.ipynb` (ou cole `kaggle/servidor_ilustracoes.py` numa célula).
+3. Settings: **Accelerator = GPU T4 x2**, **Internet = On**. Rode a célula.
+4. Clique em **▶ Abrir o Ilustrador já conectado**. O endereço e a senha já vêm preenchidos.
+5. Ao terminar, **Stop session** (cota grátis de cerca de 30 h de GPU por semana).
+
+O modelo padrão é o Animagine XL 4.0 (anime); dá para trocar na linha `MODELO` por qualquer modelo SDXL do Hugging Face. A senha muda a cada sessão; para fixá-la, crie um Secret `SENHA_ILUSTRA` no notebook. As imagens ficam guardadas no aparelho (IndexedDB `tamaki-ilustrar`) e podem ir para a Biblioteca ou o Editor.
+
 ## Como publicar
 
 1. Na conta **tamakishions2-tech**, crie um repositório novo (por exemplo `central`). Não crie uma conta nova.
