@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Estúdio · Tamaki Central</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ECE9E1;--panel:#FAF8F3;--panel2:#DEDACE;--line:#CBC5B6;--ink:#1B1912;--mute:#6B6556;
+  --gold:#D9A300;--gold-ink:#1A1400;--cl:#C8643B;--cl-ink:#fff;--ok:#2E8C83;--danger:#C2412D;--shade:rgba(0,0,0,.55);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121110;--panel:#1C1B18;--panel2:#2A2823;--line:#38352E;--ink:#F3EFE3;--mute:#9C9686;
+    --gold:#F2B705;--gold-ink:#1A1400;--cl:#E8875F;--cl-ink:#1A0E08;--ok:#3FB3A8;--danger:#E5533D;--shade:rgba(0,0,0,.72);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121110;--panel:#1C1B18;--panel2:#2A2823;--line:#38352E;--ink:#F3EFE3;--mute:#9C9686;
+  --gold:#F2B705;--gold-ink:#1A1400;--cl:#E8875F;--cl-ink:#1A0E08;--ok:#3FB3A8;--danger:#E5533D;--shade:rgba(0,0,0,.72);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:'Chakra Petch',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+button{font:inherit;color:inherit;cursor:pointer}
+.tabs{flex:none;display:flex;gap:6px;overflow-x:auto;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--panel);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;display:flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:none;border-radius:10px;padding:7px 12px;font-size:14px;font-weight:600;white-space:nowrap}
+.tab.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab.cl{border-color:var(--cl);color:var(--cl)}
+.tab.cl.on{background:var(--cl);color:var(--cl-ink)}
+.tab b{font-size:11px;min-width:18px;padding:1px 5px;border-radius:9px;background:var(--danger);color:#fff;text-align:center}
+.tab .sep{width:1px;align-self:stretch;background:var(--line)}
+.stage{flex:1;position:relative;min-height:0}
+.pane{position:absolute;inset:0;display:none}
+.pane.on{display:block}
+.pane iframe{width:100%;height:100%;border:0;background:var(--bg);display:block}
+.scroll{height:100%;overflow:auto;padding:14px 14px 40px}
+.wrap{max-width:760px;margin:0 auto}
+.carregando{display:grid;place-items:center;height:100%;color:var(--mute);font-size:14px;text-align:center;padding:20px}
+h2{font-size:18px;font-weight:600}
+h3{font-size:15px;font-weight:600;margin:18px 0 8px}
+p.mute,.mute{color:var(--mute);font-size:13px;line-height:1.45}
+.seg{display:flex;gap:6px;margin:4px 0 14px}
+.seg button{flex:1;border:1.5px solid var(--line);background:none;border-radius:8px;padding:9px;font-weight:600;font-size:14px}
+.seg button.on{background:var(--cl);border-color:var(--cl);color:var(--cl-ink)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.btn{border:0;border-radius:8px;padding:9px 13px;font-weight:600;font-size:14px;background:var(--panel2);display:inline-flex;align-items:center;gap:6px}
+.btn.pri{background:var(--cl);color:var(--cl-ink)}
+.btn.ok{background:var(--ok);color:#fff}
+.btn.danger{background:none;color:var(--danger);border:1.5px solid var(--danger)}
+.btn:disabled{opacity:.45}
+.vids{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.vid{border:2px solid transparent;border-radius:10px;background:var(--panel);padding:0;overflow:hidden;text-align:left}
+.vid.on{border-color:var(--cl)}
+.vid i{display:block;aspect-ratio:16/10;background:#000 center/cover no-repeat}
+.vid span{display:block;padding:6px 8px;font-size:12px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vid small{display:block;color:var(--mute);font-size:11px}
+.lst{max-height:36vh;overflow:auto;display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:10px;padding:6px;background:var(--panel)}
+.lst label{display:flex;gap:10px;align-items:center;padding:7px 6px;border-radius:6px;font-size:14px}
+.lst label small{margin-left:auto;color:var(--mute);font-size:11px;white-space:nowrap}
+.lst input{width:18px;height:18px;accent-color:var(--cl);flex:none}
+input[type=text],textarea{width:100%;background:var(--panel);border:1.5px solid var(--line);border-radius:8px;padding:10px;color:var(--ink);font:inherit;font-size:15px}
+textarea{resize:vertical;font-size:14px;line-height:1.4}
+.bar{height:10px;border-radius:6px;background:var(--panel2);overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;width:0;background:var(--cl);transition:width .25s}
+.prev{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
+.tela{flex:none;width:min(100%,270px);background:#000;border-radius:10px;overflow:hidden;position:relative}
+.tela canvas{display:block;width:100%;height:auto}
+.tela .fala{position:absolute;left:6px;right:6px;bottom:8px;background:rgba(0,0,0,.72);color:#fff;font-size:13px;line-height:1.35;padding:6px 8px;border-radius:8px;text-align:center}
+.tela .fala:empty{display:none}
+.corte q{display:block;font-size:13px;line-height:1.35;margin-top:2px}
+.tela .tempo{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.65);color:#fff;font-size:12px;padding:2px 7px;border-radius:6px;font-variant-numeric:tabular-nums}
+.cortes{flex:1;min-width:240px;display:flex;flex-direction:column;gap:4px;max-height:62vh;overflow:auto}
+.corte{display:flex;gap:8px;align-items:flex-start;border:1.5px solid var(--line);border-radius:8px;padding:7px 8px;background:var(--panel);font-size:13px;text-align:left}
+.corte.at{border-color:var(--cl);box-shadow:0 0 0 1px var(--cl) inset}
+.corte.off{opacity:.45}
+.corte input{width:18px;height:18px;accent-color:var(--cl);flex:none;margin-top:1px}
+.corte b{font-variant-numeric:tabular-nums}
+.corte span{display:block;color:var(--mute);font-size:12px;line-height:1.35}
+.corte .vel{margin-left:auto;font-size:11px;font-weight:700;color:var(--cl);white-space:nowrap}
+.mots{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.mot{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;font-size:13px}
+.mot video{width:100%;border-radius:6px;background:#00b140;display:block;margin-bottom:6px}
+.mot small{display:block;color:var(--mute);font-size:11px;margin-top:2px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--cl);color:var(--cl-ink);vertical-align:middle}
+.aviso{border-left:3px solid var(--cl);padding:8px 10px;background:var(--panel);border-radius:0 8px 8px 0;font-size:13px;line-height:1.45;margin:10px 0}
+.erro{border:1px solid var(--line);border-left:3px solid var(--danger);border-radius:8px;padding:8px 10px;background:var(--panel);margin-bottom:6px;font-size:13px}
+.erro small{color:var(--mute);font-size:11px;display:block}
+.erro pre{white-space:pre-wrap;word-break:break-word;font-size:11px;color:var(--mute);margin-top:4px;max-height:120px;overflow:auto}
+#motionBox{margin-top:10px}
+#motionBox iframe{width:100%;height:170px;border:0;border-radius:8px;background:#111;display:block}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;max-width:88vw;text-align:center}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<nav class="tabs" id="tabs" aria-label="Abas do Estúdio"></nav>
+<main class="stage" id="stage"></main>
+<input type="file" id="fDlc" accept=".json,.txt,application/json,text/plain" hidden>
+<input type="file" id="fResp" accept=".json,.txt,.zip,application/json,text/plain,application/zip" hidden>
+<div id="toast" role="status"></div>
+<script>
+'use strict';
+/* =====================================================================
+   Estúdio · Tamaki Central
+   Uma página só com: Biblioteca, Editor, Efeitos, Voz, Motion (as abas do site),
+   ✦ Claude (pedir edição + prévia dos cortes) e ⚠ Erros.
+   Funciona colada como aba de código na Central ou como arquivo no site.
+   As abas do site abrem pelo endereço completo, então não depende de onde está.
+   ===================================================================== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SITE=(()=>{const p=location.protocol;
+  if(p==='blob:')return location.origin+'/Tamaki-Central/';
+  if(p==='http:'||p==='https:')return new URL('.',location.href).href;
+  return 'https://tamakishions2-tech.github.io/Tamaki-Central/';})();
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),3000);}
+const fmtT=t=>{t=Math.max(0,t||0);const m=Math.floor(t/60),s=Math.floor(t%60);return m+':'+String(s).padStart(2,'0');};
+const fmtTd=t=>{t=Math.max(0,t||0);const m=Math.floor(t/60),s=(t%60).toFixed(1);return m+':'+(s<10?'0':'')+s;};
+const fmtSize=b=>b>1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';
+const lerJ=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d;}catch(_){return d;}};
+const gravaJ=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(_){return false;}};
+const espera=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ================= ⚠ erros: guarda tudo o que quebrar, aqui e dentro das abas ================= */
+let ERROS=lerJ('tamaki-estudio-erros',[]);
+function logErro(aba,msg,det){
+  msg=String(msg||'erro sem mensagem').slice(0,500);
+  const ult=ERROS[0];if(ult&&ult.msg===msg&&ult.aba===aba&&Date.now()-ult.t<3000)return;
+  ERROS.unshift({t:Date.now(),aba,msg,det:String(det||'').slice(0,1500)});ERROS=ERROS.slice(0,120);gravaJ('tamaki-estudio-erros',ERROS);
+  desenharAbas();if(atual==='erros')desenharErros();
+}
+addEventListener('error',e=>logErro('Estúdio',e.message,(e.filename||'')+':'+(e.lineno||'')+(e.error&&e.error.stack?'\n'+e.error.stack:'')));
+addEventListener('unhandledrejection',e=>{const r=e.reason;logErro('Estúdio',r&&r.message||r,r&&r.stack);});
+function vigiar(nome,f){ // escuta os erros de dentro de uma aba (mesmo site)
+  try{const w=f.contentWindow;if(!w||w.__vigiado)return;w.__vigiado=1;
+    w.addEventListener('error',e=>logErro(nome,e.message,(e.filename||'').split('/').pop()+':'+(e.lineno||'')+(e.error&&e.error.stack?'\n'+e.error.stack:'')));
+    w.addEventListener('unhandledrejection',e=>{const r=e.reason;logErro(nome,r&&r.message||r,r&&r.stack);});
+    const ce=w.console.error.bind(w.console);w.console.error=(...a)=>{logErro(nome,a.map(x=>x&&x.message||String(x)).join(' '),a.map(x=>x&&x.stack||'').join('\n'));ce(...a);};
+  }catch(_){logErro(nome,'Não consigo olhar dentro desta aba (endereço diferente). Abra o Estúdio pela Central.');}
+}
+
+/* ================= abas ================= */
+const ABAS=[
+  {k:'bib',n:'📚 Biblioteca',url:'biblioteca.html'},
+  {k:'editor',n:'🎬 Editor',url:'editor.html'},
+  {k:'efeitos',n:'🎧 Efeitos',url:'efeitos.html'},
+  {k:'voz',n:'🎙️ Voz',url:'estudio-voz.html'},
+  {k:'motion',n:'✨ Motion',url:'motion.html'},
+  {k:'claude',n:'✦ Claude',cl:1},
+  {k:'erros',n:'⚠ Erros'},
+];
+const frames={},prontos={};let atual=lerJ('tamaki-estudio-aba','claude');
+if(!ABAS.some(a=>a.k===atual))atual='claude';
+function desenharAbas(){
+  $('#tabs').innerHTML=ABAS.map(a=>`${a.k==='claude'?'<span class="sep"></span>':''}<button class="tab${a.cl?' cl':''}${atual===a.k?' on':''}" data-k="${a.k}">${a.n}${a.k==='erros'&&ERROS.length?`<b>${ERROS.length}</b>`:''}</button>`).join('');
+}
+$('#tabs').onclick=e=>{const b=e.target.closest('[data-k]');if(b)abrir(b.dataset.k);};
+function pane(k){let p=document.getElementById('p-'+k);if(!p){p=document.createElement('section');p.className='pane';p.id='p-'+k;$('#stage').appendChild(p);}return p;}
+function abrir(k){
+  atual=k;gravaJ('tamaki-estudio-aba',k);desenharAbas();
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+k));
+  const a=ABAS.find(x=>x.k===k),p=pane(k);p.classList.add('on');
+  if(a.url)frameDe(k);
+  else if(k==='claude')desenharClaude();
+  else if(k==='erros')desenharErros();
+}
+/* abre a aba do site uma vez e mantém viva (o Editor não perde o projeto ao trocar de aba) */
+function frameDe(k){
+  if(frames[k])return prontos[k];
+  const a=ABAS.find(x=>x.k===k),p=pane(k);
+  const f=document.createElement('iframe');f.title=a.n;f.allow='microphone; autoplay; clipboard-write; fullscreen';
+  frames[k]=f;p.appendChild(f);
+  prontos[k]=new Promise(ok=>{f.addEventListener('load',()=>{vigiar(a.n.replace(/^\S+\s/,''),f);ok(f);},{once:true});});
+  f.src=SITE+a.url;
+  return prontos[k];
+}
+
+/* ================= banco: Biblioteca e caixa de Recebidos (mesmos do site) ================= */
+function abrirDb(nome,store){return new Promise((ok,no)=>{const r=indexedDB.open(nome,1);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains(store))d.createObjectStore(store,{keyPath:'id'});};r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error);});}
+async function dbTx(nome,store,mode,fn){const d=await abrirDb(nome,store);try{return await new Promise((ok,no)=>{const t=d.transaction(store,mode),st=t.objectStore(store);let r;const q=fn(st);if(q)q.onsuccess=()=>{r=q.result;};t.oncomplete=()=>ok(r);t.onerror=()=>no(t.error);t.onabort=()=>no(t.error);});}finally{d.close();}}
+const bibTodos=()=>dbTx('tamaki-biblioteca','itens','readonly',s=>s.getAll());
+const bibLer=id=>dbTx('tamaki-biblioteca','itens','readonly',s=>s.get(id));
+const bibPor=it=>dbTx('tamaki-biblioteca','itens','readwrite',s=>s.put(it));
+const caixaPor=it=>dbTx('tamaki-caixa','itens','readwrite',s=>s.put(it));
+const avisaBib=id=>{try{const c=new BroadcastChannel('tamaki-biblioteca');c.postMessage({novo:id});c.close();}catch(_){}};
+function notasEscrita(){const D=lerJ('kurogane:data',{})||{},L=[];
+  const add=(arr,nomeP,tit,html)=>(D[arr]||[]).forEach(o=>L.push({id:o.id,pasta:nomeP(o),titulo:tit(o)||'Sem título',html:html(o)||''}));
+  const bl=o=>(o.blocks||[]).filter(b=>b.type==='texto').map(b=>b.content||'').join('<p></p>'),pn=o=>((D.pastas||[]).find(p=>p.id===o.pasta)||{}).nome||(o.pasta==='roteiros'?'Roteiros da Tamaki':'Notas');
+  add('chapters',()=>'Capítulos',o=>o.title,o=>o.content);add('personagens',()=>'Personagens',o=>o.nome,bl);add('cenarios',()=>'Cenários',o=>o.nome,bl);add('mundo',()=>'Mundo',o=>o.titulo,o=>o.content);add('notas',pn,o=>o.titulo,o=>o.html);
+  return L;}
+const htmlTxt=h=>{const d=document.createElement('div');d.innerHTML=String(h||'').replace(/<(br|\/p|\/div|\/li|\/h\d)>/gi,'\n$&');return d.textContent.replace(/\n{3,}/g,'\n\n').trim();};
+function waitEv(el,ev,ms=8000){return new Promise((ok,no)=>{const t=setTimeout(()=>no(new Error('tempo')),ms);el.addEventListener(ev,()=>{clearTimeout(t);ok();},{once:true});el.addEventListener('error',()=>{clearTimeout(t);no(new Error('erro'));},{once:true});});}
+async function realDur(el){if(isFinite(el.duration)&&el.duration>0)return el.duration;el.currentTime=1e9;try{await waitEv(el,'timeupdate',4000);}catch(_){}const d=el.duration;el.currentTime=0;try{await waitEv(el,'seeked',2000);}catch(_){}return isFinite(d)?d:0;}
+function baixarBlob(b,nome){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),60000);}
+
+/* ================= ✦ Claude ================= */
+let sub=lerJ('tamaki-estudio-sub','respostas');
+const RESP_KEY='tamaki-claude-respostas';
+let RESP=lerJ(RESP_KEY,[]);const salvaResp=()=>gravaJ(RESP_KEY,RESP);
+let aberta=null; // resposta aberta na prévia
+function desenharClaude(){
+  const p=pane('claude');
+  p.innerHTML=`<div class="scroll"><div class="wrap">
+    <div class="seg"><button data-s="pedir" class="${sub==='pedir'?'on':''}">1 · Pedir edição</button><button data-s="respostas" class="${sub==='respostas'?'on':''}">2 · Respostas e prévia</button><button data-s="esteticas" class="${sub==='esteticas'?'on':''}">🎨 Estéticas</button></div>
+    <div id="clCorpo"></div></div></div>`;
+  p.querySelector('.seg').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;sub=b.dataset.s;gravaJ('tamaki-estudio-sub',sub);aberta=null;pararPrevia();desenharClaude();};
+  if(sub==='pedir')desenharPedir();else if(sub==='esteticas')desenharEsteticas();else if(aberta)desenharPrevia(aberta);else desenharRespostas();
+}
+
+/* ---------- 1 · pedir edição ---------- */
+const PED={video:null,notas:null,extra:''};
+async function desenharPedir(){
+  const c=$('#clCorpo');c.innerHTML='<p class="mute">Lendo a Biblioteca…</p>';
+  let L=[];try{L=(await bibTodos()).filter(x=>x.tipo==='video').sort((a,b)=>b.criado-a.criado);}catch(e){logErro('Claude','Não abri a Biblioteca',e.message);}
+  const notas=notasEscrita(),peso=n=>n.pasta==='Roteiros da Tamaki'?0:n.pasta==='Capítulos'?2:['Personagens','Cenários','Mundo'].includes(n.pasta)?3:1;
+  notas.sort((a,b)=>peso(a)-peso(b));
+  if(PED.notas===null)PED.notas=new Set();
+  c.innerHTML=`<h2>Pedir edição pro Claude</h2><p class="mute">Escolha a gameplay, marque o roteiro da aba Escrita e gere o pacote. O som do vídeo fica de fora.</p>
+    <h3>Gameplay</h3>${L.length?`<div class="vids" id="pVids">${L.slice(0,40).map(v=>`<button class="vid${PED.video===v.id?' on':''}" data-id="${esc(v.id)}"><i style="${v.thumb?`background-image:url('${v.thumb}')`:''}"></i><span>${esc(v.nome||'Vídeo')}<small>${fmtT(v.dur)} · ${new Date(v.criado).toLocaleDateString('pt-BR')}</small></span></button>`).join('')}</div>`:'<p class="aviso">Nenhum vídeo na Biblioteca ainda. Adicione a gameplay na aba 📚 Biblioteca.</p>'}
+    <h3>Roteiro da aba Escrita</h3>${notas.length?`<div class="lst" id="pNotas">${notas.map(n=>`<label><input type="checkbox" value="${esc(n.id)}" ${PED.notas.has(n.id)?'checked':''}>${esc(n.titulo)}<small>${esc(n.pasta)}</small></label>`).join('')}</div>`:'<p class="mute">Nenhum texto na aba Escrita.</p>'}
+    <h3>Nome do projeto e pedido extra</h3><input type="text" id="pNome" maxlength="80" placeholder="Nome do projeto">
+    <textarea id="pExtra" rows="3" style="margin-top:8px" placeholder="Ex.: para Shorts, ritmo rápido, corta as partes paradas…">${esc(PED.extra)}</textarea>
+    <div class="btns"><button class="btn pri" id="pGerar">✦ Gerar pacote</button></div><div id="pProg"></div>`;
+  const nomeIn=$('#pNome'),vSel=()=>L.find(x=>x.id===PED.video);
+  nomeIn.value=PED.nome||(vSel()?vSel().nome:'');
+  const vids=$('#pVids');if(vids)vids.onclick=e=>{const b=e.target.closest('[data-id]');if(!b)return;PED.video=b.dataset.id;vids.querySelectorAll('.vid').forEach(x=>x.classList.toggle('on',x===b));if(!nomeIn.value.trim())nomeIn.value=vSel().nome||'';};
+  const ln=$('#pNotas');if(ln)ln.onchange=e=>{const i=e.target;i.checked?PED.notas.add(i.value):PED.notas.delete(i.value);};
+  nomeIn.oninput=()=>PED.nome=nomeIn.value;$('#pExtra').oninput=e=>PED.extra=e.target.value;
+  $('#pGerar').onclick=()=>gerarPacote(vSel(),notas);
+}
+async function gerarPacote(it,notas){
+  if(!it)return toast('Escolha a gameplay primeiro');
+  const nome=($('#pNome').value.trim()||it.nome||'Projeto').slice(0,80),btn=$('#pGerar');btn.disabled=true;
+  const box=$('#pProg');box.innerHTML=`<div class="card" style="margin-top:12px"><b id="pgT">Tirando quadros do vídeo…</b><div class="bar"><i id="pgB"></i></div><p class="mute" id="pgP" style="margin-top:6px">0%</p><div class="btns" id="pgA"></div></div>`;
+  const val=x=>{const p=Math.round(x*100);$('#pgB').style.width=p+'%';$('#pgP').textContent=p+'%';};
+  try{
+    const Q=await extrairQuadros(it,x=>val(x*.9));
+    $('#pgT').textContent='Juntando tudo num arquivo só…';
+    const escolhidas=[...PED.notas].map(id=>notas.find(n=>n.id===id)).filter(Boolean);
+    const roteiro=[...escolhidas.map(n=>`### ${n.titulo} (${n.pasta})\n${htmlTxt(n.html)}`),PED.extra.trim()?`### Pedido extra\n${PED.extra.trim()}`:''].filter(Boolean).join('\n\n');
+    const pedido={tamaki:'pedido-claude',versao:1,projeto:nome,video:{id:it.id,nome:it.nome||'',dur:+Q.dur.toFixed(2),w:Q.w,h:Q.h,som:'ignorar: é um vídeo de fundo, não o som do jogo'},
+      quadros:{intervalo:Q.passo,obs:'o canto de cada quadro mostra o tempo no vídeo original'},folhas:Q.lista.map(f=>({arquivo:f.nome,de:f.de,ate:f.ate})),roteiro,criado:new Date().toISOString()};
+    const pdf=await montarPdf(pedido,Q.lista),nomeArq=('claude-'+nome).replace(/[\\/:*?"<>|]+/g,'-').slice(0,60)+'.pdf';
+    val(1);$('#pgT').textContent=`Pronto: 1 arquivo (${fmtSize(pdf.size)}). Baixe e anexe no chat do Claude.`;
+    $('#pgA').innerHTML='<button class="btn pri" data-a="down">⬇ Baixar PDF</button><button class="btn" data-a="share">Compartilhar</button>';
+    $('#pgA').onclick=async e=>{const b=e.target.closest('[data-a]');if(!b)return;
+      if(b.dataset.a==='down')return baixarBlob(pdf,nomeArq);
+      const f=new File([pdf],nomeArq,{type:'application/pdf'});
+      if(!(navigator.canShare&&navigator.canShare({files:[f]})))return toast('Compartilhar não funciona aqui. Use Baixar.');
+      try{await navigator.share({files:[f],title:'Pedido pro Claude'});}catch(_){}};
+  }catch(e){logErro('Claude · pedir',e.message,e.stack);box.innerHTML='<p class="aviso">Não consegui ler esse vídeo. O erro foi para a aba ⚠ Erros.</p>';}
+  finally{btn.disabled=false;}
+}
+async function extrairQuadros(it,prog){
+  const url=URL.createObjectURL(it.blob),v=document.createElement('video');v.muted=true;v.playsInline=true;v.preload='auto';v.src=url;
+  try{
+    await waitEv(v,'loadedmetadata',15000);const dur=await realDur(v);if(!dur)throw new Error('não descobri a duração do vídeo');
+    const w=v.videoWidth||1280,h=v.videoHeight||720,a=w/h,deitado=a>=1;
+    const cols=deitado?4:6,rows=deitado?5:3,cw=deitado?320:Math.round(360*a),ch=deitado?Math.round(320/a):360,porFolha=cols*rows;
+    let passo=dur<=60?1:dur<=180?2:dur<=600?3:Math.ceil(dur/200),n=Math.floor(dur/passo)+1;
+    while(Math.ceil(n/porFolha)>15){passo++;n=Math.floor(dur/passo)+1;}
+    const lista=[];let cv=null,g=null;
+    for(let k=0;k<n;k++){
+      const marca=k*passo,t=Math.min(marca+.05,Math.max(0,dur-.05));
+      if(k%porFolha===0){if(cv)lista[lista.length-1].cv=cv;cv=document.createElement('canvas');const linhas=Math.min(rows,Math.ceil((n-k)/cols));cv.width=cols*cw;cv.height=linhas*ch;g=cv.getContext('2d');g.fillStyle='#000';g.fillRect(0,0,cv.width,cv.height);lista.push({de:marca,ate:marca});}
+      v.currentTime=t;try{await waitEv(v,'seeked',8000);}catch(_){}
+      const i=k%porFolha,x=(i%cols)*cw,y=Math.floor(i/cols)*ch;try{g.drawImage(v,x,y,cw,ch);}catch(_){}
+      const lab=fmtT(marca);g.font='bold 22px system-ui,sans-serif';g.textBaseline='top';const tw=g.measureText(lab).width;
+      g.fillStyle='rgba(0,0,0,.78)';g.fillRect(x,y,tw+14,30);g.fillStyle='#FFD34D';g.fillText(lab,x+7,y+4);g.strokeStyle='#000';g.lineWidth=3;g.strokeRect(x+1.5,y+1.5,cw-3,ch-3);
+      lista[lista.length-1].ate=marca;prog&&prog((k+1)/n);
+    }
+    if(cv)lista[lista.length-1].cv=cv;
+    for(let i=0;i<lista.length;i++){const f=lista[i];f.nome=`quadros-${String(i+1).padStart(2,'0')}.jpg`;f.blob=await new Promise(ok=>f.cv.toBlob(ok,'image/jpeg',.74));delete f.cv;}
+    return{dur,w,h,passo,lista};
+  }finally{v.removeAttribute('src');v.load();URL.revokeObjectURL(url);}
+}
+function paginasTexto(linhasIn){
+  const W=1240,H=1754,M=90,lh=44,pags=[];let cv,g,y;
+  const nova=()=>{cv=document.createElement('canvas');cv.width=W;cv.height=H;g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,W,H);g.textBaseline='top';y=M;pags.push(cv);};nova();
+  for(const [txt,est] of linhasIn){
+    const tam=est==='h1'?46:est==='h2'?34:30,fonte=(est==='h1'||est==='h2'?'bold ':'')+tam+'px system-ui,sans-serif';g.font=fonte;
+    const pal=String(txt).split(/(\s+)/);let lin='';const out=[];
+    for(const p of pal){const t=lin+p;if(g.measureText(t).width>W-M*2&&lin.trim()){out.push(lin.trimEnd());lin=p.trimStart();}else lin=t;}out.push(lin.trimEnd());
+    for(const l of out){if(y+lh>H-M){nova();g.font=fonte;}g.fillStyle=est==='mute'?'#666':'#111';g.fillText(l,M,y);y+=est==='h1'?64:est==='h2'?52:lh;}
+    if(est==='h1'||est==='h2')y+=8;
+  }
+  return pags;
+}
+async function montarPdf(pedido,folhas){
+  const v=pedido.video,L=[['Pedido pro Claude · Tamaki Central','h1'],['Projeto: '+pedido.projeto,'h2'],[`Vídeo: ${v.nome||'(sem nome)'} · ${fmtT(v.dur)} · ${v.w}×${v.h}`,''],['id na Biblioteca: '+v.id,'mute'],
+    [`Quadros: 1 a cada ${pedido.quadros.intervalo} s, com o tempo no canto de cada um.`,''],['Som: ignorar (é um vídeo de fundo, não o som do jogo).',''],['',''],['Roteiro','h2']];
+  for(const l of String(pedido.roteiro||'(sem roteiro)').split('\n'))L.push(l.startsWith('### ')?[l.slice(4),'h2']:[l,'']);
+  const imgs=[];
+  for(const c of paginasTexto(L)){const b=await new Promise(ok=>c.toBlob(ok,'image/jpeg',.8));imgs.push({b,w:c.width,h:c.height});}
+  for(const f of folhas){const bm=await createImageBitmap(f.blob);imgs.push({b:f.blob,w:bm.width,h:bm.height});bm.close&&bm.close();}
+  const enc=new TextEncoder(),partes=[],offs=[];let pos=0;
+  const put=x=>{const u=typeof x==='string'?enc.encode(x):x;partes.push(u);pos+=u.length;};
+  const obj=(n,corpo)=>{offs[n]=pos;put(`${n} 0 obj\n`);corpo();put('\nendobj\n');};
+  const n=imgs.length,b64=btoa(unescape(encodeURIComponent(JSON.stringify(pedido))));
+  put('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+  const kids=[];for(let i=0;i<n;i++)kids.push(`${4+i*3} 0 R`);
+  obj(1,()=>put('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2,()=>put(`<< /Type /Pages /Count ${n} /Kids [${kids.join(' ')}] >>`));
+  obj(3,()=>put(`<< /Title (Pedido pro Claude) /Producer (Tamaki Central) /TamakiPedido (${b64}) >>`));
+  for(let i=0;i<n;i++){
+    const im=imgs[i],pg=4+i*3,io=pg+1,co=pg+2,bytes=new Uint8Array(await im.b.arrayBuffer());
+    const pw=595,ph=+(595*im.h/im.w).toFixed(2),cs=`q ${pw} 0 0 ${ph} 0 0 cm /Im0 Do Q`;
+    obj(pg,()=>put(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 ${io} 0 R >> >> /Contents ${co} 0 R >>`));
+    obj(io,()=>{put(`<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${bytes.length} >>\nstream\n`);put(bytes);put('\nendstream');});
+    obj(co,()=>put(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`));
+  }
+  const total=4+n*3,xref=pos;let x=`xref\n0 ${total}\n0000000000 65535 f \n`;
+  for(let k=1;k<total;k++)x+=String(offs[k]).padStart(10,'0')+' 00000 n \n';
+  put(x+`trailer\n<< /Size ${total} /Root 1 0 R /Info 3 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return new Blob(partes,{type:'application/pdf'});
+}
+
+/* ---------- 2 · respostas ---------- */
+async function desenharRespostas(){
+  const c=$('#clCorpo');let vids={};
+  try{(await bibTodos()).forEach(x=>{vids[x.id]=x;});}catch(_){}
+  c.innerHTML=`<h2>Respostas do Claude</h2><p class="mute">Toque em Receber e escolha o .json ou o .zip que o Claude mandou. Antes de ir pro Editor, você vê a prévia dos cortes.</p>
+    <div class="btns" style="margin-bottom:14px"><button class="btn pri" id="rRec">✦ Receber resposta</button></div>
+    ${RESP.length?RESP.map((r,i)=>{const R=r.R,v=vids[R.video],on=(R.cortes||[]).filter((_,j)=>!(r.off||[]).includes(j)),tot=on.reduce((s,x)=>s+(x.fim-x.ini)/(x.vel||1),0);
+      return `<div class="card"><b>${esc(R.projeto||'Projeto')}</b> <span class="tag">Cloud</span><p class="mute" style="margin-top:4px">${on.length} cortes · ${fmtT(tot)} · ${(R.motions||[]).length} motions · ${esc(R.formato||'')}<br>${v?'Vídeo: '+esc(v.nome||v.id):'⚠ O vídeo original não está nesta Biblioteca'}</p>
+      <div class="btns"><button class="btn pri" data-i="${i}" data-a="ver">▶ Ver prévia</button><button class="btn ok" data-i="${i}" data-a="ed" ${v?'':'disabled'}>🎬 Mandar tudo pro Editor</button><button class="btn danger" data-i="${i}" data-a="del">Apagar</button></div></div>`;}).join(''):'<p class="aviso">Nenhuma resposta recebida ainda.</p>'}`;
+  $('#rRec').onclick=()=>$('#fResp').click();
+  c.onclick=async e=>{const b=e.target.closest('[data-a]');if(!b)return;const r=RESP[+b.dataset.i];if(!r)return;
+    if(b.dataset.a==='ver'){aberta=r.id;desenharPrevia(r.id);}
+    else if(b.dataset.a==='ed')mandarEditor(r);
+    else if(b.dataset.a==='del'){if(!confirm('Apagar esta resposta? Os vídeos da Biblioteca continuam lá.'))return;RESP=RESP.filter(x=>x!==r);salvaResp();desenharRespostas();}};
+}
+$('#fDlc').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;await instalarDlc(f);if(sub==='esteticas')desenharEsteticas();};
+$('#fResp').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const n=await receber(f);if(n){toast(n===1?'Resposta recebida! Veja a prévia.':`${n} respostas recebidas!`);sub='respostas';aberta=null;if(atual!=='claude')abrir('claude');else desenharClaude();}}
+  catch(err){logErro('Claude · receber',err.message,err.stack);toast('Não consegui ler esse arquivo (detalhes em ⚠ Erros)');}};
+async function lerZip(f){
+  const buf=new Uint8Array(await f.arrayBuffer()),dv=new DataView(buf.buffer),dec=new TextDecoder(),out=[];
+  let e=buf.length-22;while(e>=0&&dv.getUint32(e,true)!==0x06054b50)e--;if(e<0)throw new Error('zip inválido');
+  let n=dv.getUint16(e+10,true),o=dv.getUint32(e+16,true);
+  while(n--){if(dv.getUint32(o,true)!==0x02014b50)break;
+    const met=dv.getUint16(o+10,true),tc=dv.getUint32(o+20,true),ln=dv.getUint16(o+28,true),lx=dv.getUint16(o+30,true),lc=dv.getUint16(o+32,true),lo=dv.getUint32(o+42,true);
+    const nome=dec.decode(buf.subarray(o+46,o+46+ln));o+=46+ln+lx+lc;if(nome.endsWith('/'))continue;
+    const ini=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true),dados=buf.subarray(ini,ini+tc);let blob;
+    if(met===0)blob=new Blob([dados]);else if(met===8&&window.DecompressionStream)blob=await new Response(new Blob([dados]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).blob();else continue;
+    out.push({nome,blob});}
+  return out;
+}
+async function receber(f){
+  const textos=[];
+  if(/\.zip$/i.test(f.name)||(f.type||'').includes('zip')){for(const a of await lerZip(f))if(/\.(json|txt)$/i.test(a.nome))textos.push(await a.blob.text());}
+  else textos.push(await f.text());
+  let n=0;
+  for(const t of textos){let R;try{R=JSON.parse(t.replace(/^﻿/,'').trim());}catch(_){continue;}
+    if(!R||R.tamaki!=='resposta-claude')continue;
+    R.cortes=(Array.isArray(R.cortes)?R.cortes:[]).map(c=>({ini:Math.max(0,+c.ini||0),fim:+c.fim||0,nota:String(c.nota||'').slice(0,200),fala:String(c.fala||'').slice(0,600),vel:Math.max(.25,Math.min(4,+c.vel||1)),fx:c.fx||'',crop:c.crop||R.crop||null})).filter(c=>c.fim>c.ini+.05);
+    R.motions=Array.isArray(R.motions)?R.motions:[];
+    const ant=RESP.find(x=>x.R.projeto===R.projeto&&x.R.video===R.video);
+    const reg={id:ant?ant.id:'r'+Date.now().toString(36)+n,recebido:Date.now(),R,off:[],mots:ant?ant.mots||[]:[]};
+    RESP=RESP.filter(x=>x!==ant);RESP.unshift(reg);n++;
+    pastaNaBiblioteca(reg);
+  }
+  salvaResp();
+  if(!n)toast('Não achei nenhuma resposta do Claude nesse arquivo');
+  return n;
+}
+/* cria (ou acha) a pasta do projeto na Biblioteca; o vídeo entra nela se ainda não tiver pasta */
+async function pastaNaBiblioteca(reg){
+  try{const P=lerJ('tamaki-bib-pastas',[]),nome=String(reg.R.projeto||'Projeto').slice(0,80);
+    let p=P.find(x=>x.nome===nome);if(!p){p={id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),nome,criado:Date.now(),rot:[]};P.push(p);gravaJ('tamaki-bib-pastas',P);}
+    reg.pasta=p.id;salvaResp();
+    const v=await bibLer(reg.R.video);if(v&&!v.pasta){v.pasta=p.id;await bibPor(v);avisaBib(v.id);}
+  }catch(e){logErro('Claude · pasta',e.message,e.stack);}
+}
+
+/* ---------- prévia ---------- */
+let PV=null; // {r, video, cv, g, idx, raf, tocando}
+function pararPrevia(){if(!PV)return;cancelAnimationFrame(PV.raf);try{PV.v.pause();PV.v.removeAttribute('src');PV.v.load();}catch(_){}URL.revokeObjectURL(PV.url);PV=null;}
+async function desenharPrevia(id){
+  pararPrevia();const r=RESP.find(x=>x.id===id);if(!r){aberta=null;return desenharRespostas();}
+  const R=r.R,c=$('#clCorpo'),vert=R.formato!=='16:9';
+  let it=null;try{it=await bibLer(R.video);}catch(_){}
+  c.innerHTML=`<div class="btns" style="margin:0 0 10px"><button class="btn" id="pvVolta">← Respostas</button></div>
+    <h2>${esc(R.projeto||'Projeto')} <span class="tag">Cloud</span></h2>${R.notas?`<p class="aviso">${esc(R.notas)}</p>`:''}
+    ${it?'':'<p class="aviso">⚠ O vídeo original não está nesta Biblioteca, então não dá para ver a prévia. Ele precisa ser o mesmo vídeo do pacote.</p>'}
+    <div class="prev"><div class="tela"><canvas id="pvCv" width="${vert?540:960}" height="${vert?960:540}"></canvas><span class="tempo" id="pvT">0:00</span><div class="fala" id="pvFala"></div></div>
+    <div class="cortes" id="pvLista">${R.cortes.map((x,i)=>`<label class="corte${(r.off||[]).includes(i)?' off':''}" data-i="${i}"><input type="checkbox" ${(r.off||[]).includes(i)?'':'checked'}><div><b>${i+1}. ${fmtTd(x.ini)} → ${fmtTd(x.fim)}</b>${x.fala?`<q>${esc(x.fala)}</q>`:''}<span>${esc(x.nota)}</span></div>${x.vel!==1?`<em class="vel">${x.vel}×</em>`:''}</label>`).join('')}</div></div>
+    <div class="btns"><button class="btn pri" id="pvPlay" ${it?'':'disabled'}>▶ Tocar prévia</button></div>
+    <p class="mute" style="margin-top:6px">A fala de cada corte aparece embaixo da tela enquanto ele toca. Desmarque um corte para ele não ir pro Editor; toque no texto para pular até ele.</p>
+    <h3>Motions</h3><p class="mute">Gerar grava cada motion pela aba Motion (leva o tempo de cada um). Eles vão pra Biblioteca, na pasta do projeto. Ao mandar tudo pro Editor, cada motion entra como camada no tempo dele.</p>
+    <label class="f" style="display:block;margin:4px 0 10px"><b style="font-size:13px">🎨 Estética dos motions</b>
+      <select id="pvEst" style="width:100%;margin-top:4px;padding:9px;border-radius:8px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);font:inherit">${[PADRAO,...ativas()].map(d=>`<option value="${esc(d.id)}" ${(r.estetica||lerJ('tamaki-estetica-ultima','padrao'))===d.id?'selected':''}>${esc((d.icone||'🎨')+' '+d.nome)}</option>`).join('')}</select></label>
+    <div class="mots" id="pvMots"></div><div class="btns"><button class="btn pri" id="pvGerar">✨ Gerar motions</button><button class="btn" id="pvDlc">Gerenciar estéticas</button></div><div id="motionBox"></div>
+    <h3>Tudo junto</h3><p class="mute">Manda os cortes marcados e os motions já gerados. Cada motion entra no tempo dele, por cima do vídeo.</p>
+    <div class="btns"><button class="btn ok" id="pvEd" ${it?'':'disabled'} style="flex:1;min-height:48px">🎬 Mandar tudo pro Editor</button></div>`;
+  r.estetica=$('#pvEst').value;
+  $('#pvEst').onchange=e=>{r.estetica=e.target.value;gravaJ('tamaki-estetica-ultima',r.estetica);salvaResp();desenharMots(r);};
+  $('#pvDlc').onclick=()=>{sub='esteticas';aberta=null;pararPrevia();gravaJ('tamaki-estudio-sub',sub);desenharClaude();};
+  $('#pvVolta').onclick=()=>{aberta=null;pararPrevia();desenharRespostas();};
+  $('#pvEd').onclick=()=>mandarEditor(r);
+  $('#pvGerar').onclick=()=>gerarMotions(r);
+  desenharMots(r);
+  $('#pvLista').onclick=e=>{const l=e.target.closest('[data-i]');if(!l)return;const i=+l.dataset.i;
+    if(e.target.tagName==='INPUT'){r.off=r.off||[];e.target.checked?r.off=r.off.filter(x=>x!==i):r.off.push(i);l.classList.toggle('off',!e.target.checked);salvaResp();desenharMots(r);}
+    else{e.preventDefault();if(PV)irCorte(i,true);}};
+  if(!it)return;
+  const url=URL.createObjectURL(it.blob),v=document.createElement('video');v.muted=true;v.playsInline=true;v.preload='auto';v.src=url;
+  const cv=$('#pvCv');PV={r,v,url,cv,g:cv.getContext('2d'),idx:0,raf:0,tocando:false};
+  try{await waitEv(v,'loadedmetadata',15000);}catch(_){return logErro('Prévia','Não abri o vídeo para a prévia');}
+  irCorte(primeiroLigado(0),false);
+  $('#pvPlay').onclick=()=>{if(!PV)return;PV.tocando?pausar():tocar();};
+  const loop=()=>{if(!PV)return;PV.raf=requestAnimationFrame(loop);desenharQuadro();
+    const x=R.cortes[PV.idx];if(PV.tocando&&x&&v.currentTime>=x.fim-.03){const prox=primeiroLigado(PV.idx+1);if(prox<0){pausar();irCorte(primeiroLigado(0),false);}else irCorte(prox,true);}};
+  loop();
+}
+const ligado=(r,i)=>!(r.off||[]).includes(i);
+function primeiroLigado(de){const R=PV.r.R;for(let i=de;i<R.cortes.length;i++)if(ligado(PV.r,i))return i;return -1;}
+function irCorte(i,tocarDepois){if(!PV||i<0)return;const x=PV.r.R.cortes[i];PV.idx=i;PV.v.currentTime=x.ini+.01;PV.v.playbackRate=x.vel||1;
+  document.querySelectorAll('#pvLista .corte').forEach(l=>l.classList.toggle('at',+l.dataset.i===i));
+  const fl=$('#pvFala');if(fl)fl.textContent=x.fala||'';
+  const el=document.querySelector(`#pvLista .corte[data-i="${i}"]`);if(el)el.scrollIntoView({block:'nearest'});
+  if(tocarDepois)tocar();}
+function tocar(){if(!PV)return;PV.tocando=true;PV.v.play().catch(e=>logErro('Prévia',e.message));$('#pvPlay').textContent='❚❚ Pausar';}
+function pausar(){if(!PV)return;PV.tocando=false;PV.v.pause();const b=$('#pvPlay');if(b)b.textContent='▶ Tocar prévia';}
+function desenharQuadro(){
+  const {v,cv,g,r}=PV,x=r.R.cortes[PV.idx]||{},W=cv.width,H=cv.height,nw=v.videoWidth,nh=v.videoHeight;
+  g.fillStyle='#000';g.fillRect(0,0,W,H);if(!nw||!nh)return;
+  const cr=x.crop||{l:0,t:0,r:0,b:0},sx=cr.l*nw,sy=cr.t*nh,sw=nw*(1-cr.l-cr.r),sh=nh*(1-cr.t-cr.b),k=Math.min(W/sw,H/sh),dw=sw*k,dh=sh*k;
+  try{g.drawImage(v,sx,sy,sw,sh,(W-dw)/2,(H-dh)/2,dw,dh);}catch(_){}
+  const ant=r.R.cortes.slice(0,PV.idx).reduce((s,c,i)=>s+(ligado(r,i)?(c.fim-c.ini)/(c.vel||1):0),0),agora=ant+Math.max(0,(v.currentTime-(x.ini||0))/(x.vel||1));
+  const tot=r.R.cortes.reduce((s,c,i)=>s+(ligado(r,i)?(c.fim-c.ini)/(c.vel||1):0),0);
+  const t=$('#pvT');if(t)t.textContent=`${fmtT(agora)} / ${fmtT(tot)} · corte ${PV.idx+1}`;
+}
+/* em que segundo do vídeo editado cada motion entra (conta só os cortes marcados) */
+function inicioDosCortes(r){const R=r.R,ini=[];let s=0;R.cortes.forEach((c,i)=>{ini[i]=ligado(r,i)?s:null;if(ligado(r,i))s+=(c.fim-c.ini)/(c.vel||1);});return {ini,total:s};}
+function tempoMotion(r,m){
+  const {ini,total}=inicioDosCortes(r),dur=+m.dur||3,limite=x=>Math.max(0,Math.min(Math.max(0,total-.3),x));
+  let k=null; // número do corte (1 = primeiro): pelo campo "corte" ou pelo texto "onde"
+  if(m.corte!=null&&isFinite(+m.corte))k=Math.round(+m.corte);
+  else{const q=String(m.onde||'').match(/corte\s*(\d+)/i);if(q)k=+q[1];}
+  if(k!=null&&k>=1){for(let i=k-1;i<ini.length;i++)if(ini[i]!=null)return limite(ini[i]+(+m.atraso||0));return limite(total-dur);}
+  if(m.ini!=null&&isFinite(+m.ini))return limite(+m.ini);
+  if(m.papel==='final'||/\bfim\b|final/i.test(m.onde||''))return limite(total-dur);
+  if(m.papel==='titulo'||/come[cç]o|0:00/i.test(m.onde||''))return 0;
+  const q=String(m.onde||'').match(/(\d+):(\d{2})/);if(q)return limite(+q[1]*60+ +q[2]);
+  return null; // sem tempo: vai pro 📥 Recebidos
+}
+async function desenharMots(r){
+  const box=$('#pvMots');if(!box)return;const R=r.R;
+  const its=await Promise.all((r.mots||[]).map(id=>bibLer(id).catch(()=>null)));
+  box.innerHTML=R.motions.length?R.motions.map((m,i)=>{const it=its.find(x=>x&&x.ordem===i&&x.claudeDe===r.id),tm=tempoMotion(r,m);
+    return `<div class="mot">${it?`<video src="${URL.createObjectURL(it.blob)}" muted loop playsinline controls></video>`:''}<b>${esc(m.nome||'Motion '+(i+1))}</b><small>${tm==null?'⏱ sem tempo: vai pro 📥 Recebidos':'⏱ entra em '+fmtTd(tm)}</small><small>${esc(m.onde||'')}</small><small>${m.papel?esc(PAPEIS[m.papel]||m.papel)+' · ':''}${it?'✓ gerado'+(it.estetica?' em '+esc(it.estetica):''):'ainda não gerado'} · ${m.dur||3} s</small></div>`;}).join(''):'<p class="mute">Esta resposta não tem motions.</p>';
+}
+
+/* ---------- motions: grava pela aba Motion do site, num modo especial que não mexe no seu projeto ---------- */
+let motionFrame=null;
+async function abrirMotionRender(){
+  if(motionFrame&&motionFrame.isConnected)return motionFrame;
+  let src=await (await fetch(SITE+'motion.html',{cache:'no-store'})).text();
+  const T=[['const KEY = "motion-proj", PLUG = "motion-plugins", FPS = 30;','const KEY = "motion-proj", PLUG = "motion-plugins", FPS = 30;\nconst RENDER = true; let jobId = null;'],
+    ['function salvar(){ clearTimeout(tm);','function salvar(){ if (RENDER) return; clearTimeout(tm);'],
+    ['rec.onstop = () => { baixar(new Blob(partes, {type: "video/webm"}), "motion-tamaki.webm"); gravando = false; rec = null; toast("Vídeo pronto"); };','rec.onstop = () => { const b = new Blob(partes, {type: "video/webm"}); gravando = false; rec = null; parent.postMessage({tipo: "motion-feito", id: jobId, blob: b}, "*"); };'],
+    ['try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.itens)) P = Object.assign(P, s); } catch (e) {}',''],
+    ['const a = await dbGet("audio"); if (a) usarAudio(a, false);',''],
+    ['window.Motion = Motion;\n})();',RENDER_JS+'\nwindow.Motion = Motion;\n})();']];
+  if(src.includes('const RENDER = new URLSearchParams')){ // o motion.html do site já é o novo: só liga o modo
+    src=src.replace('const RENDER = new URLSearchParams(location.search).has("render");','const RENDER = true;');
+  }else{for(const [a,b] of T){if(!src.includes(a))throw new Error('o motion.html do site mudou e eu não reconheci um trecho: '+a.slice(0,40));src=src.replace(a,b);}}
+  src=src.replace('<head>','<head><base href="'+SITE+'">');
+  const f=document.createElement('iframe');f.title='Gerando motion';
+  const pronto=new Promise((ok,no)=>{const t=setTimeout(()=>{removeEventListener('message',h);no(new Error('a aba Motion não respondeu'));},25000);
+    const h=e=>{if(e.source===f.contentWindow&&(e.data||{}).tipo==='motion-pronta'){clearTimeout(t);removeEventListener('message',h);ok();}};addEventListener('message',h);});
+  ($('#motionBox')||document.body).appendChild(f);f.src=URL.createObjectURL(new Blob([src],{type:'text/html'}));
+  f.addEventListener('load',()=>vigiar('Motion (gravando)',f),{once:true});
+  await pronto;motionFrame=f;return f;
+}
+const RENDER_JS=`if (RENDER) {
+  const st = document.createElement("style");
+  st.textContent = "body.render>*{display:none!important}body.render>#cv{display:block!important;position:fixed;inset:0;width:100%!important;height:100%!important;object-fit:contain;background:#111}";
+  document.head.appendChild(st); document.body.appendChild(cv); document.body.classList.add("render");
+  addEventListener("message", async e => {
+    const d = e.data || {};
+    if (d.tipo === "motion-plugin") { try { new Function("Motion", d.codigo)(Motion); } catch (err) { parent.postMessage({tipo: "motion-erro", id: "plugin", msg: "estética: " + err.message}, "*"); } return; }
+    if (d.tipo !== "motion-render") return;
+    try {
+      if (gravando) throw new Error("já estou gravando outro");
+      const pr = d.proj || {}; parar(); audioBuf = null; editTraj = null;
+      P = {fmt: pr.fmt == "9:16" ? "9:16" : "16:9", dur: Math.max(.5, Math.min(60, +pr.dur || 3)), bg: "transp", itens: [], sel: null, zoom: 1, ima: 0, loop: 0};
+      for (const x of (pr.itens || [])) {
+        const def = TIPOS[x && x.tipo]; if (!def) continue;
+        const it = Object.assign({x: 50, y: 50, anim: "fade", saida: "fade", cont: "nenhum", te: .5, ts: .35, tam: 6}, copia(def.padrao || {}), copia(x), {id: uid()});
+        it.ini = Math.max(0, Math.min(P.dur - .2, +it.ini || 0)); it.dur = Math.max(.2, Math.min(P.dur - it.ini, +it.dur || P.dur)); P.itens.push(it);
+      }
+      if (!P.itens.length) throw new Error("nenhum tipo de motion conhecido");
+      tamanho();
+      if (document.fonts) { await Promise.all(P.itens.map(it => document.fonts.load(fnt(it.fonte || "redonda", 40)).catch(() => {}))); await document.fonts.ready; }
+      T = 0; sujo = true; await new Promise(r => setTimeout(r, 400));
+      jobId = d.id; gravar();
+      if (!gravando) throw new Error("este navegador não grava vídeo");
+    } catch (err) { parent.postMessage({tipo: "motion-erro", id: d.id, msg: err.message}, "*"); }
+  });
+  parent.postMessage({tipo: "motion-pronta"}, "*");
+}`;
+async function gravarMotion(m,prog){
+  const f=await abrirMotionRender(),id='j'+Math.random().toString(36).slice(2),dur=Math.max(.5,Math.min(60,+m.dur||3)),t0=performance.now();
+  return new Promise((ok,no)=>{
+    const iv=setInterval(()=>prog&&prog(Math.min(.97,(performance.now()-t0)/1000/(dur+1))),200);
+    const fim=()=>{clearInterval(iv);clearTimeout(t);removeEventListener('message',h);};
+    const t=setTimeout(()=>{fim();no(new Error('demorou demais'));},(dur+30)*1000);
+    const h=e=>{const d=e.data||{};if(e.source!==f.contentWindow||d.id!==id)return;if(d.tipo==='motion-feito'){fim();ok({blob:d.blob,dur});}else if(d.tipo==='motion-erro'){fim();no(new Error(d.msg||'erro'));}};
+    addEventListener('message',h);
+    f.contentWindow.postMessage({tipo:'motion-render',id,proj:{fmt:m.fmt,dur,itens:Array.isArray(m.itens)?m.itens:[]}},'*');
+  });
+}
+async function gerarMotions(r){
+  const R=r.R;if(!R.motions.length)return toast('Esta resposta não tem motions');
+  const btn=$('#pvGerar');btn.disabled=true;pausar();
+  const box=$('#motionBox');const lab=document.createElement('p');lab.className='mute';lab.style.marginTop='8px';const bar=document.createElement('div');bar.className='bar';bar.innerHTML='<i></i>';box.before(lab);box.before(bar);
+  const val=x=>bar.firstChild.style.width=Math.round(x*100)+'%';
+  let ok=0;const novos=[];
+  try{
+    const est=estetica(r.estetica);
+    if(est.codigo){const f=await abrirMotionRender();f.contentWindow.postMessage({tipo:'motion-plugin',codigo:est.codigo},'*');await espera(150);}
+    for(let i=0;i<R.motions.length;i++){const m=R.motions[i]||{};lab.textContent=`Gerando motion ${i+1} de ${R.motions.length}: ${m.nome||''} (${est.nome})`;
+      try{const rs=resolverMotion(m,est);const g=await gravarMotion(Object.assign({},m,{itens:rs.itens}),x=>val((i+x)/R.motions.length));
+        const it={id:'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),origem:'claude',tipo:'video',nome:String(m.nome||'Motion '+(i+1)).slice(0,80),texto:String(m.onde||''),mime:'video/webm',tamanho:g.blob.size,criado:Date.now(),blob:g.blob,
+          pasta:r.pasta||null,tags:['Cloud',est.nome],fundo:'verde',dur:g.dur,claudeDe:r.id,ordem:i,estetica:est.nome};
+        await bibPor(it);avisaBib(it.id);novos.push(it.id);ok++;
+      }catch(e){logErro('Motion',`“${m.nome||i+1}”: ${e.message}`,e.stack);}
+    }
+  }catch(e){logErro('Motion',e.message,e.stack);}
+  for(const id of r.mots||[]){if(!novos.includes(id))try{await dbTx('tamaki-biblioteca','itens','readwrite',s=>s.delete(id));}catch(_){}}
+  r.mots=novos;salvaResp();val(1);
+  lab.textContent=ok===R.motions.length?`✓ ${ok} motions prontos. Agora é só tocar em 🎬 Mandar tudo pro Editor.`:`${ok} de ${R.motions.length} motions prontos. Os que falharam estão em ⚠ Erros.`;
+  if(motionFrame){motionFrame.remove();motionFrame=null;}
+  btn.disabled=false;desenharMots(r);
+}
+
+/* ---------- mandar tudo pro Editor: cortes na faixa principal e cada motion como camada, no tempo dele ---------- */
+const INJETAR=`window.__tamakiTudo=async function(id,cortes,formato,motions){
+  if(exporting)return {n:-1};
+  if((formato==='9:16'||formato==='16:9')&&S.ratio!==formato){try{applyRatio(formato);}catch(_){}}
+  const r=await TamakiBib.ler(id);if(!r||!r.blob)return {n:0};
+  const f=new File([r.blob],(r.nome||'gravacao')+'.'+((r.mime||'').split('/')[1]||'bin'),{type:r.mime});
+  const m=await loadMedia(f);commit();
+  const st=videoEnd(),D=isFinite(m.dur)&&m.dur>0?m.dur:1e9,FX=['none','kenburns','pulse','heart','shake','sway','blurin','flash','glitch'];let n=0,nm=0;
+  for(const c of cortes){const a=Math.max(0,Math.min(+c.ini||0,D)),b=Math.max(0,Math.min(+c.fim||0,D));if(b-a<=.05)continue;
+    const ex={in:a,out:b,vol:0,speed:Math.max(.25,Math.min(4,+c.vel||1)),tr:{type:'none',dur:.5}};
+    if(c.crop)ex.crop={l:+c.crop.l||0,t:+c.crop.t||0,r:+c.crop.r||0,b:+c.crop.b||0,rot:0,ratio:'free'};
+    if(FX.includes(c.fx))ex.fx=c.fx;
+    S.clips.push(newVisual(m,ex));n++;}
+  if(m.type==='video')makeThumbs(m);
+  for(const x of (motions||[])){try{
+    const it=await TamakiBib.ler(x.bib);if(!it||!it.blob)continue;
+    const fm=new File([it.blob],(it.nome||'motion')+'.webm',{type:it.mime||'video/webm'}),mm=await loadMedia(fm);
+    const o=newVisual(mm,{start:st+Math.max(0,+x.t||0),vol:0,tf:{x:0,y:0,s:1,r:0},...(it.fundo==='verde'?{chroma:{on:true,color:'#00B140',tol:.4}}:it.fundo==='preto'?{blend:'screen'}:{})});
+    S.ovs.push(o);if(mm.type==='video')makeThumbs(mm);nm++;
+  }catch(_){}}
+  select(null);seek(st);renderTL();renderTools();needDraw=true;updateTime();
+  return {n,nm};
+};`;
+async function mandarEditor(r){
+  const R=r.R,cortes=R.cortes.filter((_,i)=>ligado(r,i));if(!cortes.length)return toast('Nenhum corte marcado');
+  pausar();toast('Abrindo o Editor…');
+  try{
+    // cada motion já gerado: onde ele entra no vídeo editado
+    const its=await Promise.all((r.mots||[]).map(id=>bibLer(id).catch(()=>null))),comTempo=[],semTempo=[];
+    R.motions.forEach((m,i)=>{const it=its.find(x=>x&&x.ordem===i&&x.claudeDe===r.id);if(!it)return;const t=tempoMotion(r,m);(t==null?semTempo:comTempo).push({bib:it.id,t,it});});
+    const f=await frameDe('editor');const w=f.contentWindow,d=f.contentDocument;
+    if(!w.__tamakiTudo){const sc=d.createElement('script');sc.textContent=INJETAR;d.body.appendChild(sc);}
+    for(let i=0;i<50&&!w.__tamakiTudo;i++)await espera(100);
+    if(!w.__tamakiTudo)throw new Error('não consegui ligar no Editor');
+    const res=await w.__tamakiTudo(R.video,cortes,R.formato||'',comTempo.map(x=>({bib:x.bib,t:x.t})));
+    if(res.n<0)return toast('O Editor está exportando agora. Espere terminar.');
+    if(!res.n)throw new Error('o vídeo original não foi encontrado na Biblioteca');
+    let nc=0;for(const x of semTempo){try{const it=x.it;await caixaPor({id:'cl-'+it.id,nome:it.nome,tipo:'video',mime:it.mime,blob:it.blob,criado:Date.now(),origem:'Claude',fundo:'verde',dur:it.dur});nc++;}catch(_){}}
+    if(nc)try{localStorage.setItem('tamaki-caixa-aviso',String(Date.now()));}catch(_){}
+    const faltam=R.motions.length-comTempo.length-semTempo.length;
+    abrir('editor');toast(`Pronto! ${res.n} cortes${res.nm?` e ${res.nm} motions nos tempos certos`:''}${nc?` · ${nc} em 📥 Recebidos`:''}${faltam>0?` · ${faltam} motions ainda não gerados`:''}`);
+  }catch(e){logErro('Editor',e.message,e.stack);toast('Não consegui mandar pro Editor (detalhes em ⚠ Erros)');}
+}
+
+/* ================= 🎨 Estéticas (DLC) =================
+   Uma estética é um arquivo .json que se instala e desinstala quando quiser.
+   Ela traz (1) o código dos motions dela e (2) as "receitas": como cada papel
+   (título, impacto, personagem, transição…) vira motion naquela estética.
+   O Claude escreve os motions por papel; aqui você escolhe a estética na hora de gerar. */
+const DLC_KEY='tamaki-dlc';
+let DLCS=lerJ(DLC_KEY,[]);const salvaDlc=()=>gravaJ(DLC_KEY,DLCS);
+const PAPEIS={titulo:'Título de abertura',impacto:'Palavra de impacto',personagem:'Apresentação de personagem',nome:'Nome / legenda',aviso:'Aviso / alerta',
+  transicao:'Transição',batalha:'Começo de batalha',vida:'Barra de vida',captura:'Capturado / conquista',fala:'Caixa de fala',final:'Encerramento'};
+/* estética padrão: só usa os motions que já vêm na aba Motion */
+const PADRAO={id:'padrao',nome:'Padrão',icone:'⚪',desc:'Os motions que já vêm na aba Motion',receitas:{
+  titulo:[{tipo:'intro',texto:'{texto}',sub:'{sub}',tam:10,y:17,anim:'pop'}],
+  impacto:[{tipo:'texto',texto:'{texto}',fonte:'bebas',tam:14,y:17,anim:'pop',cor:'#ffffff',cor2:'#151515'}],
+  personagem:[{tipo:'faixa',texto:'{texto}',sub:'{sub}',tam:6,x:6,y:74,cor:'#151515',cor2:'#d6a400'}],
+  nome:[{tipo:'faixa',texto:'{texto}',sub:'{sub}',tam:6,x:6,y:74,cor:'#151515',cor2:'#d6a400'}],
+  aviso:[{tipo:'texto',texto:'{texto}',fonte:'bebas',tam:11,y:17,anim:'pop',cor:'#ffffff',cor2:'#c2412d'}],
+  batalha:[{tipo:'texto',texto:'{texto|BATALHA!}',fonte:'bebas',tam:14,y:17,anim:'pop',cor:'#ffffff',cor2:'#c2412d'}],
+  vida:[{tipo:'texto',texto:'{texto}',fonte:'bebas',tam:10,y:17,anim:'pop',cor:'#ffffff',cor2:'#151515'}],
+  captura:[{tipo:'texto',texto:'{texto|Conseguiu!}',fonte:'bebas',tam:12,y:17,anim:'pop',cor:'#ffffff',cor2:'#2e8c83'}],
+  fala:[{tipo:'faixa',texto:'{texto}',sub:'{sub}',tam:5,x:6,y:78,cor:'#151515',cor2:'#ffffff'}],
+  final:[{tipo:'intro',texto:'{texto}',sub:'{sub}',tam:9,y:17,anim:'pop'},{tipo:'inscreva',tam:7,x:50,y:84,ini:.5}]}};
+const ativas=()=>DLCS.filter(d=>d.ativo);
+const estetica=id=>id==='padrao'||!id?PADRAO:(DLCS.find(d=>d.id===id&&d.ativo)||PADRAO);
+/* troca {texto}, {sub}, {texto|padrão} pelos valores do motion */
+function preencher(v,m){
+  if(typeof v!=='string')return v;
+  const so=v.match(/^\{(\w+)(?:\|([^}]*))?\}$/);
+  if(so){const x=m[so[1]];return x===undefined||x===''?(so[2]!==undefined?so[2]:''):x;}
+  return v.replace(/\{(\w+)(?:\|([^}]*))?\}/g,(_,k,d)=>{const x=m[k];return x===undefined||x===''?(d||''):String(x);});
+}
+/* motion do Claude → itens da aba Motion, na estética escolhida */
+function resolverMotion(m,est){
+  if(Array.isArray(m.itens)&&m.itens.length&&!m.papel)return {itens:m.itens,de:'fixo'};
+  const papel=m.papel||'impacto',rec=(est.receitas||{})[papel]||PADRAO.receitas[papel]||PADRAO.receitas.impacto,de=(est.receitas||{})[papel]?est.nome:'Padrão';
+  const dur=+m.dur||3;
+  const itens=rec.map(t=>{const it={};for(const [k,v] of Object.entries(t))it[k]=preencher(v,m);
+    if(it.ini==null)it.ini=0;if(it.dur==null)it.dur=Math.max(.3,dur-(+it.ini||0));
+    for(const k of ['x','y','tam','cor','cor2','img','lado'])if(m[k]!==undefined&&t[k]===undefined)it[k]=m[k];
+    return it;});
+  return {itens,de};
+}
+async function instalarDlc(f){
+  let D;try{D=JSON.parse((await f.text()).replace(/^﻿/,''));}catch(_){return toast('Esse arquivo não é uma estética');}
+  if(!D||D.tamaki!=='dlc-estetica'||!D.id||!D.receitas)return toast('Esse arquivo não é uma estética');
+  if(D.codigo){try{new Function('Motion',D.codigo);}catch(e){logErro('Estéticas',`O código de “${D.nome}” tem erro: ${e.message}`);return toast('O código dessa estética tem erro (veja ⚠ Erros)');}}
+  const ant=DLCS.find(x=>x.id===D.id);D.ativo=ant?ant.ativo:true;D.instalada=Date.now();
+  DLCS=DLCS.filter(x=>x.id!==D.id);DLCS.push(D);salvaDlc();sincMotion();
+  toast(`${D.icone||'🎨'} ${D.nome} ${ant?'atualizada':'instalada'}!`);
+}
+/* deixa os motions das estéticas ligadas também na aba ✨ Motion (para editar à mão) */
+function sincMotion(){
+  try{let P=lerJ('motion-plugins',[]);P=P.filter(p=>!p.dlc);
+    for(const d of ativas())if(d.codigo)P.push({nome:`${d.icone||'🎨'} DLC: ${d.nome}`,codigo:d.codigo,dlc:d.id});
+    gravaJ('motion-plugins',P);
+    if(frames.motion)try{frames.motion.contentWindow.location.reload();}catch(_){}
+  }catch(e){logErro('Estéticas',e.message,e.stack);}
+}
+function desenharEsteticas(){
+  const c=$('#clCorpo');
+  c.innerHTML=`<h2>Estéticas</h2><p class="mute">Como DLCs: instale, ligue e desligue quando quiser. Na prévia de cada resposta você escolhe em qual estética os motions vão ser gerados.</p>
+    <div class="btns" style="margin-bottom:14px"><button class="btn pri" id="dlcIn">＋ Instalar estética</button></div>
+    <div class="card"><b>${PADRAO.icone} Padrão</b> <span class="tag" style="background:var(--panel2);color:var(--ink)">sempre ligada</span><p class="mute" style="margin-top:4px">${esc(PADRAO.desc)}</p></div>
+    ${DLCS.map((d,i)=>`<div class="card" style="border-left:4px solid ${esc(d.cor||'var(--cl)')}"><b>${esc(d.icone||'🎨')} ${esc(d.nome)}</b> ${d.ativo?'<span class="tag">ligada</span>':'<span class="tag" style="background:var(--panel2);color:var(--mute)">desligada</span>'}
+      <p class="mute" style="margin-top:4px">${esc(d.desc||'')}<br>Papéis: ${Object.keys(d.receitas).map(k=>esc(PAPEIS[k]||k)).join(', ')}</p>
+      <div class="btns"><button class="btn ${d.ativo?'':'ok'}" data-i="${i}" data-a="liga">${d.ativo?'Desligar':'Ligar'}</button><button class="btn danger" data-i="${i}" data-a="tira">Remover</button></div></div>`).join('')}
+    ${DLCS.length?'':'<p class="aviso">Nenhuma estética instalada. Toque em Instalar e escolha um arquivo dlc-….json.</p>'}`;
+  $('#dlcIn').onclick=()=>$('#fDlc').click();
+  c.onclick=e=>{const b=e.target.closest('[data-a]');if(!b||b.dataset.i==null)return;const d=DLCS[+b.dataset.i];if(!d)return;
+    if(b.dataset.a==='liga'){d.ativo=!d.ativo;salvaDlc();sincMotion();toast(`${d.nome} ${d.ativo?'ligada':'desligada'}`);desenharEsteticas();}
+    else if(b.dataset.a==='tira'){if(!confirm(`Remover a estética “${d.nome}”? Os motions já gerados continuam na Biblioteca.`))return;DLCS=DLCS.filter(x=>x!==d);salvaDlc();sincMotion();desenharEsteticas();}};
+}
+
+/* ================= ⚠ Erros ================= */
+function textoErros(){return `Erros do Estúdio · Tamaki Central\nGerado em ${new Date().toLocaleString('pt-BR')}\nEndereço: ${location.protocol} · site ${SITE}\nNavegador: ${navigator.userAgent}\n\n`+
+  ERROS.map(e=>`[${new Date(e.t).toLocaleString('pt-BR')}] ${e.aba}: ${e.msg}${e.det?'\n  '+e.det.replace(/\n/g,'\n  '):''}`).join('\n\n');}
+function desenharErros(){
+  const p=pane('erros');
+  p.innerHTML=`<div class="scroll"><div class="wrap"><h2>Erros</h2><p class="mute">Tudo o que quebrar no Estúdio e nas abas aparece aqui. Baixe o relatório e mande no chat do Claude.</p>
+    <div class="btns" style="margin-bottom:12px"><button class="btn pri" data-a="down" ${ERROS.length?'':'disabled'}>⬇ Baixar relatório</button><button class="btn" data-a="copy" ${ERROS.length?'':'disabled'}>Copiar</button><button class="btn danger" data-a="limpar" ${ERROS.length?'':'disabled'}>Limpar</button></div>
+    ${ERROS.length?ERROS.map(e=>`<div class="erro"><small>${new Date(e.t).toLocaleString('pt-BR')} · ${esc(e.aba)}</small>${esc(e.msg)}${e.det?`<pre>${esc(e.det)}</pre>`:''}</div>`).join(''):'<p class="aviso">Nenhum erro até agora. 🎉</p>'}</div></div>`;
+  p.querySelector('.btns').onclick=async e=>{const b=e.target.closest('[data-a]');if(!b)return;
+    if(b.dataset.a==='down')baixarBlob(new Blob([textoErros()],{type:'text/plain'}),'erros-estudio.txt');
+    else if(b.dataset.a==='copy'){try{await navigator.clipboard.writeText(textoErros());toast('Copiado! Cole no chat do Claude.');}catch(_){toast('Não deu para copiar. Use Baixar.');}}
+    else if(b.dataset.a==='limpar'){ERROS=[];gravaJ('tamaki-estudio-erros',ERROS);desenharAbas();desenharErros();}};
+}
+
+/* ================= início ================= */
+if(location.protocol==='file:'||location.protocol==='content:')logErro('Estúdio','Este arquivo foi aberto direto do tablet. Assim ele não enxerga a sua Biblioteca: cole o código como aba na Central.');
+desenharAbas();abrir(atual);
+</script>
+</body>
+</html>
