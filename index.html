@@ -110,6 +110,8 @@ dialog textarea{width:100%;min-height:40vh;background:#0d0d0d;color:var(--tx);bo
     <button id="verArq" role="menuitem">🗄 Abas arquivadas</button>
     <button id="verTags" role="menuitem">🎨 Tags e cores</button>
     <button id="verLeit" role="menuitem">Aa Leitura e letra</button>
+    <hr>
+    <button id="verGit" role="menuitem">🐙 GitHub (salvar sozinho)</button>
   </div>
 </header>
 <main id="area">
@@ -190,6 +192,22 @@ dialog textarea{width:100%;min-height:40vh;background:#0d0d0d;color:var(--tx);bo
   <div class="chips" id="lEsp"><button class="chip" data-v="normal">Normal</button><button class="chip" data-v="amplo">Amplo</button><button class="chip" data-v="extra">Bem amplo</button></div>
   <label class="mut" style="display:flex;gap:8px;align-items:center;margin:4px 0 12px"><input type="checkbox" id="lAbas"> Usar a mesma letra dentro de todas as abas (Universo, Palco, Editor…)</label>
   <div class="row"><button class="bt pri" id="lOk">Pronto</button></div>
+</dialog>
+
+<dialog id="dGit">
+  <h2 style="margin:0 0 6px;font-family:var(--fonte)">🐙 GitHub</h2>
+  <p class="mut" style="margin-bottom:10px">Com a chave, a Central salva os arquivos direto no repositório <b>Tamaki-Central</b>. O site se atualiza sozinho em 1 a 2 minutos. Universo e Ficha da Tamaki nunca são mexidos.</p>
+  <label class="campo">Chave do GitHub (token)<input id="gitTok" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></label>
+  <label class="mut" style="display:flex;gap:8px;align-items:center;margin:0 0 10px"><input type="checkbox" id="gitAuto"> Mandar pro GitHub sempre que eu salvar o código de uma aba</label>
+  <p class="mut" id="gitMsg" style="margin:0 0 8px"></p>
+  <div class="row"><button class="bt pri" id="gitTestar">✓ Salvar e testar</button><button class="bt" id="gitSair">Esquecer a chave</button></div>
+  <ul class="lista" id="gitPend" style="margin-top:10px"></ul>
+  <p class="rot">Pacote do Claude<small>Cole o pacote que o Claude mandou ou escolha o arquivo .json. Dá pra escolher arquivos soltos (.html, .js, imagens) também.</small></p>
+  <textarea id="gitPac" spellcheck="false" style="min-height:22vh" placeholder='{"tamaki":"pacote", …}'></textarea>
+  <input type="file" id="gitArqs" multiple class="hide">
+  <div class="row" style="margin-top:8px"><button class="bt" id="gitColar">📋 Colar</button><button class="bt" id="gitEsc">📁 Escolher arquivos</button><button class="bt pri" id="gitVer">Ver o que muda</button></div>
+  <ul class="lista" id="gitPrev" style="margin-top:10px"></ul>
+  <div class="row"><button class="bt pri hide" id="gitMandar">⬆ Mandar pro GitHub</button><button class="bt" id="gitFechar">Fechar</button></div>
 </dialog>
 
 <div id="toast" class="hide" role="status"><span id="toastT"></span><button id="toastB" class="hide">Desfazer</button></div>
@@ -401,7 +419,9 @@ $("#codFechar").onclick = () => $("#dCod").close();
 $("#codColar").onclick = async () => { try { $("#codTxt").value = await navigator.clipboard.readText(); } catch (e) { aviso("Não consegui colar sozinho: toque e segure no campo para colar."); } };
 async function trocarCodigoSite(k, novo, de){ const a = ABAS[k], velho = await cGet("o-" + k); if (velho === novo) return aviso("Esse código é igual ao que já está na aba.");
   await cPut("o-" + k, novo); cfgDe(k).codEm = Date.now(); salvaCfg(); esqueceFrame(k); $("#dAba").close(); ir(k);
-  aviso(`“${a.n}” agora usa ${de}. Os dados dela continuam.`, async () => { await cPut("o-" + k, velho || null); esqueceFrame(k); ir(k); aviso("Voltou para a versão anterior."); }); }
+  const volta = async () => { await cPut("o-" + k, velho || null); esqueceFrame(k); ir(k); aviso("Voltou para a versão anterior."); };
+  if (GIT.auto && GIT.token && caminhoDe(a)) return mandarAba(k, novo, de, volta);
+  aviso(`“${a.n}” agora usa ${de}. Os dados dela continuam.`, volta); }
 $("#aArq").onclick = () => { guardarAba(); const k = editK; $("#dAba").close(); ABAS[k].arq ? desarquivar(k) : arquivar(k); };
 function arquivar(k){ if (visiveis().length <= 1) return aviso("Deixe pelo menos uma aba na barra.");
   const n = ABAS[k].n; cfgDe(k).arq = true; salvaCfg(); esqueceFrame(k); if (k == atual) ir(visiveis()[0]);
@@ -679,7 +699,7 @@ const CAB = ["=== INSTRUÇÕES PARA O CLAUDE ===",
   "Motion.registrar({ tipo: \"id-unico\", nome: \"Nome\", icone: \"✨\", desc: \"frase curta\", cor: \"#hex da barra na linha do tempo\", usa: [\"texto\",\"sub\",\"area\",\"fonte\",\"cor\",\"cor2\",\"tam\",\"pos\"], rot: {cor2: \"rótulo da cor2\"}, fixo: false, padrao: {dur: 3, texto: \"...\", anim: \"pop\", saida: \"fade\", cont: \"nenhum\"}, campos: [[\"chave\",\"Rótulo\",\"num\",min,max,passo], [\"chave\",\"Rótulo\",\"sel\",[[\"valor\",\"Nome\"]]], [\"chave\",\"Rótulo\",\"texto\"], [\"chave\",\"Rótulo\",\"cor\"], [\"chave\",\"Rótulo\",\"chk\"], [\"chave\",\"Rótulo\",\"img\"], [\"chave\",\"Rótulo\",\"imgs\"]], desenhar(g, it, s, c){ ... } })",
   "No desenhar: g é o contexto 2D do canvas (1280x720 ou 720x1280), já levado até (it.x%, it.y%) com entrada, saída e efeito contínuo aplicados (com fixo: true ele desenha na tela inteira, sem posição). it tem os campos do item. s tem a, k, rot, chars, letras, onda. c tem W, H, m (menor lado), T (tempo do vídeo), lt (tempo desde o começo do item), dur, fs (tamanho da fonte em px a partir de it.tam), fnt(fonte, px), texto(str, s, {fs, cor, contorno, align}), img(chave) para imagens escolhidas em campos img/imgs.",
   "Entradas existentes: fade, subir, descer, pop, zoom, deslizar, deslizarD, girar, quique, elastico, digitar, letras, glitch, desfocar, nenhuma. Saídas: fade, subir, descer, zoom, encolher, deslizar, girar, glitch, nenhuma. Contínuos: nenhum, pulsar, flutuar, balancar, tremer, onda, brilhar, glitch.",
-  "3) MUDANÇA NO QUE JÁ EXISTE (Central, Palco, Motion): peça o arquivo atual se precisar, entregue o arquivo completo e diga o nome exato e a pasta dentro do repositório Tamaki-Central.",
+  "3) MUDANÇA NO QUE JÁ EXISTE (Central, Palco, Motion…): peça o arquivo atual se precisar e entregue um PACOTE: um arquivo .json no formato {\"tamaki\":\"pacote\",\"versao\":1,\"mensagem\":\"o que mudou\",\"arquivos\":[{\"caminho\":\"motion.html\",\"texto\":\"arquivo completo\"},{\"caminho\":\"img/x.png\",\"base64\":\"...\"}],\"apagar\":[\"arquivo-velho.html\"]}. Caminhos relativos ao repositório Tamaki-Central. Eu aplico em ⋮ › 🐙 GitHub › Pacote do Claude, que salva direto no repositório.",
   "=== FIM DAS INSTRUÇÕES ==="].join("\n");
 async function montar(){
   $("#resumo").textContent = "Juntando tudo…";
@@ -711,12 +731,111 @@ $("#colar").onclick = () => $("#dCola").showModal();
 $("#fechar").onclick = () => $("#dCola").close();
 $("#aplicar").onclick = async () => {
   const t = $("#cola").value.trim(); if (!t) return;
+  if (/"tamaki"\s*:\s*"pacote"/.test(t)) { $("#dCola").close(); $("#cola").value = ""; abrirGit(); $("#gitPac").value = t; return verPacote(); }
   $("#dCola").close(); ir("universo");
   await prontos.universo; await new Promise(r => setTimeout(r, 700));
   try { const d = frames.universo.contentWindow.document;
     d.querySelector("#pb").value = t; d.querySelector("#ps").click(); $("#cola").value = ""; }
   catch (e) { alert("Não consegui falar com o Universo. Abra a aba Universo e use Reunião > Colar resposta do Claude."); }
 };
+
+/* ---------- 🐙 GitHub: salvar direto no repositório Tamaki-Central ---------- */
+// A chave fica só neste aparelho. Só o repositório Tamaki-Central é mexido (nunca universo nem Tamaki_Personagem).
+const GIT_DONO = "tamakishions2-tech", GIT_REPO = "Tamaki-Central", GIT_RAMO = "main";
+let GIT = lerJ("central-git", {});
+const gravaGit = () => gravaJ("central-git", GIT);
+const caminhoOk = c => typeof c == "string" && c && !c.startsWith("/") && !/^[a-z]+:/i.test(c) && !c.split("/").some(x => x == ".." || x == "." || x == "" || x == ".git");
+// arquivo do repositório que uma aba do site usa (null para Universo, Ficha e endereços de fora)
+const caminhoDe = a => { if (!a || !a.src || a.extra) return null; const c = a.src.endsWith("/") ? a.src + "index.html" : a.src; return caminhoOk(c) ? c : null; };
+function erroGit(s, j){ if (s == 401) return "a chave do GitHub não vale (venceu ou foi colada errada)";
+  if (s == 403 || s == 404) return "a chave não tem permissão de escrever no Tamaki-Central";
+  if (s == 409 || s == 422) return "o repositório mudou no meio do envio, tente de novo";
+  return (j && j.message) || "erro " + s; }
+async function gh(rota, op = {}){
+  let r; try { r = await fetch(`https://api.github.com/repos/${GIT_DONO}/${GIT_REPO}${rota}`, {...op, cache: "no-store", headers: {"Accept": "application/vnd.github+json", "Authorization": "Bearer " + GIT.token, "X-GitHub-Api-Version": "2022-11-28"}}); }
+  catch (e) { throw new Error("sem internet ou o GitHub não respondeu"); }
+  const j = await r.json().catch(() => null); if (!r.ok) { const e = new Error(erroGit(r.status, j)); e.status = r.status; throw e; } return j; }
+const b64 = u8 => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+// Manda vários arquivos num commit só. arquivos: [{caminho, texto} ou {caminho, base64}]; apagar: [caminho]
+async function gitEnviar(arquivos, msg, apagar = []){
+  for (const c of [...arquivos.map(f => f.caminho), ...apagar]) if (!caminhoOk(c)) throw new Error("caminho estranho no pacote: " + c);
+  const ref = await gh("/git/ref/heads/" + GIT_RAMO), pai = ref.object.sha, com = await gh("/git/commits/" + pai), tree = [];
+  for (const f of arquivos) { const bl = await gh("/git/blobs", {method: "POST", body: JSON.stringify({content: f.base64 != null ? f.base64.replace(/\s/g, "") : b64(new TextEncoder().encode(f.texto)), encoding: "base64"})});
+    tree.push({path: f.caminho, mode: "100644", type: "blob", sha: bl.sha}); }
+  for (const c of apagar) tree.push({path: c, mode: "100644", type: "blob", sha: null});
+  const t = await gh("/git/trees", {method: "POST", body: JSON.stringify({base_tree: com.tree.sha, tree})});
+  const novo = await gh("/git/commits", {method: "POST", body: JSON.stringify({message: msg, tree: t.sha, parents: [pai]})});
+  await gh("/git/refs/heads/" + GIT_RAMO, {method: "PATCH", body: JSON.stringify({sha: novo.sha})});
+  return {sha: novo.sha, pai};
+}
+// Desfazer no GitHub: põe de volta como os arquivos estavam no commit anterior
+async function gitVoltar(caminhos, pai, msg){ const arq = [], apagar = [];
+  for (const c of caminhos) { try { const j = await gh(`/contents/${encodeURI(c)}?ref=${pai}`); arq.push({caminho: c, base64: j.content}); }
+    catch (e) { if (e.status == 404) apagar.push(c); else throw e; } } // 404: o arquivo não existia antes
+  return gitEnviar(arq, msg, apagar); }
+
+async function mandarAba(k, texto, de, volta){ const a = ABAS[k], c = caminhoDe(a), cfg = cfgDe(k);
+  aviso(`“${a.n}” salva aqui. Mandando pro GitHub…`);
+  try { const r = await gitEnviar([{caminho: c, texto}], `Central: ${a.n} atualizada (${de})`);
+    delete cfg.gitPend; cfg.gitEm = Date.now(); salvaCfg();
+    aviso(`✓ “${a.n}” salva no GitHub. O site atualiza em 1 a 2 minutos.`, async () => { await volta();
+      try { await gitVoltar([c], r.pai, `Central: desfazer ${a.n}`); aviso("Voltou para a versão anterior, aqui e no GitHub."); } catch (e) { aviso("Voltou aqui, mas não no GitHub: " + e.message); } }); }
+  catch (e) { cfg.gitPend = true; salvaCfg(); aviso(`Não foi pro GitHub (${e.message}). A aba já usa o código novo aqui; tente de novo em ⋮ › 🐙 GitHub.`, volta); }
+}
+
+/* janela do GitHub */
+let PAC = null;
+function pendentes(){ const ks = Object.keys(ABAS).filter(k => (CFG[k] || {}).gitPend && caminhoDe(ABAS[k]));
+  $("#gitPend").innerHTML = ks.map(k => `<li data-k="${k}"><div class="lin"><span class="nm"><b>${esc(ABAS[k].n)}</b><br><small class="mut">Salva aqui, mas ainda não foi pro GitHub</small></span><button class="bt pri" data-a="manda">⬆ Mandar</button></div></li>`).join(""); }
+function abrirGit(){ fecharMenu(); $("#gitTok").value = GIT.token || ""; $("#gitAuto").checked = !!GIT.auto;
+  $("#gitMsg").textContent = GIT.token ? (GIT.ok ? "✓ Chave guardada neste aparelho." : "Chave guardada, ainda não testada.") : "Sem chave: a Central só guarda as coisas neste aparelho.";
+  $("#gitPrev").innerHTML = ""; $("#gitMandar").classList.add("hide"); PAC = null; pendentes(); $("#dGit").showModal(); }
+$("#verGit").onclick = abrirGit;
+$("#gitFechar").onclick = () => $("#dGit").close();
+$("#gitAuto").onchange = () => { GIT.auto = $("#gitAuto").checked; gravaGit(); };
+$("#gitSair").onclick = () => { if (!confirm("Esquecer a chave do GitHub neste aparelho?")) return; GIT = {}; gravaGit(); abrirGit(); };
+$("#gitTestar").onclick = async () => { const t = $("#gitTok").value.trim(); if (!t) return $("#gitMsg").textContent = "Cole a chave primeiro.";
+  GIT.token = t; GIT.auto = $("#gitAuto").checked; GIT.ok = false; gravaGit(); $("#gitMsg").textContent = "Testando…";
+  try { const j = await gh(""); if (j.permissions && !j.permissions.push) throw new Error("a chave só pode ler, não escrever");
+    GIT.ok = true; gravaGit(); $("#gitMsg").textContent = "✓ Funcionou! A Central consegue salvar no Tamaki-Central."; }
+  catch (e) { $("#gitMsg").textContent = "✗ Não funcionou: " + e.message + "."; } };
+$("#gitPend").onclick = async e => { const b = e.target.closest("[data-a]"); if (!b) return; const k = b.closest("li").dataset.k, h = await cGet("o-" + k);
+  if (!h) { delete cfgDe(k).gitPend; salvaCfg(); return pendentes(); }
+  b.disabled = true; b.textContent = "Mandando…"; await mandarAba(k, h, "código guardado no aparelho", async () => {}); pendentes(); };
+$("#gitColar").onclick = async () => { try { $("#gitPac").value = await navigator.clipboard.readText(); verPacote(); } catch (e) { aviso("Não consegui colar sozinho: toque e segure no campo para colar."); } };
+$("#gitEsc").onclick = () => $("#gitArqs").click();
+$("#gitArqs").onchange = async e => { const fs = [...e.target.files]; e.target.value = ""; if (!fs.length) return;
+  const json = fs.find(f => /\.json$/i.test(f.name)); if (json && fs.length == 1) { $("#gitPac").value = await json.text(); return verPacote(); }
+  const nomes = [...Object.values(BASE).map(a => caminhoDe(a)).filter(Boolean), "index.html", "sw.js", "manifest.webmanifest", "CLAUDE.md", "README.md"], arquivos = [];
+  for (const f of fs) { let c = f.name;
+    if (!nomes.includes(c)) { c = prompt(`Onde guardar “${f.name}” no repositório? (ex.: pasta/arquivo.html)`, c); if (!c) continue; c = c.trim(); }
+    arquivos.push({caminho: c, base64: b64(new Uint8Array(await f.arrayBuffer()))}); }
+  if (!arquivos.length) return; $("#gitPac").value = ""; mostrarPacote({tamaki: "pacote", mensagem: "Central: arquivos enviados pelo tablet", arquivos}); };
+$("#gitVer").onclick = () => verPacote();
+function verPacote(){ const t = $("#gitPac").value.trim(); if (!t) return aviso("Cole o pacote ou escolha os arquivos.");
+  let p; try { p = JSON.parse(t.replace(/^```(json)?\s*|\s*```$/g, "")); } catch (e) { return aviso("Esse pacote não é um JSON válido. Copie de novo o bloco inteiro."); }
+  if (p.tamaki != "pacote" || !Array.isArray(p.arquivos)) return aviso("Isso não é um pacote da Central (falta \"tamaki\":\"pacote\").");
+  mostrarPacote(p); }
+async function mostrarPacote(p){ const ap = Array.isArray(p.apagar) ? p.apagar : [];
+  const ruins = [...p.arquivos.map(f => f.caminho), ...ap].filter(c => !caminhoOk(c)); if (ruins.length) return aviso("Caminho estranho no pacote: " + ruins[0]);
+  if (p.arquivos.some(f => f.texto == null && f.base64 == null)) return aviso("Tem arquivo sem conteúdo no pacote.");
+  PAC = p; $("#gitPrev").innerHTML = '<li class="vazio">Conferindo o repositório…</li>';
+  let tem = null; if (GIT.token) { try { const j = await gh(`/git/trees/${GIT_RAMO}?recursive=1`); tem = new Set(j.tree.map(x => x.path)); } catch (e) {} }
+  const tam = f => { const n = f.texto != null ? new TextEncoder().encode(f.texto).length : Math.floor(f.base64.replace(/\s/g, "").length * 3 / 4); return n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB"; };
+  $("#gitPrev").innerHTML = (p.mensagem ? `<li><b>${esc(p.mensagem)}</b></li>` : "")
+    + p.arquivos.map(f => `<li style="--c:${tem && !tem.has(f.caminho) ? "#93d67f" : "#f2b51d"}">${tem && !tem.has(f.caminho) ? "＋ novo" : "✎ troca"} · <b>${esc(f.caminho)}</b> <small class="mut">${tam(f)}</small></li>`).join("")
+    + ap.map(c => `<li style="--c:#ff8a73">🗑 apaga · <b>${esc(c)}</b></li>`).join("");
+  $("#gitMandar").classList.toggle("hide", false); if (!GIT.token) aviso("Cole e teste a chave do GitHub antes de mandar."); }
+$("#gitMandar").onclick = async () => { if (!PAC) return; if (!GIT.token) return aviso("Cole e teste a chave do GitHub primeiro.");
+  const b = $("#gitMandar"), p = PAC, ap = Array.isArray(p.apagar) ? p.apagar : []; b.disabled = true; b.textContent = "Mandando…";
+  try { await gitEnviar(p.arquivos, p.mensagem || "Central: pacote do Claude", ap);
+    // abas do site que mudaram passam a usar o código novo já agora (o site leva 1 a 2 minutos)
+    for (const [k, a] of Object.entries(ABAS)) { const c = caminhoDe(a), f = p.arquivos.find(x => x.caminho == c);
+      if (f && f.texto != null) { await cPut("o-" + k, f.texto); const g = cfgDe(k); g.codEm = Date.now(); delete g.gitPend; esqueceFrame(k); } }
+    salvaCfg(); PAC = null; $("#gitPac").value = ""; $("#gitPrev").innerHTML = ""; b.classList.add("hide");
+    $("#dGit").close(); ir(atual); aviso(`✓ ${p.arquivos.length + ap.length} arquivo(s) no GitHub. O site atualiza em 1 a 2 minutos.`); }
+  catch (e) { aviso("Não mandei: " + e.message + "."); }
+  b.disabled = false; b.textContent = "⬆ Mandar pro GitHub"; };
 
 aplicarLeitura();
 const salvo = localStorage.getItem("central_aba");

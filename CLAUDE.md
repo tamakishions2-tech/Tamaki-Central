@@ -25,3 +25,15 @@ em ✦ Claude › Respostas e prévia › Receber resposta. Não responda com re
 - Gameplay gravada no tablet (XRecorder 1152×720): a tela do jogo fica em crop l .215, r .045, t .1, b .1.
 - Personagem: palavrões da Tamaki são suavizados; manter o jeito de falar dela (guris, bicha, é bica).
 - A usuária usa ".." no lugar de "?" (o teclado dela não tem): troque por "?" nas perguntas.
+
+## Pacote (mudanças nos arquivos do repositório)
+A Central salva direto no GitHub (⋮ › 🐙 GitHub). Para mudar arquivos deste repositório, entregue um **pacote**:
+um arquivo `.json` (pode ser grande) que ela aplica num commit só, mostrando antes o que muda.
+```json
+{"tamaki":"pacote","versao":1,"mensagem":"o que mudou, curto",
+ "arquivos":[{"caminho":"motion.html","texto":"arquivo completo"},{"caminho":"img/x.png","base64":"..."}],
+ "apagar":["arquivo-velho.html"]}
+```
+- Caminhos relativos a este repositório. Nunca mande nada para `universo` ou `Tamaki_Personagem`.
+- Sempre o arquivo completo em `texto` (não é patch). `apagar` é opcional.
+- Ele cola o pacote em ⋮ › 🐙 GitHub › Pacote do Claude, ou em Reunião › Colar resposta do Claude (a Central reconhece sozinha).
