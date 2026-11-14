@@ -19,7 +19,7 @@
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:var(--tam)/1.6 var(--fonte);letter-spacing:var(--le);word-spacing:var(--pe);overflow:hidden}
 button,input,select,textarea{letter-spacing:inherit;word-spacing:inherit}
-body{display:grid;grid-template-rows:auto 1fr;grid-template-columns:minmax(0,1fr);height:100dvh}
+body{display:grid;grid-template-rows:auto auto 1fr;grid-template-columns:minmax(0,1fr);height:100dvh}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible,a:focus-visible,textarea:focus-visible{outline:2px solid var(--am);outline-offset:2px}
 header{position:relative;display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 8px;background:var(--bar);border-bottom:1px solid var(--ln);z-index:5}
@@ -89,7 +89,7 @@ dialog textarea{width:100%;min-height:40vh;background:#0d0d0d;color:var(--tx);bo
 .vazio{color:var(--mut);background:#1b1b1b;border:1px dashed var(--ln);border-radius:12px;padding:14px}
 #toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#2b2b2b;border:1px solid var(--ln);border-radius:14px;padding:12px 16px;z-index:50;max-width:90vw;box-shadow:0 10px 30px #000a;display:flex;gap:12px;align-items:center}
 #prod{display:flex;align-items:center;gap:10px;width:100%;border:0;border-bottom:1px solid var(--ln);background:#1b1b1b;color:var(--tx);padding:9px 12px;font:inherit;text-align:left;cursor:pointer}
-#prod.hide{display:none}#prod .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.9rem}
+#prod.hide{display:none}#prod{max-height:44px}#prod .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.9rem}
 #prod .br{width:70px;height:6px;border-radius:4px;background:#333;overflow:hidden}#prod .br i{display:block;height:100%;width:0;background:var(--am);transition:width .3s}
 #prod.ok{background:#1d2a1b}#prod.ok .br i{background:#93d67f}#prod.erro{background:#2e1a1a}#prod.erro .br i{background:#ff8a73}
 #prod .gi{display:inline-block;animation:gira 1.2s linear infinite}@keyframes gira{to{transform:rotate(360deg)}}
@@ -264,7 +264,7 @@ dialog textarea{width:100%;min-height:40vh;background:#0d0d0d;color:var(--tx);bo
   <div class="row" style="margin-top:10px"><button class="bt pri" id="aplicar">Aplicar no Universo</button><button class="bt" id="fechar">Cancelar</button></div>
 </dialog>
 
-<script src="organizador.js"></script>
+<script>/* sempre a versão mais nova destes arquivos */document.write('<script src="organizador.js?v='+Date.now().toString(36)+'"><\/script>');</script>
 <script>
 // Se a Central abrir dentro dela mesma, o index.html dela foi parar no repositório de outro projeto.
 // Dentro do site Tamaki (window.tamakiHub) ela pode abrir normalmente.
@@ -327,7 +327,9 @@ const baseDe = a => { const u = new URL(a.src, location.href); return u.pathname
 const comBase = (h, a) => /<base\s/i.test(h) ? h : /<head[^>]*>/i.test(h) ? h.replace(/<head[^>]*>/i, m => m + `<base href="${baseDe(a)}">`) : `<base href="${baseDe(a)}">` + h;
 async function codigoDe(k){ const a = ABAS[k]; if (!a) return null; if (a.extra) return await cGet("x-" + a.extra.id);
   const h = await cGet("o-" + k); if (h) return h; try { const r = await fetch(a.src, {cache: "no-store"}); return r.ok ? await r.text() : null; } catch (e) { return null; } }
-async function srcDe(k){ const a = ABAS[k]; if (a.src) { const h = await cGet("o-" + k); return h ? URL.createObjectURL(new Blob([comBase(h, a)], {type: "text/html"})) : a.src; } const h = await cGet("x-" + a.extra.id); return URL.createObjectURL(new Blob([h || "<p style='font-family:sans-serif;color:#fff'>Código desta aba não encontrado neste aparelho.</p>"], {type: "text/html"})); }
+const fresco = (u, v) => /^(https?:)?\/\//.test(u) || u.startsWith("/") ? u : u.split("#")[0] + (u.includes("?") ? "&" : "?") + "v=" + (v || VER);
+const VER = Date.now().toString(36); // cada vez que a Central abre, as abas do site vêm na versão mais nova
+async function srcDe(k, v){ const a = ABAS[k]; if (a.src) { const h = await cGet("o-" + k); return h ? URL.createObjectURL(new Blob([comBase(h, a)], {type: "text/html"})) : fresco(a.src, v); } const h = await cGet("x-" + a.extra.id); return URL.createObjectURL(new Blob([h || "<p style='font-family:sans-serif;color:#fff'>Código desta aba não encontrado neste aparelho.</p>"], {type: "text/html"})); }
 const frames = {}, prontos = {};
 let atual = "";
 const esqueceFrame = k => { if (frames[k]) { frames[k].remove(); delete frames[k]; delete prontos[k]; } };
@@ -921,7 +923,10 @@ async function produzirRoteiro(r, jaConfirmou){
   prodSinal({etapa: "info", texto: "Abrindo a aba Escrita…"});
   await ir("escrita"); await prontos.escrita; await new Promise(ok => setTimeout(ok, 800));
   let chegou = false; const bc = new BroadcastChannel("tamaki-producao"); bc.addEventListener("message", e => { if ((e.data || {}).etapa == "escrita") chegou = true; });
-  for (let i = 0; i < 6 && !chegou; i++) { frames.escrita.contentWindow.postMessage({roteiroNovo: r}, location.origin); await new Promise(ok => setTimeout(ok, 1500)); }
+  for (let vez = 0; vez < 2 && !chegou; vez++) {
+    if (vez) { prodSinal({etapa: "info", texto: "A Escrita estava numa versão velha. Recarregando ela…"}); esqueceFrame("escrita"); await frame("escrita", await srcDe("escrita", Date.now().toString(36))); frames.escrita.classList.toggle("hide", atual != "escrita"); await new Promise(ok => setTimeout(ok, 1500)); }
+    for (let i = 0; i < 6 && !chegou; i++) { frames.escrita.contentWindow.postMessage({roteiroNovo: r}, location.origin); await new Promise(ok => setTimeout(ok, 1500)); }
+  }
   bc.close();
   if (!chegou) prodSinal({etapa: "erro", texto: "⚠ A aba Escrita não respondeu. Recarregue a Central (⋮ › ⟳) e tente de novo em ⋮ › 🎬 Produção."});
 }
