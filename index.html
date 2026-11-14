@@ -861,7 +861,10 @@ $("#gitMandar").onclick = async () => { if (!PAC) return; if (!GIT.token) return
 
 aplicarLeitura();
 // abas da Central podem pedir para abrir outra (a linha de produção abre o Editor)
-addEventListener("message", e => { const d = e.data || {}; if (e.origin !== location.origin || d.central !== "abrir" || !ABAS[d.aba]) return;
+function abaVisivel(k){ if (ABAS[k] && !ABAS[k].arq) return k;
+  if (k == "editor") return Object.keys(ABAS).find(x => !ABAS[x].arq && (/estudio\.html/.test(ABAS[x].src || "") || /edi[cç][aã]o|est[uú]dio/i.test(ABAS[x].n) && !/voz/i.test(ABAS[x].n))) || k;
+  return k; }
+addEventListener("message", e => { const d = e.data || {}; if (e.origin !== location.origin || d.central !== "abrir") return; if (!d.fica) d.aba = abaVisivel(d.aba); if (!ABAS[d.aba]) return;
   if (d.fica) { if (!frames[d.aba]) srcDe(d.aba).then(s => frame(d.aba, s)); } else ir(d.aba); });
 /* ---------- 🎬 acompanhar a produção: barra no topo + janela com as etapas ---------- */
 const ETAPAS = [["recebido", "Roteiro recebido"], ["escrita", "Escrita salvou o roteiro"], ["voz", "Estúdio de voz ligado"], ["falas", "Falas geradas"], ["palco", "Palco gravando a Tamaki"], ["editor", "Editor montando"], ["pronto", "Vídeo pronto no Editor"]];

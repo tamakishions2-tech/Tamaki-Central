@@ -95,15 +95,17 @@
     abrirAba("editor", true);
     const eu = "pr" + Date.now().toString(36), bc = new BroadcastChannel("tamaki-editor");
     try {
-      let ed = null; bc.onmessage = e => { const d = e.data || {}; if (d.tipo === "pong" && d.de === eu) ed = d; };
-      for (let i = 0; i < 40 && !ed; i++) { bc.postMessage({tipo: "ping", de: eu}); await espera(500); }
-      if (!ed) return {erro: "o Editor não abriu. Abra a aba 🎞️ Editor e toque em 🎬 Produzir de novo"};
-      if (ed.exportando) return {erro: "o Editor está exportando um vídeo agora"};
-      if (aviso) aviso("🎞️ Montando no Editor…");
-      const r = await new Promise(ok => { const t = setTimeout(() => ok({erro: "o Editor não respondeu"}), 120000);
-        bc.onmessage = e => { const d = e.data || {}; if (d.tipo === "montado" && d.para === eu) { clearTimeout(t); ok(d); } };
-        bc.postMessage(Object.assign({tipo: "montar", para: ed.id, de: eu}, dados)); });
-      return r;
+      // pode haver mais de um Editor aberto (o da Central e o da Sala de edição): monta em todos
+      const eds = new Map(); bc.onmessage = e => { const d = e.data || {}; if (d.tipo === "pong" && d.de === eu) eds.set(d.id, d); };
+      for (let i = 0; i < 40 && !eds.size; i++) { bc.postMessage({tipo: "ping", de: eu}); await espera(500); }
+      await espera(1200); // dá tempo do segundo Editor responder
+      const livres = [...eds.values()].filter(x => !x.exportando);
+      if (!eds.size) return {erro: "o Editor não abriu. Abra a aba 🎞️ Editor e toque em 🎬 Produzir de novo"};
+      if (!livres.length) return {erro: "o Editor está exportando um vídeo agora"};
+      if (aviso) aviso(`🎞️ Montando no Editor${livres.length > 1 ? ` (${livres.length} editores abertos)` : ""}…`);
+      return await new Promise(ok => { const t = setTimeout(() => ok({erro: "o Editor não respondeu"}), 120000); let falta = livres.length, bom = null;
+        bc.onmessage = e => { const d = e.data || {}; if (d.tipo === "montado" && d.para === eu) { if (!d.erro) bom = d; if (--falta <= 0) { clearTimeout(t); ok(bom || d); } } };
+        for (const x of livres) bc.postMessage(Object.assign({tipo: "montar", para: x.id, de: eu}, dados)); });
     } finally { bc.close(); }
   }
 
