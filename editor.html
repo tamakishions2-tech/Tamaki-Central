@@ -2638,7 +2638,7 @@ function caixaDialogo(w,h){return new Promise(ok=>{const c=document.createElemen
 async function montarLayoutPalco(d,falas,vm,pm){
   commit();if(S.ratio!=='9:16'){try{applyRatio('9:16');}catch(_){}}
   try{await document.fonts.load('26px "Press Start 2P"');await document.fonts.load('700 60px "Chakra Petch"');}catch(_){}
-  const W=720,H=1280,t0=videoEnd(),blocos=[];let t=t0+.2;
+  const W=720,H=1280,t0=totalDur()>0?totalDur()+.5:0,blocos=[];let t=t0+.2;// um episódio depois do outro
   falas.forEach((x,ix)=>{const k=x.i??ix,dur=isFinite(x.m.dur)?x.m.dur:2,p=(d.pausasFinais||d.pausas||[])[k];
     S.audios.push(newAudio(x.m,{start:t}));makePeaks(x.m,x.f);const pausa=p!=null&&isFinite(p)?+p:.3;
     blocos.push({ini:t,fala:dur,fim:t+dur+pausa,cena:(d.cenas||[])[k],close:!!(d.closes||[])[k]&&!!pm,k});t+=dur+pausa;});

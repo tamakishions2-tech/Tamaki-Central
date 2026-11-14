@@ -224,6 +224,8 @@ dialog textarea{width:100%;min-height:40vh;background:#0d0d0d;color:var(--tx);bo
   <p class="mut" id="prodResumo" style="margin-bottom:8px">Nenhum vídeo sendo produzido agora.</p>
   <ul class="etapas" id="prodEtapas"></ul>
   <div id="prodLog" aria-label="O que aconteceu"></div>
+  <p class="rot">Roteiros prontos do Claude<small>Toque em 🎬 num episódio, ou produza a série toda em sequência (um depois do outro no Editor).</small></p>
+  <ul class="lista" id="prodSeries"><li class="vazio">Carregando…</li></ul>
   <p class="rot">Roteiro do Claude<small>Se o link não funcionar, cole aqui o link inteiro ou o roteiro (primeira linha = título).</small></p>
   <textarea id="prodCola" spellcheck="false" style="min-height:16vh" placeholder="https://…#roteiro=…"></textarea>
   <div class="row" style="margin-top:8px"><button class="bt" id="prodColar">📋 Colar</button><button class="bt pri" id="prodIr">🎬 Produzir</button><button class="bt" id="prodCopiar">Copiar o registro</button><button class="bt" id="prodFechar">Fechar</button></div>
@@ -917,6 +919,27 @@ $("#prodIr").onclick = async () => { const t = $("#prodCola").value.trim(); if (
 addEventListener("error", e => { if (PROD.log.length && !PROD.feito.pronto && !PROD.erro) prodSinal({etapa: "info", texto: "⚠ " + (e.message || "erro") }); });
 addEventListener("unhandledrejection", e => { if (PROD.log.length && !PROD.feito.pronto) prodSinal({etapa: "erro", texto: "⚠ " + ((e.reason && e.reason.message) || e.reason || "erro")}); });
 prodTela();
+// séries que o Claude salva no GitHub: roteiros/indice.json → [{arquivo, nome}] e cada arquivo → {serie, episodios:[{titulo, texto, pasta, video, final, redes}]}
+let SERIES = [];
+async function carregarSeries(){ const el = $("#prodSeries");
+  try { const ix = await (await fetch("roteiros/indice.json?v=" + Date.now(), {cache: "no-store"})).json(); SERIES = [];
+    for (const s of ix) { try { const j = await (await fetch("roteiros/" + s.arquivo + "?v=" + Date.now(), {cache: "no-store"})).json(); SERIES.push(Object.assign({nome: s.nome}, j)); } catch (e) {} }
+  } catch (e) { SERIES = []; }
+  const feitos = lerJ("central-roteiros-feitos", {});
+  el.innerHTML = SERIES.length ? SERIES.map((s, si) => `<li><div class="lin"><span class="nm"><b>${esc(s.nome || s.serie)}</b><br><small class="mut">${s.episodios.length} episódios</small></span><button class="bt pri" data-si="${si}" data-a="todos">🎬 Todos</button></div>`
+    + s.episodios.map((e, ei) => `<div class="lin" style="margin-top:6px"><span class="nm">${feitos[e.titulo] ? "✅" : "▫️"} ${esc(e.titulo)}</span><button class="bt" data-si="${si}" data-ei="${ei}" data-a="um">🎬</button></div>`).join("") + "</li>").reverse().join("")
+    : '<li class="vazio">Nenhum roteiro pronto ainda. Quando o Claude mandar uma série, ela aparece aqui.</li>'; }
+$("#prodSeries").onclick = async e => { const b = e.target.closest("[data-a]"); if (!b) return; const s = SERIES[+b.dataset.si]; if (!s) return;
+  const lista = b.dataset.a == "todos" ? s.episodios : [s.episodios[+b.dataset.ei]];
+  if (!confirm(`Produzir ${lista.length == 1 ? "“" + lista[0].titulo + "”" : "os " + lista.length + " episódios de “" + (s.nome || s.serie) + "”, um depois do outro"}?\n\nO Kaggle do Estúdio de voz precisa estar ligado. Não troque de aba enquanto o Palco grava.`)) return;
+  $("#dProd").close();
+  for (const [i, ep] of lista.entries()) {
+    if (lista.length > 1) prodSinal({etapa: "info", texto: `📺 Episódio ${i + 1} de ${lista.length}: ${ep.titulo}`});
+    await produzirRoteiro(ep, true);
+    if (!PROD.feito.pronto) { prodSinal({etapa: "erro", texto: `⚠ Parei no episódio “${ep.titulo}”. Os anteriores estão no Editor.`}); break; }
+    const f = lerJ("central-roteiros-feitos", {}); f[ep.titulo] = Date.now(); gravaJ("central-roteiros-feitos", f);
+  } };
+$("#verProd").addEventListener("click", carregarSeries); $("#prod").addEventListener("click", carregarSeries);
 
 /* a Central abre o Palco, injeta palco-gravar.js e manda gravar a cena com as falas */
 function abaPalco(){ const ks = Object.keys(ABAS).filter(k => !ABAS[k].arq && k != "palcoanim" && k != "reuniao");
@@ -959,7 +982,7 @@ async function produzirRoteiro(r, jaConfirmou){
   if (frames.escrita) { try { frames.escrita.contentWindow.postMessage({roteiroNovo: r, soSalvar: true}, location.origin); } catch (e) {} }
   else { try { const D = lerJ("kurogane:data", {}); D.notas = D.notas || []; if (!D.notas.some(n => n.pasta == "roteiros" && n.titulo == nota.titulo && n.html == html)) { D.notas.push({id: nota.id, titulo: nota.titulo, html, pasta: "roteiros", criado: Date.now(), editado: Date.now()}); gravaJ("kurogane:data", D); } } catch (e) {} }
   if (!window.TamakiProducao) return prodSinal({etapa: "erro", texto: "⚠ A linha de produção (producao.js) não carregou. Toque no ⟳ do navegador e tente de novo."});
-  TamakiProducao.produzir(nota, t => aviso(t));
+  await TamakiProducao.produzir(nota, t => aviso(t));
 }
 if (window.TamakiOrganizador) TamakiOrganizador.iniciar({aviso: t => aviso(t)}); // a Biblioteca se arruma sozinha, mesmo com a aba fechada
 const salvo = localStorage.getItem("central_aba");

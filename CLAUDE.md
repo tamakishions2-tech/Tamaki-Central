@@ -87,3 +87,7 @@ Ajuste fino do close, se precisar: `closeAjuste:{s,x,y}` no montar (padrão s 1.
 - **Virada/payoff nos últimos 10–20%:** entrega exatamente o que o gancho prometeu.
 - **Final (2–4 s, em close):** um pedido só e ligado ao vídeo ("segue pra ver a vingança do Bulba"), sempre depois do payoff. A última frase deve poder emendar na primeira (loop). Só prometa parte 2 se ela vai existir.
 - 20–40 s no total (~2,5 palavras por segundo → 50–100 palavras).
+
+### Séries de roteiros (`roteiros/`)
+Para uma série, salve `roteiros/<nome>.json` = `{"serie", "episodios":[{titulo, texto, pasta, video, final, redes}]}` e acrescente `{arquivo, nome}` em `roteiros/indice.json` (a mais nova por último). Aparece em ⋮ › 🎬 Produção › Roteiros prontos, com 🎬 por episódio e 🎬 Todos (um depois do outro na mesma linha do tempo, para ele cortar depois).
+Tom das séries de gameplay: **diário em call com os amigos** — a Tamaki conta o que aconteceu ("Gente, …"), título "Diário da Tamaki #N · …", gancho e chamada em `[close]`, e a chamada final aponta para o próximo episódio.
