@@ -901,11 +901,16 @@ $("#verProd").onclick = () => { fecharMenu(); prodTela(); $("#dProd").showModal(
 $("#prodFechar").onclick = () => $("#dProd").close();
 $("#prodColar").onclick = async () => { try { $("#prodCola").value = await navigator.clipboard.readText(); } catch (e) { aviso("Toque e segure no campo para colar."); } };
 $("#prodCopiar").onclick = async () => { try { await navigator.clipboard.writeText(PROD.log.join("\n")); aviso("Registro copiado: cole no chat do Claude."); } catch (e) {} };
-$("#prodIr").onclick = () => { const t = $("#prodCola").value.trim(); if (!t) return aviso("Cole o link ou o roteiro primeiro.");
+$("#prodIr").onclick = async () => { const t = $("#prodCola").value.trim(); if (!t) { $("#prodResumo").textContent = "⚠ A caixa está vazia: cole o link do Claude antes de tocar em Produzir."; return aviso("Cole o link ou o roteiro primeiro."); }
+  $("#prodResumo").textContent = "Lendo o roteiro…";
   let r = null; const m = t.match(/#roteiro=([A-Za-z0-9_\-+/=]+)/);
   if (m) r = lerRoteiro(m[1]); else { try { r = JSON.parse(t); } catch (e) { const ls = t.split("\n"); r = {titulo: ls[0].replace(/^título:\s*/i, "").trim(), texto: ls.slice(1).join("\n").trim()}; } }
-  if (!r || !r.texto) return aviso("Não achei o roteiro aí. Cole o link inteiro do Claude.");
-  $("#dProd").close(); $("#prodCola").value = ""; produzirRoteiro(r, true); };
+  if (!r || !r.texto) { $("#prodResumo").textContent = "⚠ Não achei o roteiro nesse texto. Copie o link inteiro de novo (ele é bem comprido)."; return; }
+  $("#dProd").close(); $("#prodCola").value = "";
+  try { await produzirRoteiro(r, true); } catch (e) { prodSinal({etapa: "erro", texto: "⚠ Erro na Central: " + (e.message || e)}); } };
+// qualquer erro escondido durante a produção aparece na faixa
+addEventListener("error", e => { if (PROD.log.length && !PROD.feito.pronto && !PROD.erro) prodSinal({etapa: "info", texto: "⚠ " + (e.message || "erro") }); });
+addEventListener("unhandledrejection", e => { if (PROD.log.length && !PROD.feito.pronto) prodSinal({etapa: "erro", texto: "⚠ " + ((e.reason && e.reason.message) || e.reason || "erro")}); });
 prodTela();
 
 /* a Central abre o Palco, injeta palco-gravar.js e manda gravar a cena com as falas */

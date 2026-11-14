@@ -129,15 +129,15 @@
         bc.postMessage(Object.assign({tipo: "gravar", para: pa.id, de: eu}, dados)); });
     } finally { bc.close(); }
   }
-  let rodando = false;
+  let rodando = false, rodandoDesde = 0;
   async function produzir(nota, aviso0) {
     const ETAPA = {"🔌": "voz", "🎙": "falas", "🎭": "palco", "🎞": "editor", "✓": "pronto"};
     const aviso = t => { (aviso0 || (() => {}))(t); const e = Object.keys(ETAPA).find(k => t.startsWith(k));
       sinal(e ? ETAPA[e] : /^(Parei|Estúdio de voz desligado|O motor|O roteiro está vazio|As \d+ falas|Já estou)/.test(t) ? "erro" : "info", t); };
     sinal("recebido", `📥 Roteiro “${nota.titulo || "Roteiro"}” recebido na Escrita`);
-    if (rodando) return aviso("Já estou produzindo um vídeo. Espere terminar.");
+    if (rodando && Date.now() - rodandoDesde < 600000) return aviso("Já estou produzindo um vídeo. Espere terminar (ou toque no ⟳ do navegador para recomeçar).");
     const linhas = linhasDe(nota.html); if (!linhas.length) return aviso("O roteiro está vazio: escreva uma fala por linha.");
-    rodando = true;
+    rodando = true; rodandoDesde = Date.now();
     try {
       aviso("🔌 Ligando no Estúdio de voz…");
       if (!(await ligar())) return aviso("Estúdio de voz desligado. Ligue o Kaggle e toque em 🎬 Produzir de novo.");
