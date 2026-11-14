@@ -17,7 +17,7 @@ window.__tamakiGravar = async function (d, sinal) {
   if (d.semBalao) cfg.bal.on = 0; cfg.guides = 0; hold = false;
   rec = {stop() {}, state: "recording", roteiro: true}; // o Palco esconde guias e marcações enquanto "grava"
   try {
-    const st = cv.captureStream(30), tipo = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find(m => MediaRecorder.isTypeSupported(m));
+    const st = cv.captureStream(30), tipo = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find(m => MediaRecorder.isTypeSupported(m));
     const r = new MediaRecorder(st, tipo ? {mimeType: tipo, videoBitsPerSecond: 4e6} : {}), pts = [], fim = new Promise(ok => r.onstop = ok);
     r.ondataavailable = e => { if (e.data.size) pts.push(e.data); };
     r.start(250); const t0 = performance.now();
@@ -28,9 +28,9 @@ window.__tamakiGravar = async function (d, sinal) {
       await espera(((d.pausas || [])[i] ?? .3) * 1000);
     }
     await espera(400); r.stop(); await fim; cap = "";
-    const dur = (performance.now() - t0) / 1000, blob = new Blob(pts, {type: "video/webm"});
+    const dur = (performance.now() - t0) / 1000, mime = (tipo || "video/webm").split(";")[0], blob = new Blob(pts, {type: mime});
     if (blob.size < 2000) throw new Error("a gravação da cena saiu vazia");
-    const it = {id: "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), origem: "palco", tipo: "video", nome: "Palco · " + (d.titulo || "Roteiro"), nomeManual: 1, pasta: d.pasta || null, texto: "", mime: "video/webm", tamanho: blob.size, criado: Date.now(), dur, blob};
+    const it = {id: "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), origem: "palco", tipo: "video", nome: "Palco · " + (d.titulo || "Roteiro"), nomeManual: 1, pasta: d.pasta || null, texto: "", mime, tamanho: blob.size, criado: Date.now(), dur, blob};
     await tx("readwrite", s => s.put(it));
     try { const b = new BroadcastChannel("tamaki-biblioteca"); b.postMessage({novo: it.id}); b.close(); } catch (e) {}
     return {id: it.id, dur, w: cv.width, h: cv.height};

@@ -2649,11 +2649,14 @@ async function montarLayoutPalco(d,falas,vm,pm){
   if(vm&&vm.type==='video'&&isFinite(vm.dur)&&vm.dur>.2){
     const [w,h]=srcSize(vm),xr=w===1152&&h===720,crop=xr?{l:.215,t:.1,r:.045,b:.1,rot:0,ratio:'free'}:{l:0,t:0,r:0,b:0,rot:0,ratio:'free'};
     const cw=w*(1-crop.l-crop.r),ch=h*(1-crop.t-crop.b),hJ=W*ch/cw,s=Math.min(1,LAY.jogoH/hJ),y=(H-LAY.jogoH/2-H/2)/H;
-    let cur=0;
-    blocos.forEach((b,bi)=>{if(b.cena!=null&&isFinite(b.cena))cur=Math.min(Math.max(0,+b.cena),vm.dur-.3);
-      let len=b.fim-ini(b),pri=true;const volta=bi>0&&blocos[bi-1].close&&!b.close;// saindo do close: um flash
-      for(let i=0;i<10&&len>.05;i++){const l=Math.min(len,vm.dur-cur);if(l<=.05){cur=0;continue;}
-        S.clips.push(newVisual(vm,{in:cur,out:cur+l,vol:0,fit:'contain',crop,fx:volta&&pri?'flash':'none',tf:{x:0,y,s,r:0},tr:{type:'none',dur:.3}}));cur+=l;len-=l;pri=false;}});
+    // o jogo entra como camada (não manda no relógio: quem manda é a voz) e cada cena tem a sua cópia do vídeo
+    // já parada no ponto certo, para não precisar procurar o trecho na hora que entra (era isso que travava)
+    let cur=0,mm=vm;
+    for(const [bi,b] of blocos.entries()){
+      if(b.cena!=null&&isFinite(b.cena)){const c=Math.min(Math.max(0,+b.cena),vm.dur-.3);if(Math.abs(c-cur)>.5||bi>0){if(bi>0)mm=await cloneMedia(vm);cur=c;try{mm.el.currentTime=c;}catch(_){}}}
+      let len=b.fim-ini(b);const volta=bi>0&&blocos[bi-1].close&&!b.close;// saindo do close: um flash
+      const l=Math.min(len,vm.dur-cur);if(l<=.05)continue;
+      S.ovs.push(newVisual(mm,{start:ini(b),in:cur,out:cur+l,vol:0,fit:'contain',crop,fx:volta?'flash':'none',tf:{x:0,y,s,r:0}}));cur+=l;}
     makeThumbs(vm);
   }
   // Palco: em cima no formato padrão; nas falas [close] ele ocupa a tela toda, perto do rosto da Tamaki
