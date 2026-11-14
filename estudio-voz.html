@@ -31,7 +31,7 @@ html,body{margin:0;height:100%;background:#120f24}
 &lt;html lang="pt-BR" data-tema="noite">
 &lt;head>
 &lt;meta charset="utf-8">
-&lt;meta name="tvz-versao" content="4.1">
+&lt;meta name="tvz-versao" content="4.2">
 &lt;meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 &lt;title>Estúdio de voz · Tamaki&lt;/title>
 &lt;link rel="preconnect" href="https://fonts.googleapis.com">
@@ -220,6 +220,7 @@ Tô até agora sem acreditar, sério mesmo. Gente, que dia!&lt;/textarea>
     &lt;div class="btns" id="todasAcoes" hidden>
       &lt;button class="btn" id="todasBib">📚 Todas para a Biblioteca&lt;/button>
       &lt;button class="btn" id="juntar">⬇ Juntar num áudio&lt;/button>
+      &lt;button class="btn perigo" id="apagarTodas">🗑 Apagar todas&lt;/button>
     &lt;/div>
     &lt;div id="lista">&lt;/div>
   &lt;/section>
@@ -822,6 +823,11 @@ async function mandarBib(f) {
   catch (e) { toast("Não salvei na Biblioteca: " + e.message); }
 }
 $("#todasBib").onclick = async () => { if (!confirm(`Mandar ${FALAS.length} falas para a Biblioteca?`)) return; for (const f of FALAS) await TamakiBib.salvar(f.atual, {origem: "voz", nome: f.nome, texto: f.texto}).catch(() => {}); toast(naCentral ? "Todas foram para a Biblioteca" : "Salvas, mas a Biblioteca só enxerga se a página estiver na Tamaki Central"); };
+$("#apagarTodas").onclick = async () => {
+  if (!FALAS.length || !confirm(`Apagar as ${FALAS.length} falas desta lista? O que você já mandou para a Biblioteca continua lá.`)) return;
+  for (const f of FALAS) { if (f.url) URL.revokeObjectURL(f.url); try { await FDB.tirar(f.id); } catch (e) {} }
+  FALAS = []; desenharLista(); toast("Falas apagadas");
+};
 $("#juntar").onclick = async () => { try { const partes = []; let sr = 24000; for (const f of FALAS) { const ab = await decodificar(f.atual); sr = ab.sampleRate; partes.push(mono(ab), new Float32Array(Math.round(sr * .4))); } const y = new Float32Array(partes.reduce((s, p) => s + p.length, 0)); let o = 0; for (const p of partes) { y.set(p, o); o += p.length; } baixar(wav(y, sr), "falas-tamaki.wav"); } catch (e) { toast("Não consegui juntar: " + e.message); } };
 
 /* ---------- emoções ---------- */
