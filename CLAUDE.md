@@ -41,3 +41,10 @@ um arquivo `.json` (pode ser grande) que ela aplica num commit só, mostrando an
 ## Biblioteca automática (`organizador.js`)
 Carregado pela Central e pela Biblioteca. Toda vez que algo entra no IndexedDB `tamaki-biblioteca` (aviso `{novo:id}` no BroadcastChannel do mesmo nome), ele dá nome claro aos genéricos, etiqueta emoções das falas, marca `#repetido` e põe na pasta do "vídeo em andamento".
 Configuração em localStorage `tamaki-bib-auto` (`ligado`, `pasta`, `desde`, `renomear`, `emocoes`, `repetidos`). Itens arrumados ganham `auto:1`; nome trocado à mão ganha `nomeManual:1`. Abas novas que guardarem na Biblioteca só precisam mandar `{novo:id}`.
+
+## Linha de produção (`producao.js`)
+Aba Escrita › nota em Roteiros da Tamaki › 🎬 Vídeo (ou ao salvar um roteiro novo/mudado, ela pergunta).
+Roteiro: uma fala por linha, `(emoção) texto`; linhas com `#` são anotação. Gera cada fala no Estúdio de voz (mesmo `tvz_codigo`/ntfy),
+guarda na Biblioteca na pasta do vídeo em andamento (ou cria uma com o título), e manda `{tipo:"montar"}` no BroadcastChannel `tamaki-editor`:
+o Editor (`montarRoteiro`) põe as falas em sequência, o gameplay da pasta por baixo (volume baixo, crop do XRecorder), título no começo e "Até a próxima!" no fim.
+A Central abre abas a pedido: `parent.postMessage({central:"abrir", aba:"editor", fica:true})` (`fica` carrega sem trocar de aba).

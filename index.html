@@ -839,6 +839,9 @@ $("#gitMandar").onclick = async () => { if (!PAC) return; if (!GIT.token) return
   b.disabled = false; b.textContent = "⬆ Mandar pro GitHub"; };
 
 aplicarLeitura();
+// abas da Central podem pedir para abrir outra (a linha de produção abre o Editor)
+addEventListener("message", e => { const d = e.data || {}; if (e.origin !== location.origin || d.central !== "abrir" || !ABAS[d.aba]) return;
+  if (d.fica) { if (!frames[d.aba]) srcDe(d.aba).then(s => frame(d.aba, s)); } else ir(d.aba); });
 if (window.TamakiOrganizador) TamakiOrganizador.iniciar({aviso: t => aviso(t)}); // a Biblioteca se arruma sozinha, mesmo com a aba fechada
 const salvo = localStorage.getItem("central_aba");
 ir(salvo || "universo");

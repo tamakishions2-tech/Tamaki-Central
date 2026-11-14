@@ -182,6 +182,7 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
     <button class="ic tk" id="fOuvir" aria-label="Ouvir com a voz da Tamaki" title="Ouvir o trecho selecionado">🔊<small>Ouvir</small></button>
     <button class="ic tk" id="fHumor" aria-label="Humor: escolher a emoção do trecho selecionado" title="Humor do trecho selecionado">🎭<small>Humor</small></button>
     <button class="ic tk" id="fAudio" aria-label="Gerar o áudio com os humores" title="Gerar o áudio com os humores">🎧<small>Áudio</small></button>
+    <button class="ic tk" id="fVideo" aria-label="Produzir o vídeo deste roteiro" title="Roteiro → voz → vídeo montado no Editor">🎬<small>Vídeo</small></button>
     <span class="sepv"></span>
     <select id="fTam" aria-label="Tamanho da letra"><option value="2">Pequeno</option><option value="3" selected>Normal</option><option value="5">Grande</option><option value="6">Título</option></select>
     <button class="ic" data-cmd="bold" aria-label="Negrito"><b>B</b></button>
@@ -255,6 +256,8 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 <input type="file" id="fWord" class="esc" multiple accept=".docx,.doc,.txt,.md,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,text/plain">
 <div id="toast" role="status" aria-live="polite"></div>
 
+<script src="../../organizador.js"></script>
+<script src="../../producao.js"></script>
 <script>
 (() => {
 "use strict";
@@ -423,12 +426,23 @@ function gravarNota(){ // salva a nota aberta na biblioteca
   return guardar();
 }
 const limpar = h => h.replace(/<(script|style)[\s\S]*?<\/\1>/gi, "").replace(/\son\w+="[^"]*"/gi, "").replace(/^(<br>|\s)+$/, "");
+// 🎬 linha de produção (producao.js): roteiro → falas no Estúdio de voz → Biblioteca → Editor montado
+let avisoProd = null;
+function avisoP(t){ const e = $("#toast"); e.textContent = t; e.classList.add("on"); clearTimeout(toast.t); clearTimeout(avisoProd);
+  if (!/…$/.test(t)) avisoProd = setTimeout(() => e.classList.remove("on"), 7000); }
+function produzirNota(n){ if (!window.TamakiProducao) return toast("A linha de produção não carregou. Recarregue a aba."); TamakiProducao.produzir({id: n.id, titulo: n.titulo, html: n.html}, avisoP); }
+$("#fVideo").onclick = () => { if (!atual) return; if (!gravarNota()) return toast("Escreva o roteiro primeiro.");
+  if (atual.pasta != "roteiros" && !confirm("Esta nota não está em Roteiros da Tamaki. Produzir o vídeo mesmo assim?")) return; produzirNota(Object.assign({}, atual)); };
 function fechar(salvar){
+  const prod = salvar && atual && atual.pasta == "roteiros" && window.TamakiProducao && !TamakiProducao.ocupado() ? Object.assign({}, atual, {titulo: $("#titulo").value.trim(), html: limpar($("#corpo").innerHTML)}) : null;
   const novaVazia = atual && atual.nova && !$("#titulo").value.trim() && !texto($("#corpo").innerHTML);
   if (salvar && gravarNota()) toast("Salvo em " + pastaDe(atual.pasta).nome);
   else if (salvar && novaVazia) toast("Nota vazia descartada");
   clearTimeout(rascunho); atual = null; descartar = false; $("#editor").classList.add("esc"); fecharPop();
   $("#busca").value = ""; tudo(); $("#notas").scrollTop = 0;
+  // salvou um roteiro novo ou mudado: oferece virar vídeo
+  if (prod && TamakiProducao.linhasDe(prod.html).length && !TamakiProducao.jaFeito(prod) && (localStorage.getItem("tamaki-producao-perguntar") !== "nao"))
+    setTimeout(() => { if (confirm(`🎬 Produzir o vídeo de “${prod.titulo || "Roteiro"}” agora?\n\nGera as falas no Estúdio de voz (Kaggle ligado), guarda na pasta do vídeo e monta no Editor.`)) produzirNota(prod); }, 300);
 }
 // "Salvar" e a seta voltam direto para a biblioteca
 $("#salvar").onclick = () => { if (history.state && history.state.nota) history.back(); else fechar(true); };

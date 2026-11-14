@@ -2579,6 +2579,31 @@ addEventListener('storage',e=>{if(e.key==='tamaki-caixa-aviso')toast('📥 Chego
   history.replaceState(null,'',location.pathname);toast('Trazendo da Biblioteca…');
   toast(msgBib(await addFromBib(ids,q.get('modo')||'fim')));
 })();
+/* linha de produção (producao.js): falas em sequência, gameplay por baixo, título e final */
+async function montarRoteiro(d){
+  if(exporting)return {erro:'o Editor está exportando agora'};
+  while(bibBusy)await new Promise(r=>setTimeout(r,150));
+  bibBusy=true;
+  try{
+    const arq=r=>new File([r.blob],(r.nome||'gravacao')+'.'+((r.mime||'').split('/')[1]||'bin'),{type:r.mime});
+    const falas=[];for(const id of d.falas||[]){const r=await TamakiBib.ler(id).catch(()=>null);if(!r||!r.blob)continue;const f=arq(r),m=await loadMedia(f);falas.push({m,f});}
+    if(!falas.length)return {erro:'as falas não chegaram na Biblioteca'};
+    let vm=null;if(d.video){const r=await TamakiBib.ler(d.video).catch(()=>null);if(r&&r.blob)vm=await loadMedia(arq(r)).catch(()=>null);}
+    commit();if(S.ratio!=='9:16'){try{applyRatio('9:16');}catch(_){}}
+    const t0=videoEnd(),gap=.35;let t=t0+(d.titulo?1.4:.3);
+    for(const x of falas){S.audios.push(newAudio(x.m,{start:t}));makePeaks(x.m,x.f);t+=(isFinite(x.m.dur)?x.m.dur:2)+gap;}
+    const fim=t+(d.final?2.4:.6);
+    if(vm&&vm.type==='video'&&isFinite(vm.dur)&&vm.dur>.2){
+      const [w,h]=srcSize(vm),xr=w===1152&&h===720,crop=xr?{l:.215,t:.1,r:.045,b:.1,rot:0,ratio:'free'}:{l:0,t:0,r:0,b:0,rot:0,ratio:'free'};
+      let resto=fim-t0;for(let i=0;i<30&&resto>.05;i++){const len=Math.min(vm.dur,resto);S.clips.push(newVisual(vm,{in:0,out:len,vol:.15,fit:'cover',crop,tr:{type:'none',dur:.5}}));resto-=len;}
+      makeThumbs(vm);
+    }
+    if(d.titulo)S.texts.push(newText({start:t0+.1,dur:2.8,text:d.titulo,size:78,stroke:6,y:-.32,anim:{in:'zoomIn',inD:.45,out:'fade',outD:.4,combo:'none'}}));
+    if(d.final)S.texts.push(newText({start:fim-2.4,dur:2.4,text:d.final,size:64,stroke:5,y:0,anim:{in:'bounce',inD:.5,out:'fade',outD:.4,combo:'none'}}));
+    select(null);seek(t0);renderTL();renderTools();needDraw=true;updateTime();
+    return {n:falas.length,v:!!vm};
+  }finally{bibBusy=false;}
+}
 /* direto, com o Editor já aberto em outra aba da Central */
 const ED_ID='ed'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 try{
@@ -2586,6 +2611,7 @@ try{
   bc.onmessage=async e=>{
     const d=e.data||{};
     if(d.tipo==='ping')bc.postMessage({tipo:'pong',id:ED_ID,de:d.de,itens:S.clips.length+S.ovs.length+S.texts.length+S.audios.length,exportando:!!exporting});
+    else if(d.tipo==='montar'&&d.para===ED_ID){toast('🎬 Montando o vídeo do roteiro…');let r;try{r=await montarRoteiro(d);}catch(e){r={erro:e.message};}bc.postMessage(Object.assign({tipo:'montado',para:d.de},r));if(!r.erro)toast(`🎬 Vídeo montado: ${r.n} falas${r.v?' + gameplay':''}`);}
     else if(d.tipo==='add'&&d.para===ED_ID){toast('Recebendo da Biblioteca…');const n=await addFromBib(d.ids||[],d.modo);toast(msgBib(n));bc.postMessage({tipo:'ok',para:d.de,n});}
   };
 }catch(_){}
