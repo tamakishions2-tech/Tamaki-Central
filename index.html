@@ -264,7 +264,7 @@ dialog textarea{width:100%;min-height:40vh;background:#0d0d0d;color:var(--tx);bo
   <div class="row" style="margin-top:10px"><button class="bt pri" id="aplicar">Aplicar no Universo</button><button class="bt" id="fechar">Cancelar</button></div>
 </dialog>
 
-<script>/* sempre a versão mais nova destes arquivos */document.write('<script src="organizador.js?v='+Date.now().toString(36)+'"><\/script>');</script>
+<script>/* sempre a versão mais nova destes arquivos */document.write('<script src="organizador.js?v='+Date.now().toString(36)+'"><\/script>'+'<script src="producao.js?v='+Date.now().toString(36)+'"><\/script>');</script>
 <script>
 // Se a Central abrir dentro dela mesma, o index.html dela foi parar no repositório de outro projeto.
 // Dentro do site Tamaki (window.tamakiHub) ela pode abrir normalmente.
@@ -920,15 +920,12 @@ async function produzirRoteiro(r, jaConfirmou){
     const c = TamakiOrganizador.cfg(); c.ligado = true; TamakiOrganizador.salvaCfg(c); if (c.pasta != p.id) TamakiOrganizador.usarPasta(p.id); }
   prodSinal({etapa: "inicio"}); prodSinal({etapa: "recebido", texto: `📥 Roteiro “${r.titulo}” recebido · ${String(r.texto).split("\n").filter(l => l.trim() && !l.trim().startsWith("#")).length} falas`});
   if (await cGet("o-escrita")) prodSinal({etapa: "info", texto: "⚠ A aba Escrita está usando um código guardado só neste aparelho. Se nada acontecer: segure a aba Escrita › ↺ Voltar ao original."});
-  prodSinal({etapa: "info", texto: "Abrindo a aba Escrita…"});
-  await ir("escrita"); await prontos.escrita; await new Promise(ok => setTimeout(ok, 800));
-  let chegou = false; const bc = new BroadcastChannel("tamaki-producao"); bc.addEventListener("message", e => { if ((e.data || {}).etapa == "escrita") chegou = true; });
-  for (let vez = 0; vez < 2 && !chegou; vez++) {
-    if (vez) { prodSinal({etapa: "info", texto: "A Escrita estava numa versão velha. Recarregando ela…"}); esqueceFrame("escrita"); await frame("escrita", await srcDe("escrita", Date.now().toString(36))); frames.escrita.classList.toggle("hide", atual != "escrita"); await new Promise(ok => setTimeout(ok, 1500)); }
-    for (let i = 0; i < 6 && !chegou; i++) { frames.escrita.contentWindow.postMessage({roteiroNovo: r}, location.origin); await new Promise(ok => setTimeout(ok, 1500)); }
-  }
-  bc.close();
-  if (!chegou) prodSinal({etapa: "erro", texto: "⚠ A aba Escrita não respondeu. Recarregue a Central (⋮ › ⟳) e tente de novo em ⋮ › 🎬 Produção."});
+  // guarda o roteiro na Escrita (sem esperar por ela) e a própria Central produz
+  const html = String(r.texto || "").split("\n").map(l => "<div>" + esc(l) + "</div>").join(""), nota = {id: "c" + Date.now().toString(36), titulo: String(r.titulo || "Roteiro"), html, video: r.video || null};
+  if (frames.escrita) { try { frames.escrita.contentWindow.postMessage({roteiroNovo: r, soSalvar: true}, location.origin); } catch (e) {} }
+  else { try { const D = lerJ("kurogane:data", {}); D.notas = D.notas || []; if (!D.notas.some(n => n.pasta == "roteiros" && n.titulo == nota.titulo && n.html == html)) { D.notas.push({id: nota.id, titulo: nota.titulo, html, pasta: "roteiros", criado: Date.now(), editado: Date.now()}); gravaJ("kurogane:data", D); } } catch (e) {} }
+  if (!window.TamakiProducao) return prodSinal({etapa: "erro", texto: "⚠ A linha de produção (producao.js) não carregou. Toque no ⟳ do navegador e tente de novo."});
+  TamakiProducao.produzir(nota, t => aviso(t));
 }
 if (window.TamakiOrganizador) TamakiOrganizador.iniciar({aviso: t => aviso(t)}); // a Biblioteca se arruma sozinha, mesmo com a aba fechada
 const salvo = localStorage.getItem("central_aba");

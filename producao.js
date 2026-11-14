@@ -90,8 +90,9 @@
   }
 
   /* ---------- Editor (aba da Central) ---------- */
+  const abrirAba = (aba, fica) => { try { (window.parent !== window ? window.parent : window).postMessage({central: "abrir", aba, fica}, location.origin); } catch (e) {} };
   async function editor(dados, aviso) {
-    try { if (window.parent !== window) window.parent.postMessage({central: "abrir", aba: "editor", fica: true}, location.origin); } catch (e) {}
+    abrirAba("editor", true);
     const eu = "pr" + Date.now().toString(36), bc = new BroadcastChannel("tamaki-editor");
     try {
       let ed = null; bc.onmessage = e => { const d = e.data || {}; if (d.tipo === "pong" && d.de === eu) ed = d; };
@@ -137,7 +138,7 @@
       const r = await editor({titulo: nota.titulo || "", final: "Até a próxima!", falas: ids, pausas: linhas.map(l => (l.tom || {}).pausa ?? null), cenas: linhas.map(l => l.cena), video: vids[0] ? vids[0].id : (nota.video || null)}, aviso);
       const extra = semEmo.size ? ` · sem emoção treinada: ${[...semEmo].join(", ")}` : "";
       if (r.erro) return aviso(`As ${ids.length} falas estão na pasta “${pasta.nome}”, mas ${r.erro}.${extra}`);
-      try { if (window.parent !== window) window.parent.postMessage({central: "abrir", aba: "editor"}, location.origin); } catch (e) {}
+      abrirAba("editor", false);
       aviso(`✓ Vídeo montado no Editor: ${ids.length} falas${vids[0] || nota.video ? " + gameplay" : " (sem gameplay na pasta)"}, título e final.${extra}`);
       gravaJ("tamaki-producao-feito", Object.assign(lerJ("tamaki-producao-feito", {}), {[nota.id]: assinatura(nota)}));
     } catch (e) { aviso("Parei: " + e.message); }

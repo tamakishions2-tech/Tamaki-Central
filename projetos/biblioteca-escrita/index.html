@@ -436,12 +436,12 @@ $("#fVideo").onclick = () => { if (!atual) return; if (!gravarNota()) return toa
 let roteiroVisto = "";
 addEventListener("message", e => { const d = e.data || {}; if (e.origin !== location.origin || !d.roteiroNovo) return;
   const chave = JSON.stringify(d.roteiroNovo); if (chave === roteiroVisto) return; roteiroVisto = chave; // a Central reenvia até eu responder
-  if (!window.TamakiProducao) { try { const c = new BroadcastChannel("tamaki-producao"); c.postMessage({etapa: "erro", texto: "⚠ A Escrita não carregou a linha de produção (producao.js). Recarregue a Central.", quando: Date.now()}); c.close(); } catch (er) {} return; }
+  if (!window.TamakiProducao && !d.soSalvar) { try { const c = new BroadcastChannel("tamaki-producao"); c.postMessage({etapa: "erro", texto: "⚠ A Escrita não carregou a linha de produção (producao.js). Recarregue a Central.", quando: Date.now()}); c.close(); } catch (er) {} return; }
   try { const c = new BroadcastChannel("tamaki-producao"); c.postMessage({etapa: "escrita", texto: "✍️ A Escrita recebeu o roteiro", quando: Date.now()}); c.close(); } catch (er) {}
   const r = d.roteiroNovo, html = String(r.texto || "").split("\n").map(l => "<div>" + esc(l) + "</div>").join("");
   let n = N.find(x => x.pasta == "roteiros" && x.titulo == r.titulo && x.html == html);
   if (!n) { n = {id: uid(), pasta: "roteiros", titulo: String(r.titulo || "Roteiro"), html, criado: Date.now(), editado: Date.now(), fav: false, papel: "", ordem: N.length}; N.push(n); guardar(); tudo(); }
-  toast("Roteiro “" + n.titulo + "” salvo em Roteiros da Tamaki"); TamakiProducao.produzir({id: n.id, titulo: n.titulo, html: n.html, video: r.video || null}, avisoP); });
+  toast("Roteiro “" + n.titulo + "” salvo em Roteiros da Tamaki"); if (d.soSalvar) return; TamakiProducao.produzir({id: n.id, titulo: n.titulo, html: n.html, video: r.video || null}, avisoP); });
 function fechar(salvar){
   const prod = salvar && atual && atual.pasta == "roteiros" && window.TamakiProducao && !TamakiProducao.ocupado() ? Object.assign({}, atual, {titulo: $("#titulo").value.trim(), html: limpar($("#corpo").innerHTML)}) : null;
   const novaVazia = atual && atual.nova && !$("#titulo").value.trim() && !texto($("#corpo").innerHTML);
