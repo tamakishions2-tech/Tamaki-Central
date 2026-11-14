@@ -181,7 +181,7 @@ function frameDe(k){
   const f=document.createElement('iframe');f.title=a.n;f.allow='microphone; autoplay; clipboard-write; fullscreen';
   frames[k]=f;p.appendChild(f);
   prontos[k]=new Promise(ok=>{f.addEventListener('load',()=>{vigiar(a.n.replace(/^\S+\s/,''),f);ok(f);},{once:true});});
-  f.src=SITE+a.url;
+  f.src=SITE+a.url+(a.url.includes('?')?'&':'?')+'v='+Date.now().toString(36); // sempre a versão nova
   return prontos[k];
 }
 
