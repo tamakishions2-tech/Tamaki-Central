@@ -6,7 +6,7 @@
 <title>Editor · Tamaki Central</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Bebas+Neue&family=Chakra+Petch:wght@400;500;600;700&family=Pacifico&family=Permanent+Marker&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Press+Start+2P&family=Bangers&family=Bebas+Neue&family=Chakra+Petch:wght@400;500;600;700&family=Pacifico&family=Permanent+Marker&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#ECE9E1;--panel:#FAF8F3;--panel2:#DEDACE;--line:#CBC5B6;--ink:#1B1912;--mute:#6B6556;
@@ -462,7 +462,7 @@ const RATIOS={'9:16':[9,16],'16:9':[16,9],'1:1':[1,1],'4:5':[4,5],'3:4':[3,4],'4
 const CROP_R=[['free','Personalizar',null],['9:16','9:16',9/16],['16:9','16:9',16/9],['1:1','1:1',1],['4:3','4:3',4/3],['2:1','2:1',2],['5.8in','5.8"',1125/2436],['2.35:1','2.35:1',2.35],['3:4','3:4',3/4],['1.85:1','1.85:1',1.85]];
 const ADJ_P=[['b','Brilho',-100,100],['c','Contraste',-100,100],['s','Saturação',-100,100],['e','Iluminação',-100,100],['t','Temperatura',-100,100],['h','Matiz',-100,100],['fd','Desvanecer',0,100],['bl','Desfoque',0,100],['v','Vinheta',0,100],['gr','Granulado',0,100]];
 const ADJ_SMART={auto:['Ajuste automático',{b:6,c:12,s:15,e:4}],portrait:['Retrato',{b:8,c:-6,s:6,t:10}],land:['Paisagem',{c:15,s:28,t:-6}],night:['Noite',{e:30,c:-8,s:-5}],vivid:['Vívido',{c:20,s:40}]};
-const FONTS=['Chakra Petch','Bangers','Anton','Bebas Neue','Pacifico','Permanent Marker','Roboto Slab'];
+const FONTS=['Chakra Petch','Press Start 2P','Bangers','Anton','Bebas Neue','Pacifico','Permanent Marker','Roboto Slab'];
 const COLORS=['#FFFFFF','#000000','#F2B705','#E5533D','#FF7BB0','#B05CF0','#4A7BF7','#3E9C93','#7CD957'];
 const CHROMA_C=['#00FF00','#00B140','#0047FF','#FFFFFF','#000000'];
 const TPL={
@@ -2594,6 +2594,8 @@ async function montarRoteiro(d){
     const falas=[];for(const id of d.falas||[]){const r=await TamakiBib.ler(id).catch(()=>null);if(!r||!r.blob)continue;const f=arq(r),m=await loadMedia(f);falas.push({m,f,i:(d.falas||[]).indexOf(id)});}
     if(!falas.length)return {erro:'as falas não chegaram na Biblioteca'};
     let vm=null;if(d.video){const r=await TamakiBib.ler(d.video).catch(()=>null);if(r&&r.blob)vm=await loadMedia(arq(r)).catch(()=>null);}
+    let pm=null;if(d.palco){const r=await TamakiBib.ler(d.palco).catch(()=>null);if(r&&r.blob)pm=await loadMedia(arq(r)).catch(()=>null);}
+    if(d.layout==='palco')return await montarLayoutPalco(d,falas,vm,pm);
     commit();if(S.ratio!=='9:16'){try{applyRatio('9:16');}catch(_){}}
     const t0=videoEnd(),gap=.3;let t=t0+.2;const blocos=[];// cada fala: {ini, fim, cena, k}
     falas.forEach((x,ix)=>{const k=x.i??ix,dur=isFinite(x.m.dur)?x.m.dur:2,p=(d.pausas||[])[k];
@@ -2626,6 +2628,47 @@ async function montarRoteiro(d){
     select(null);seek(t0);renderTL();renderTools();needDraw=true;updateTime();
     return {n:falas.length,v:!!vm};
   }finally{bibBusy=false;}
+}
+/* layout do Tama (9:16): Palco em cima · caixa de diálogo estilo jogo no meio · tela do jogo inteira embaixo.
+   Som: só a voz da Tamaki (o áudio da gravação do jogo é o vídeo que ele assiste de fundo, vai mudo). */
+const LAY={palcoH:520,caixaY:530,caixaH:250,jogoH:480};
+function caixaDialogo(w,h){return new Promise(ok=>{const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');
+  g.fillStyle='#000';g.fillRect(0,0,w,h);g.strokeStyle='#fff';g.lineWidth=4;g.strokeRect(14,14,w-28,h-28);g.lineWidth=2;g.strokeRect(22,22,w-44,h-44);
+  c.toBlob(b=>ok(new File([b],'caixa-dialogo.png',{type:'image/png'})),'image/png');});}
+async function montarLayoutPalco(d,falas,vm,pm){
+  commit();if(S.ratio!=='9:16'){try{applyRatio('9:16');}catch(_){}}
+  try{await document.fonts.load('26px "Press Start 2P"');}catch(_){}
+  const W=720,H=1280,t0=videoEnd(),blocos=[];let t=t0+.2;
+  falas.forEach((x,ix)=>{const k=x.i??ix,dur=isFinite(x.m.dur)?x.m.dur:2,p=(d.pausasFinais||d.pausas||[])[k];
+    S.audios.push(newAudio(x.m,{start:t}));makePeaks(x.m,x.f);const pausa=p!=null&&isFinite(p)?+p:.3;
+    blocos.push({ini:t,fala:dur,fim:t+dur+pausa,cena:(d.cenas||[])[k],k});t+=dur+pausa;});
+  const fim=t+.4;if(blocos.length)blocos[blocos.length-1].fim=fim;
+  S.bg={type:'color',color:'#000000'};
+  // embaixo: o jogo inteiro (crop só das bordas do XRecorder), sem zoom e sem som
+  if(vm&&vm.type==='video'&&isFinite(vm.dur)&&vm.dur>.2){
+    const [w,h]=srcSize(vm),xr=w===1152&&h===720,crop=xr?{l:.215,t:.1,r:.045,b:.1,rot:0,ratio:'free'}:{l:0,t:0,r:0,b:0,rot:0,ratio:'free'};
+    const cw=w*(1-crop.l-crop.r),ch=h*(1-crop.t-crop.b),hJ=W*ch/cw,s=Math.min(1,LAY.jogoH/hJ),y=(H-LAY.jogoH/2-H/2)/H;
+    let cur=0;
+    blocos.forEach((b,bi)=>{if(b.cena!=null&&isFinite(b.cena))cur=Math.min(Math.max(0,+b.cena),vm.dur-.3);
+      let len=bi===0?b.fim-t0:b.fim-b.ini;
+      for(let i=0;i<10&&len>.05;i++){const l=Math.min(len,vm.dur-cur);if(l<=.05){cur=0;continue;}
+        S.clips.push(newVisual(vm,{in:cur,out:cur+l,vol:0,fit:'contain',crop,tf:{x:0,y,s:s*W/W,r:0},tr:{type:'none',dur:.3}}));cur+=l;len-=l;}});
+    makeThumbs(vm);
+  }
+  // em cima: a cena do Palco, ocupando a largura (sem som: a voz já está nas falas)
+  if(pm){const [pw,ph]=srcSize(pm),hC=W*(ph||720)/(pw||1280),alto=hC>LAY.palcoH,f=LAY.palcoH/hC;
+    // cena alta (9:16): mostra a faixa do meio; cena larga (16:9): aumenta até encher a altura de cima
+    const o=newVisual(pm,{start:t0,in:0,out:Math.min(pm.dur||fim-t0,d.palcoDur||fim-t0,fim-t0),vol:0,fit:'contain',tf:{x:0,y:(LAY.palcoH/2-H/2)/H,s:alto?1:f,r:0}});
+    if(alto)o.crop={l:0,t:(1-f)/2,r:0,b:(1-f)/2,rot:0,ratio:'free'};
+    S.ovs.push(o);if(pm.type==='video')makeThumbs(pm);}
+  // no meio: a caixa de diálogo, e o texto de cada fala sendo digitado dentro dela
+  try{const cm=await loadMedia(await caixaDialogo(W,LAY.caixaH),'image');S.ovs.push(newVisual(cm,{start:t0,in:0,out:fim-t0,fit:'contain',tf:{x:0,y:(LAY.caixaY+LAY.caixaH/2-H/2)/H,s:1,r:0}}));}catch(_){}
+  const yT=(LAY.caixaY+LAY.caixaH/2-H/2)/H;
+  blocos.forEach(b=>{const txt=String(((d.legendas||[])[b.k])||'').trim();if(!txt)return;
+    S.texts.push(newText({start:b.ini,dur:Math.max(.6,b.fim-b.ini),text:txt,font:'Press Start 2P',size:25,color:'#FFFFFF',stroke:0,bold:false,ls:0,y:yT,anim:{in:'type',inD:Math.max(.4,b.fala*.85),out:'none',outD:.1,combo:'none'}}));});
+  if(d.titulo)S.texts.push(newText({start:t0,dur:Math.min(3,(blocos[0]||{fim:3}).fim-t0),text:d.titulo,size:44,stroke:6,y:(LAY.palcoH-40-H/2)/H,anim:{in:'slideD',inD:.3,out:'fade',outD:.3,combo:'none'}}));
+  select(null);seek(t0);renderTL();renderTools();needDraw=true;updateTime();
+  return {n:falas.length,v:!!vm,p:!!pm};
 }
 /* direto, com o Editor já aberto em outra aba da Central */
 const ED_ID='ed'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);

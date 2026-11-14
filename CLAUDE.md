@@ -68,3 +68,8 @@ Ao escrever o roteiro (você é o editor e criador dos Shorts dela):
 - 15–40 s, 6–10 falas curtas (até ~12 palavras), cada uma com a cena exata em que aquilo acontece no vídeo; uma ideia por fala.
 - Arco: gancho → contexto rápido → escalada → virada → reação; a última fala puxa de volta pro gancho (loop).
 - Ênfase em MAIÚSCULAS em 1 palavra por fala no máximo. Link `#roteiro=` em base64url de `{titulo, texto, pasta, video, final}`.
+
+### Layout do Tama (`montarLayoutPalco`, padrão da linha de produção)
+9:16 em 720×1280: em cima (0–520) a cena gravada do Palco (a Tamaki falando, sem o balão do Palco); no meio (530–780) caixa de diálogo preta com borda branca dupla e o texto da fala digitando em Press Start 2P; embaixo (800–1280) a tela do jogo inteira (crop só das bordas do XRecorder), sem zoom.
+Som: só as falas. O áudio da gravação do jogo é mudo (é um vídeo que ele assiste de fundo). O Palco grava pelo canal `tamaki-palco` (`{tipo:"gravar", ids, textos, pausas, ini}` → `{tipo:"gravado", id, dur}`) e precisa estar na tela enquanto grava.
+Futuro: poses/expressões da Tamaki por emoção no Palco (por enquanto só parada/falando/falando2).

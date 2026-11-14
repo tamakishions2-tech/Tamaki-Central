@@ -109,9 +109,26 @@
 
   // sinais para a Central mostrar o andamento (barra 🎬 no topo)
   function sinal(etapa, texto, extra) { try { const c = new BroadcastChannel("tamaki-producao"); c.postMessage(Object.assign({etapa, texto, quando: Date.now()}, extra || {})); c.close(); } catch (e) {} }
+  /* ---------- Palco (aba da Central): toca as falas e grava a cena de cima ---------- */
+  async function palco(dados, aviso) {
+    abrirAba("palco", false); // o Palco precisa estar na tela para desenhar
+    const eu = "pr" + Date.now().toString(36), bc = new BroadcastChannel("tamaki-palco");
+    try {
+      let pa = null; bc.onmessage = e => { const d = e.data || {}; if (d.tipo === "pong" && d.de === eu) pa = d; };
+      for (let i = 0; i < 40 && !pa; i++) { bc.postMessage({tipo: "ping", de: eu}); await espera(500); }
+      if (!pa) return {erro: "o Palco não abriu"};
+      if (pa.ocupado) return {erro: "o Palco já está gravando"};
+      await espera(1200); // a cena termina de carregar os PNGs
+      aviso("🎭 Palco gravando a cena da Tamaki…");
+      const total = (dados.duracao || 60) * 1000 + 90000;
+      return await new Promise(ok => { const t = setTimeout(() => ok({erro: "o Palco não terminou a gravação"}), total);
+        bc.onmessage = e => { const d = e.data || {}; if (d.tipo === "gravado" && d.para === eu) { clearTimeout(t); ok(d); } };
+        bc.postMessage(Object.assign({tipo: "gravar", para: pa.id, de: eu}, dados)); });
+    } finally { bc.close(); }
+  }
   let rodando = false;
   async function produzir(nota, aviso0) {
-    const ETAPA = {"🔌": "voz", "🎙": "falas", "🎞": "editor", "✓": "pronto"};
+    const ETAPA = {"🔌": "voz", "🎙": "falas", "🎭": "palco", "🎞": "editor", "✓": "pronto"};
     const aviso = t => { (aviso0 || (() => {}))(t); const e = Object.keys(ETAPA).find(k => t.startsWith(k));
       sinal(e ? ETAPA[e] : /^(Parei|Estúdio de voz desligado|O motor|O roteiro está vazio|As \d+ falas|Já estou)/.test(t) ? "erro" : "info", t); };
     sinal("recebido", `📥 Roteiro “${nota.titulo || "Roteiro"}” recebido na Escrita`);
@@ -135,7 +152,13 @@
       }
       // gameplay: o vídeo mais novo da pasta (de preferência do Emulador)
       const todos = await bib("readonly", s => s.getAll()), vids = todos.filter(it => it.pasta === pasta.id && it.tipo === "video" && it.blob).sort((a, b) => (b.origem === "emulador") - (a.origem === "emulador") || b.criado - a.criado);
-      const r = await editor({titulo: nota.titulo || "", final: nota.final || "", legendas: linhas.map(l => l.texto), emos: linhas.map(l => l.emo), tons: linhas.map(l => l.tom || {}), falas: ids, pausas: linhas.map(l => (l.tom || {}).pausa ?? null), cenas: linhas.map(l => l.cena), video: nota.video && todos.some(it => it.id === nota.video) ? nota.video : vids[0] ? vids[0].id : null}, aviso);
+      // Palco: a Tamaki falando em cima (o texto vai na caixa do Editor, então o balão do Palco fica desligado)
+      const pausas = linhas.map(l => (l.tom || {}).pausa ?? .3);
+      let durTot = 0; for (const id of ids) { const it = await bib("readonly", s => s.get(id)); try { const c = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, 44100); durTot += (await c.decodeAudioData(await it.blob.arrayBuffer())).duration; } catch (e) { durTot += 4; } }
+      sinal("palco", "🎭 Abrindo o Palco…");
+      const pr = await palco({ids, textos: linhas.map(l => l.texto), pausas, ini: .2, semBalao: true, titulo: nota.titulo, pasta: pasta.id, duracao: durTot + pausas.reduce((a, b) => a + b, 0)}, aviso);
+      if (pr.erro) aviso(`⚠ Sem a cena do Palco (${pr.erro}). Monto só com o jogo.`);
+      const r = await editor({palco: pr.id || null, palcoDur: pr.dur || null, layout: "palco", pausasFinais: pausas, titulo: nota.titulo || "", final: nota.final || "", legendas: linhas.map(l => l.texto), emos: linhas.map(l => l.emo), tons: linhas.map(l => l.tom || {}), falas: ids, pausas: linhas.map(l => (l.tom || {}).pausa ?? null), cenas: linhas.map(l => l.cena), video: nota.video && todos.some(it => it.id === nota.video) ? nota.video : vids[0] ? vids[0].id : null}, aviso);
       const extra = semEmo.size ? ` · sem emoção treinada: ${[...semEmo].join(", ")}` : "";
       if (r.erro) return aviso(`As ${ids.length} falas estão na pasta “${pasta.nome}”, mas ${r.erro}.${extra}`);
       abrirAba("editor", false);

@@ -943,6 +943,38 @@ async function importar(f){
   try { conectar(); } catch (e) {}
 })();
 })();
+
+/* ---------- linha de produção: o Palco toca as falas do roteiro e grava a cena (producao.js) ---------- */
+const bibAbrir = () => new Promise((ok, no) => { const r = indexedDB.open("tamaki-biblioteca", 1); r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains("itens")) r.result.createObjectStore("itens", {keyPath: "id"}); }; r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+async function bibTx(modo, fn){ const db = await bibAbrir(); try { return await new Promise((ok, no) => { const t = db.transaction("itens", modo), q = fn(t.objectStore("itens")); t.oncomplete = () => ok(q && q.result); t.onerror = () => no(t.error); }); } finally { db.close(); } }
+let gravandoRoteiro = false;
+async function gravarRoteiro(d){
+  if (rec || gravandoRoteiro) throw new Error("o Palco já está gravando");
+  gravandoRoteiro = true; const B = cfg.bal, balAntes = B.on;
+  try {
+    const c = audio(); try { await c.resume(); } catch (e) {}
+    if (c.state != "running") throw new Error("o som do Palco está bloqueado: toque uma vez na tela do Palco e produza de novo");
+    const bufs = []; for (const id of d.ids) { const it = await bibTx("readonly", s => s.get(id)); if (!it || !it.blob) throw new Error("uma fala não chegou na Biblioteca"); bufs.push(await c.decodeAudioData(await it.blob.arrayBuffer())); }
+    if (d.semBalao) B.on = 0; hold = false; parar();
+    const st = cv.captureStream(30), tipo = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find(m => MediaRecorder.isTypeSupported(m));
+    const r = new MediaRecorder(st, tipo ? {mimeType: tipo, videoBitsPerSecond: 4e6} : {}), pts = [], fim = new Promise(ok => r.onstop = ok);
+    r.ondataavailable = e => { if (e.data.size) pts.push(e.data); };
+    r.start(250); const t0 = performance.now();
+    await espera((d.ini ?? .2) * 1000);
+    for (const [i, ab] of bufs.entries()) { await tocarBuffer(ab, (d.textos || [])[i] || ""); await espera(((d.pausas || [])[i] ?? .3) * 1000); }
+    await espera(400); r.stop(); await fim; cap = "";
+    const dur = (performance.now() - t0) / 1000, blob = new Blob(pts, {type: "video/webm"});
+    const it = {id: "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), origem: "palco", tipo: "video", nome: "Palco · " + (d.titulo || "Roteiro"), nomeManual: 1, pasta: d.pasta || null, texto: "", mime: "video/webm", tamanho: blob.size, criado: Date.now(), dur, blob};
+    await bibTx("readwrite", s => s.put(it));
+    try { const b = new BroadcastChannel("tamaki-biblioteca"); b.postMessage({novo: it.id}); b.close(); } catch (e) {}
+    return {id: it.id, dur, w: cv.width, h: cv.height};
+  } finally { B.on = balAntes; gravandoRoteiro = false; }
+}
+try { const pc = new BroadcastChannel("tamaki-palco"), eu = "pa" + Date.now().toString(36);
+  pc.onmessage = async e => { const d = e.data || {};
+    if (d.tipo == "ping") pc.postMessage({tipo: "pong", id: eu, de: d.de, ocupado: !!(rec || gravandoRoteiro)});
+    else if (d.tipo == "gravar" && d.para == eu) { let res; try { toast("🎬 Gravando a cena…"); res = await gravarRoteiro(d); } catch (er) { res = {erro: er.message || String(er)}; } pc.postMessage(Object.assign({tipo: "gravado", para: d.de}, res)); } };
+} catch (e) {}
 </script>
 </body>
 </html>
