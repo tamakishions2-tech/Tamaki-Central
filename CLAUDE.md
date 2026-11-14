@@ -92,6 +92,9 @@ Ajuste fino do close, se precisar: `closeAjuste:{s,x,y}` no montar (padrão s 1.
 Só depois que o Tama aprovar o roteiro na conversa (a reunião é no chat: o Claude escreve o roteiro na própria mensagem, em texto bom de ouvir — ele escuta as mensagens com o áudio do app —, um episódio por vez, com as falas numeradas; eles ajustam e só então vai pra Central). Para uma série aprovada, salve `roteiros/<nome>.json` = `{"serie", "episodios":[{titulo, texto, pasta, video, final, redes}]}` e acrescente `{arquivo, nome}` em `roteiros/indice.json` (a mais nova por último). Aparece em ⋮ › 🎬 Produção › Roteiros prontos, com 🎬 por episódio e 🎬 Todos (um depois do outro na mesma linha do tempo, para ele cortar depois).
 Tom das séries de gameplay: **diário em call com os amigos** — a Tamaki conta o que aconteceu ("Gente, …"), título "Diário da Tamaki #N · …", gancho e chamada em `[close]`, e a chamada final aponta para o próximo episódio.
 
-## Voz da Tamaki: naturalidade (pendente)
-- Não treinar a voz com frases faladas por ela mesma (aba Treinar › Gerar frases): é cópia de cópia e deixa a voz metálica.
-- Próximo passo combinado (sem data): célula no Kaggle que baixa 1–2 h das conversas espontâneas do CORAA (Hugging Face, PT-BR, entrevistas/diálogos de SP, MG, Recife) e faz o fine-tune do timbre da Tamaki com elas, para o ritmo ficar natural. O Tama liberou o uso. O pajubá e os trejeitos vêm do roteiro, não do treino.
+## Voz da Tamaki: naturalidade
+- O código do Kaggle fica em `kaggle/tamaki_estudio_voz_kaggle.py` (versão 4). Ao mudar, mande o arquivo pro Tama colar na célula (Save & Run All) e suba a versão em `/status`.
+- O treino só ajusta o T3 do Chatterbox (texto → códigos de fala); o timbre vem da referência (conds). Por isso treinar com fala de outras pessoas muda o ritmo, não o timbre.
+- Não treinar a voz com frases faladas por ela mesma (Treinar › Gerar frases): é cópia de cópia e deixa a voz metálica.
+- Estúdio de voz › Treinar › 🗣️ Baixar conversas reais: `/dataset/coraa` baixa a parte dev do CORAA v1.1 (gabrielrstan/CORAA-v1.1, 1,3 GB), pega só falas espontâneas sem ruído/hesitação, de preferência de SP, e põe como frases de treino. Depois: treinar como voz nova com "Começar do português original" (`do_zero`). O Tama liberou o uso.
+- O pajubá e os trejeitos vêm do roteiro, não do treino.

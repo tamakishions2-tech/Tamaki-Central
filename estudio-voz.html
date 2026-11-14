@@ -31,7 +31,7 @@ html,body{margin:0;height:100%;background:#120f24}
 &lt;html lang="pt-BR" data-tema="noite">
 &lt;head>
 &lt;meta charset="utf-8">
-&lt;meta name="tvz-versao" content="3.0">
+&lt;meta name="tvz-versao" content="4.0">
 &lt;meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 &lt;title>Estúdio de voz · Tamaki&lt;/title>
 &lt;link rel="preconnect" href="https://fonts.googleapis.com">
@@ -262,6 +262,14 @@ Tô até agora sem acreditar, sério mesmo. Gente, que dia!&lt;/textarea>
         &lt;button class="btn" id="dsOuvir">Ouvir a última&lt;/button>
       &lt;/div>
       &lt;audio id="dsAudio" controls hidden>&lt;/audio>
+      &lt;div class="bloco" style="margin-top:12px">
+        &lt;h3 style="margin:0 0 4px">Conversas reais (recomendado)&lt;/h3>
+        &lt;p class="dica" style="margin:0 0 8px">Em vez de ela treinar com a própria voz (fica robótica), usa trechos de gente brasileira conversando de verdade. O timbre continua o dela; o que muda é o ritmo e o jeito solto.&lt;/p>
+        &lt;label class="rot" for="coQtd">Quantos trechos&lt;/label>
+        &lt;select id="coQtd">&lt;option value="400">400 (mais rápido)&lt;/option>&lt;option value="600" selected>600 (recomendado)&lt;/option>&lt;option value="900">900 (mais natural)&lt;/option>&lt;/select>
+        &lt;div class="btns">&lt;button class="btn principal" id="coBaixar">🗣️ Baixar conversas reais&lt;/button>&lt;button class="btn" id="coParar">Parar&lt;/button>&lt;/div>
+        &lt;p class="dica" id="coMsg" style="margin:8px 0 0">&lt;/p>
+      &lt;/div>
       &lt;details style="margin-top:10px">&lt;summary>Mais opções&lt;/summary>
         &lt;label class="rot" for="dsZip">Enviar suas frases (zip com metadata.csv e pasta wavs)&lt;/label>
         &lt;input type="file" id="dsZip" accept=".zip">
@@ -277,6 +285,7 @@ Tô até agora sem acreditar, sério mesmo. Gente, que dia!&lt;/textarea>
       &lt;h3>Treinar e salvar&lt;/h3>
       &lt;label class="rot" for="epocas">Voltas no treino&lt;/label>
       &lt;select id="epocas">&lt;option value="3">3 (rápido)&lt;/option>&lt;option value="5" selected>5 (recomendado)&lt;/option>&lt;option value="8">8 (mais firme)&lt;/option>&lt;/select>
+      &lt;label class="opcao">&lt;input type="checkbox" id="trZero">&lt;span>&lt;b>Começar do português original&lt;/b>&lt;br>&lt;span class="dica">Recomendado com as conversas reais: não aproveita treinos antigos (que deixaram a voz robótica).&lt;/span>&lt;/span>&lt;/label>
       &lt;label class="opcao">&lt;input type="radio" name="destino" value="atualizar" checked>&lt;span>&lt;b id="optAtualizar">Atualizar esta voz&lt;/b>&lt;br>&lt;span class="dica">O treino novo entra na mesma voz. O cartão dela continua valendo.&lt;/span>&lt;/span>&lt;/label>
       &lt;label class="opcao">&lt;input type="radio" name="destino" value="nova">&lt;span>&lt;b>Salvar como voz nova&lt;/b>&lt;br>&lt;span class="dica">Fica uma voz separada, com nome e foto. A atual continua igual.&lt;/span>&lt;/span>&lt;/label>
       &lt;div id="novaCampos" hidden>
@@ -644,7 +653,9 @@ function desenhar() {
   $("#designMsg").textContent = st.design.msg; $("#criarBtn").disabled = st.design.rodando;
   if (!st.design.rodando &amp;&amp; st.design.n !== desenharVersoes.n) desenharVersoes(st.design.n);
   // treinar
-  const sua = st.ativa !== "padrao", ds = st.dataset, tr = st.treino || {};
+  const sua = st.ativa !== "padrao", ds = st.dataset, tr = st.treino || {}, co = st.coraa;
+  $("#coMsg").textContent = co ? (co.msg || "") : "Atualize a célula do Kaggle para a versão 4 para usar as conversas reais.";
+  $("#coBaixar").disabled = !co || co.rodando || !sua || ds.rodando || !!tr.rodando; $("#coParar").disabled = !co || !co.rodando;
   $("#trSemVoz").hidden = sua;
   const outra = ds.feitas &amp;&amp; ds.voz &amp;&amp; ds.voz !== st.ativa;
   $("#dsOutra").hidden = !outra; if (outra) $("#dsOutra").textContent = `As ${ds.feitas} frases que existem são da voz “${ds.voz_nome}”. Volte para ela para treinar, ou apague as frases para gerar com a voz atual.`;
@@ -911,12 +922,19 @@ async function acao(b, fn) { b.disabled = true; try { await fn(); } catch (e) { 
 $("#trIniciar").onclick = () => acao($("#trIniciar"), async () => {
   const destino = document.querySelector('input[name="destino"]:checked').value;
   if (destino === "nova" &amp;&amp; !$("#trNome").value.trim()) throw new Error("Escreva o nome da voz nova");
-  await api("/treino/iniciar", {body: {epocas: +$("#epocas").value, destino, nome: $("#trNome").value.trim(), foto: NV.foto}});
+  await api("/treino/iniciar", {body: {epocas: +$("#epocas").value, destino, nome: $("#trNome").value.trim(), foto: NV.foto, do_zero: $("#trZero").checked}});
   toast("Treino começou");
 });
 $("#trParar").onclick = () => acao($("#trParar"), () => api("/treino/parar", {method: "POST", body: {}}));
 $("#trCartao").onclick = () => baixarCartao(ativa());
 $("#dsIniciar").onclick = () => acao($("#dsIniciar"), () => api("/dataset/iniciar", {body: {}}));
+$("#coBaixar").onclick = () => acao($("#coBaixar"), async () => {
+  if (!confirm("Trocar as frases de treino pelas conversas reais? As frases atuais desta voz são apagadas (a voz em si não muda).")) return;
+  await api("/dataset/coraa", {body: {qtd: +$("#coQtd").value}});
+  $("#trZero").checked = true; const nv = document.querySelector('input[name="destino"][value="nova"]'); if (nv) { nv.checked = true; nv.dispatchEvent(new Event("change", {bubbles: true})); }
+  if (!$("#trNome").value.trim()) $("#trNome").value = "Tamaki natural";
+  toast("Baixando as conversas…"); });
+$("#coParar").onclick = () => acao($("#coParar"), () => api("/dataset/coraa/parar", {body: {}}));
 $("#dsParar").onclick = () => acao($("#dsParar"), () => api("/dataset/parar", {body: {}}));
 $("#dsOuvir").onclick = async () => { try { const el = $("#dsAudio"); el.src = URL.createObjectURL(await api("/dataset/amostra", {blob: true})); el.hidden = false; el.play().catch(() => {}); } catch (e) { toast(e.message); } };
 $("#dsLimpar").onclick = () => { if (confirm("Apagar todas as frases de treino?")) acao($("#dsLimpar"), () => api("/dataset/limpar", {body: {}})); };
