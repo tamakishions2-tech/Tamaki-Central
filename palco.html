@@ -70,8 +70,7 @@ fieldset:disabled{opacity:.45}
 .btns .bt{min-height:38px}
 .fala{display:grid;grid-template-columns:1fr auto;gap:10px;height:100%}
 .fala textarea{height:100%;min-height:0;resize:none}
-.fala .lado{display:flex;flex-direction:column;gap:6px;min-width:150px;overflow:auto}
-.vozfala select{font-size:.95rem;padding:10px}
+.fala .lado{display:flex;flex-direction:column;gap:6px;min-width:150px}
 .dica{color:var(--mu);font-size:.78rem;margin:4px 0 0}
 .icones{display:flex;flex-wrap:wrap;gap:4px}
 .icones button,.icones label{width:38px;height:38px;display:grid;place-items:center;background:var(--pn2);border:1px solid var(--ln);border-radius:8px;font-size:1.15rem;cursor:pointer}
@@ -109,6 +108,8 @@ fieldset:disabled{opacity:.45}
       <button class="bt mini" data-a="desfazer" aria-label="Desfazer" title="Desfazer">↶</button>
       <button class="bt mini" data-a="refazer" aria-label="Refazer" title="Refazer">↷</button>
       <button class="bt" data-a="formato" id="bFmt">16:9</button>
+      <button class="bt" data-a="qualidade" id="bQual" title="Qualidade da gravação">🎥 1080p</button>
+      <button class="bt" data-a="readaptar" id="bReadaptar" title="Refazer as posições deste formato a partir do outro">⤢ Readaptar</button>
       <button class="bt" data-a="fundo" id="bFundo">Fundo</button>
       <label class="chk"><input type="checkbox" id="guias"> Guias</label>
       <span id="st">Termux: desconectado</span>
@@ -176,7 +177,7 @@ let subV = "motor", subP = "parada", subA = "mov", verPose = null, mostrada = {}
 const estados = {};
 let cfg = normalizar(copia(DEF)), imgs = {}, aba = "camada", subB = "pos", subE = "cam", tm, hist = [], fut = [];
 const cv = $("#cv"), g = cv.getContext("2d");
-const chavesImgs = () => [...cfg.layers.flatMap(L => [L.img, ...(L.poses ? Object.values(L.poses).filter(Boolean).map(p => p.img) : [])]), ...cfg.folders.map(f => f.iconImg).filter(Boolean)];
+const chavesImgs = () => [...cfg.layers.flatMap(L => [L.img, ...(L.poses ? Object.values(L.poses).filter(Boolean).map(p => p.img) : [])]), ...cfg.folders.map(f => f.iconImg)].filter(Boolean);
 const persDe = L => cfg.pers[L.pers] || (cfg.pers[L.pers] = copia(PDEF));
 const irmas = L => cfg.layers.filter(x => x != L && x.tipo == "personagem" && x.pers == L.pers);
 const paradaDe = nome => cfg.layers.find(x => x.tipo == "personagem" && x.pers == nome && x.pose == "parada");
@@ -308,31 +309,6 @@ async function dizer(t){
   if (cfg.motor != "browser") { try { const ab = await obterAudio(t); if (ab) return await tocarBuffer(ab, t); } catch (e) { aviso(msgErro(e) + ". Usei a voz do aparelho."); } }
   await vozNavegador(t);
 }
-/* voz da fala: as vozes criadas na aba VOZ (Editor de voz) e as de cada motor, num lugar só */
-function minhasVozes(){ try { return (JSON.parse(localStorage.getItem("editor-voz")) || {}).vozes || []; } catch (e) { return []; } }
-function vozAtualFala(){ if (cfg.vozFala && minhasVozes().some(v => v.id == cfg.vozFala)) return "minha:" + cfg.vozFala;
-  const m = cfg.motor, V = cfg.voz; return m + ":" + (m == "termux" ? cfg.voice : m == "azure" ? V.azVoz : m == "eleven" ? V.elVoz : V.navVoz || ""); }
-function opcoesVoz(){ const at = vozAtualFala(), NM = {termux: "Kokoro", azure: "Azure", eleven: "ElevenLabs", browser: "aparelho"};
-  const op = (v, n) => `<option value="${esc(v)}"${v == at ? " selected" : ""}>${esc(n)}</option>`, g = (n, a) => a.length ? `<optgroup label="${esc(n)}">${a.join("")}</optgroup>` : "";
-  const minhas = minhasVozes().map(v => op("minha:" + v.id, v.nome + " · " + (v.tipo == "clone" ? "clonada" : NM[(v.base || {}).motor] || "")));
-  return g("Minhas vozes (aba VOZ)", minhas.length ? minhas : ['<option disabled>Nenhuma ainda: crie na aba VOZ</option>'])
-    + g("Voz do aparelho · grátis, sem internet", [op("browser:", "Automática (português)"), ...vozesNav().map(v => op("browser:" + v.voiceURI, v.name))])
-    + g("Kokoro no Termux", [["pf_dora", "Dora (feminina)"], ["pm_alex", "Alex (masculina)"], ["pm_santa", "Santa (masculina)"]].map(([i, n]) => op("termux:" + i, n)))
-    + g("Azure" + (chaves.az ? "" : " · precisa da chave (Voz › Motor)"), vozesAz.map(v => op("azure:" + v.id, v.n)))
-    + g("ElevenLabs" + (chaves.el ? "" : " · precisa da chave (Voz › Motor)"), vozesEl.map(v => op("eleven:" + v.id, v.n))); }
-function escolherVozFala(val){ const i = val.indexOf(":"), m = val.slice(0, i), id = val.slice(i + 1);
-  if (m == "minha") { const v = minhasVozes().find(x => x.id == id); if (!v) return; const b = v.base || {};
-    if (b.motor) cfg.motor = b.motor; for (const k of ["voice", "speed"]) if (b[k] != null) cfg[k] = b[k];
-    for (const k of ["azVoz", "elVoz", "elModelo", "elEst", "elSim", "elStyle", "navVoz"]) if (b[k] != null) cfg.voz[k] = b[k];
-    cfg.ed = Object.assign(copia(PRESET.natural), v.ed); cfg.vozFala = id; aviso("Voz \"" + v.nome + "\" escolhida. Toque em 🔊 Ouvir a voz para testar."); }
-  else { cfg.motor = m; cfg.vozFala = ""; if (m == "termux") cfg.voice = id; else if (m == "azure") cfg.voz.azVoz = id; else if (m == "eleven") cfg.voz.elVoz = id; else cfg.voz.navVoz = id;
-    aviso({browser: "Voz do aparelho escolhida.", termux: "Voz do Kokoro escolhida: ligue o comando palco no Termux.", azure: chaves.az ? "Voz do Azure escolhida." : "Falta a chave do Azure: coloque em Voz › Motor de voz.", eleven: chaves.el ? "Voz do ElevenLabs escolhida." : "Falta a chave do ElevenLabs: coloque em Voz › Motor de voz."}[m]); }
-  if (cadV) cadV.ajustar(); salvar(); }
-document.addEventListener("change", e => { if (e.target.matches && e.target.matches("[data-vozfala]")) escolherVozFala(e.target.value); });
-// a aba VOZ criou ou apagou uma voz: atualiza a lista sem mexer no texto
-const atualizarVozFala = () => { const s = document.querySelector("[data-vozfala]"); if (s) s.innerHTML = opcoesVoz(); };
-window.addEventListener("storage", e => { if (e.key == "editor-voz" || e.key == "palco-vozes-el" || e.key == "palco-vozes-az") atualizarVozFala(); });
-if (window.speechSynthesis) speechSynthesis.addEventListener("voiceschanged", atualizarVozFala);
 function ouvir(){ audio(); parar(); falar(FRASE); }
 function wav(ab){
   const n = ab.length, ch = ab.numberOfChannels, sr = ab.sampleRate, dv = new DataView(new ArrayBuffer(44 + n * ch * 2)), w = (o, s) => [...s].forEach((c, i) => dv.setUint8(o + i, c.charCodeAt(0)));
@@ -341,6 +317,28 @@ function wav(ab){
   for (let i = 0; i < n; i++) for (let c = 0; c < ch; c++) { const v = Math.max(-1, Math.min(1, d[c][i])); dv.setInt16(o, v < 0 ? v * 32768 : v * 32767, true); o += 2; }
   return new Blob([dv], {type: "audio/wav"});
 }
+/* ===== Biblioteca da Tamaki Central =====
+   Guarda gravações no próprio aparelho (IndexedDB "tamaki-biblioteca").
+   Todas as abas no mesmo site (tamakishions2-tech.github.io) enxergam a mesma biblioteca. */
+const TamakiBib={
+  abrir(){return new Promise((ok,no)=>{const r=indexedDB.open('tamaki-biblioteca',1);r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains('itens'))db.createObjectStore('itens',{keyPath:'id'});};r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error);});},
+  async salvar(blob,o={}){
+    if(!window.indexedDB||!blob||!blob.size)throw new Error('vazio');
+    const mime=(blob.type||'').split(';')[0],tipo=mime.startsWith('audio/')?'audio':mime.startsWith('image/')?'imagem':'video';
+    const it={id:'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),origem:o.origem||'outro',tipo,nome:o.nome||'Gravação',texto:o.texto||'',mime,tamanho:blob.size,criado:Date.now(),blob};
+    if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+    const db=await this.abrir();
+    await new Promise((ok,no)=>{const tx=db.transaction('itens','readwrite');tx.objectStore('itens').put(it);tx.oncomplete=ok;tx.onerror=()=>no(tx.error);tx.onabort=()=>no(tx.error);});
+    db.close();
+    try{const c=new BroadcastChannel('tamaki-biblioteca');c.postMessage({novo:it.id});c.close();}catch(_){}
+    return it.id;
+  },
+  async ler(id){
+    const db=await this.abrir();
+    const r=await new Promise((ok,no)=>{const q=db.transaction('itens').objectStore('itens').get(id);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error);});
+    db.close();return r;
+  }
+};
 function baixar(blob, nome){ const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = nome; a.click(); }
 async function baixarFala(){
   if (cfg.motor == "browser") return aviso("A voz do aparelho não pode ser baixada. Escolha o Azure, o ElevenLabs ou o Kokoro.");
@@ -350,7 +348,8 @@ async function baixarFala(){
     const sr = ps[0].sampleRate, gap = Math.round(sr * cfg.pause * (+cfg.ed.pausa || 1)), tot = ps.reduce((s, b) => s + b.length + gap, Math.round(sr * .3)) + sr;
     const off = new OfflineAudioContext(1, tot, sr), cd = cadeia(off); cd.out.connect(off.destination);
     let t0 = .15; for (const b of ps) { const s = off.createBufferSource(); s.buffer = b; s.connect(cd.ent); s.start(t0); t0 += (b.length + gap) / sr; }
-    baixar(wav(await off.startRendering()), "fala-tamaki.wav"); aviso("Áudio baixado: fala-tamaki.wav");
+    const wv = wav(await off.startRendering()); baixar(wv, "fala-tamaki.wav"); aviso("Áudio baixado: fala-tamaki.wav");
+    const tx = linhas.join("\n"); TamakiBib.salvar(wv, {origem: "voz", nome: tx.length > 48 ? tx.slice(0, 46).trim() + "…" : tx, texto: tx}).then(() => aviso("Áudio baixado e guardado na Biblioteca.")).catch(() => {});
   } catch (e) { aviso("Não consegui gerar: " + msgErro(e)); }
 }
 async function carregarVozes(){
@@ -409,13 +408,13 @@ function camera(now){
 }
 function cena(x, y, comCam){ // ponto da tela -> ponto da cena (sem a câmera)
   if (!comCam) return [x, y];
-  const W = cv.width, H = cv.height, c = camAtual, a = -c.rot * Math.PI / 180;
+  const W = cv.width / ESC, H = cv.height / ESC, c = camAtual, a = -c.rot * Math.PI / 180;
   let dx = x - W / 2, dy = y - H / 2; [dx, dy] = [dx * Math.cos(a) - dy * Math.sin(a), dx * Math.sin(a) + dy * Math.cos(a)];
   return [dx / c.z + W / 2 + c.px / 100 * W, dy / c.z + H / 2 + c.py / 100 * H];
 }
 function sobreposicoes(now, W, H){
   for (const a of A) {
-    const p = Math.min(1, (now - a.t0) / a.dur); g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1;
+    const p = Math.min(1, (now - a.t0) / a.dur); g.save(); g.setTransform(ESC, 0, 0, ESC, 0, 0); g.globalAlpha = 1;
     if (a.k == "entrada") { g.fillStyle = `rgba(0,0,0,${1 - p})`; g.fillRect(0, 0, W, H); }
     else if (a.k == "saida") { g.fillStyle = `rgba(0,0,0,${p})`; g.fillRect(0, 0, W, H); }
     else if (a.k == "flash") { g.fillStyle = `rgba(255,255,255,${(1 - p) * .9})`; g.fillRect(0, 0, W, H); }
@@ -424,7 +423,7 @@ function sobreposicoes(now, W, H){
     else if (a.k == "intro") intro(a, p, W, H);
     g.restore();
   }
-  if (hold && !A.some(a => a.k == "entrada")) { g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = "#000"; g.fillRect(0, 0, W, H); }
+  if (hold && !A.some(a => a.k == "entrada")) { g.setTransform(ESC, 0, 0, ESC, 0, 0); g.fillStyle = "#000"; g.fillRect(0, 0, W, H); }
 }
 function intro(a, p, W, H){
   const f = cfg.fx, env = Math.max(0, Math.min(1, p / .15, (1 - p) / .15)), m = Math.min(W, H), cor = f.cor || "#ff9f45", T = f.titulo || "";
@@ -433,7 +432,7 @@ function intro(a, p, W, H){
     g.globalAlpha = env; g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
     g.translate(W / 2, H / 2); g.rotate(p * .6); g.fillStyle = cor; const R = Math.hypot(W, H);
     for (let i = 0; i < 24; i++) { g.rotate(Math.PI * 2 / 24); g.beginPath(); g.moveTo(0, 0); g.lineTo(-m * .06, -R); g.lineTo(m * .06, -R); g.closePath(); g.fill(); }
-    g.setTransform(1, 0, 0, 1, 0, 0); const sh = (1 - p) * 10, tx = W / 2 + (Math.random() - .5) * sh, ty = H / 2 + (Math.random() - .5) * sh;
+    g.setTransform(ESC, 0, 0, ESC, 0, 0); const sh = (1 - p) * 10, tx = W / 2 + (Math.random() - .5) * sh, ty = H / 2 + (Math.random() - .5) * sh;
     g.font = `${m * .08}px 'Press Start 2P', monospace`; g.lineWidth = m * .022; g.lineJoin = "round"; g.strokeStyle = "#120f24"; g.strokeText(T, tx, ty); g.fillStyle = "#fff"; g.fillText(T, tx, ty);
   } else if (a.estilo == "faixa") {
     const off = p < .15 ? -W * Math.pow(1 - p / .15, 3) : p > .85 ? -W * Math.pow((p - .85) / .15, 3) : 0, h = m * .15, y = H * .68;
@@ -466,7 +465,7 @@ function balao(now, W, H, base){
   balR = {x: bx, y: by, w, h, cam: !!B.cam};
   const marcado = cfg.sel == "balao" && cfg.guides && !rec;
   if (!txt && !marcado) return;
-  g.save(); if (B.cam) base(); else g.setTransform(1, 0, 0, 1, 0, 0);
+  g.save(); if (B.cam) base(); else g.setTransform(ESC, 0, 0, ESC, 0, 0);
   g.globalAlpha = ph ? .55 : 1;
   const m = Math.min(W, H), pix = B.fonte == "pixel", fs = B.tam / 100 * m * (pix ? 1 : 1.35), lh = fs * (pix ? 1.8 : 1.3), fundo = hexA(B.fundo, B.opF);
   if (B.estilo == "rpg") { g.fillStyle = fundo; g.fillRect(bx, by, w, h); g.strokeStyle = B.borda; g.lineWidth = 3; g.strokeRect(bx + 3, by + 3, w - 6, h - 6); g.strokeRect(bx + 10, by + 10, w - 20, h - 20); }
@@ -510,25 +509,449 @@ function gravar(){
   }
   if (!window.MediaRecorder || !cv.captureStream) { alert("Este navegador não grava vídeo. Use o Chrome."); return; }
   audio(); hold = false;
+  ESC = QUAL[qual()]; tamanho();
   const s = cv.captureStream(30); saida.stream.getAudioTracks().forEach(t => s.addTrack(t));
-  const tipo = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"].find(m => MediaRecorder.isTypeSupported(m));
-  rec = new MediaRecorder(s, tipo ? {mimeType: tipo} : {}); partes = [];
+  const tipo = ["video/mp4;codecs=avc1.640028,mp4a.40.2", "video/mp4;codecs=avc1,mp4a.40.2", "video/mp4;codecs=avc1", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"].find(m => MediaRecorder.isTypeSupported(m));
+  try { rec = new MediaRecorder(s, Object.assign({videoBitsPerSecond: BITS[qual()], audioBitsPerSecond: 192000}, tipo ? {mimeType: tipo} : {})); }
+  catch (e) { rec = new MediaRecorder(s, tipo ? {mimeType: tipo} : {}); }
+  partes = [];
   rec.ondataavailable = e => { if (e.data.size) partes.push(e.data); };
-  rec.onstop = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(partes, {type: "video/webm"})); a.download = "palco-tamaki.webm"; a.click(); rec = null; parando = false; hold = false; $("#bRec").classList.remove("on"); $("#bRec").textContent = "● Gravar"; };
+  rec.onstop = () => { const mt = rec.mimeType || tipo || "video/webm", ext = mt.includes("mp4") ? "mp4" : "webm";
+    const bl = new Blob(partes, {type: mt.split(";")[0]}), a = document.createElement("a"); a.href = URL.createObjectURL(bl); a.download = `palco-tamaki-${qual()}.${ext}`; a.click();
+    TamakiBib.salvar(bl, {origem: "palco", nome: "Gravação do Palco"}).then(() => aviso("Vídeo baixado e guardado na Biblioteca.")).catch(() => {});
+    rec = null; parando = false; hold = false; ESC = 1; tamanho(); $("#bRec").classList.remove("on"); $("#bRec").textContent = "● Gravar"; };
   rec.start(); $("#bRec").classList.add("on"); $("#bRec").textContent = "■ Parar gravação";
   if (cfg.fx.gEntrada) disparar("entrada");
   if (cfg.fx.gIntro) disparar("intro");
   if (cfg.motor == "browser") toast("A voz do navegador não entra na gravação");
 }
 
+/* ---------- partes que mexem (deformação da imagem, sem cortar) ---------- */
+// Uma malha cobre a PNG; cada parte pintada puxa só os pontos da malha que estão debaixo dela.
+function criarPartes(){
+  // um só WebGL para todas as partes (o tablet aguenta poucos)
+  const SH = criarPartes.sh || (criarPartes.sh = (() => {
+    const gc = document.createElement("canvas"); let gl = null;
+    try { gl = gc.getContext("webgl", {premultipliedAlpha: true, alpha: true, antialias: false}); } catch (e) {}
+    if (!gl) return {gc, gl: null};
+    const sh = (t, src) => { const s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+    const prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, "attribute vec2 p;attribute vec2 u;varying vec2 v;void main(){v=u;gl_Position=vec4(p,0.,1.);}"));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, "precision mediump float;varying vec2 v;uniform sampler2D t;void main(){gl_FragColor=texture2D(t,v);}"));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return {gc, gl: null};
+    return {gc, gl, prog, aP: gl.getAttribLocation(prog, "p"), aU: gl.getAttribLocation(prog, "u"), uT: gl.getUniformLocation(prog, "t")};
+  })());
+  const gc = SH.gc, gl = SH.gl, prog = SH.prog, aP = SH.aP, aU = SH.aU, uT = SH.uT;
+  const dimsDe = x => ({w: x.naturalWidth || x.width, h: x.naturalHeight || x.height});
+  let bPos, bUV, bIdx, nIdx = 0;
+  if (gl) { bPos = gl.createBuffer(); bUV = gl.createBuffer(); bIdx = gl.createBuffer(); }
+  const caixas = new WeakMap(), texs = new WeakMap(); let pesos = {};
+  let G = null, molas = {}, ultimo = 0, enviado = -1, quadro = 0;
+  function caixa(img){ // retângulo onde a imagem não é transparente
+    if (caixas.has(img)) return caixas.get(img);
+    const d = dimsDe(img), s = Math.min(1, 256 / Math.max(d.w, d.h)), c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(d.w * s)); c.height = Math.max(1, Math.round(d.h * s));
+    const x = c.getContext("2d"); x.drawImage(img, 0, 0, c.width, c.height);
+    let r = {x: 0, y: 0, w: d.w, h: d.h, justa: {x: 0, y: 0, w: d.w, h: d.h}};
+    try { const a = x.getImageData(0, 0, c.width, c.height).data; let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+      for (let j = 0; j < c.height; j++) for (let i = 0; i < c.width; i++) if (a[(j * c.width + i) * 4 + 3] > 12) { if (i < x0) x0 = i; if (i > x1) x1 = i; if (j < y0) y0 = j; if (j > y1) y1 = j; }
+      if (x1 >= 0) { const m = .1 * Math.max(x1 - x0, y1 - y0); const X0 = Math.max(0, (x0 - m) / s), Y0 = Math.max(0, (y0 - m) / s), X1 = Math.min(d.w, (x1 + 1 + m) / s), Y1 = Math.min(d.h, (y1 + 1 + m) / s); r = {x: X0, y: Y0, w: X1 - X0, h: Y1 - Y0, justa: {x: x0 / s, y: y0 / s, w: (x1 + 1 - x0) / s, h: (y1 + 1 - y0) / s}}; }
+    } catch (e) {}
+    caixas.set(img, r); return r;
+  }
+  function rasterizar(p, nx, ny, bx, by, bw, bh, d){
+    const A = new Float32Array(nx * ny);
+    if (p.png) { A.fill(1); return A; }
+    for (const [sx, sy, sr, er] of (p.tr || [])) {
+      const cx = sx * d.w, cy = sy * d.h, r = sr * d.h;
+      const i0 = Math.max(0, Math.floor((cx - r - bx) / bw * (nx - 1))), i1 = Math.min(nx - 1, Math.ceil((cx + r - bx) / bw * (nx - 1)));
+      const j0 = Math.max(0, Math.floor((cy - r - by) / bh * (ny - 1))), j1 = Math.min(ny - 1, Math.ceil((cy + r - by) / bh * (ny - 1)));
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const X = bx + i / (nx - 1) * bw, Y = by + j / (ny - 1) * bh; if ((X - cx) * (X - cx) + (Y - cy) * (Y - cy) <= r * r) A[j * nx + i] = er ? 0 : 1; }
+    }
+    const rb = Math.round(+p.borda || 0); if (!rb) return A;
+    const T = new Float32Array(nx * ny);
+    for (let pass = 0; pass < 2; pass++) {
+      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { let s = 0, n = 0; for (let k = -rb; k <= rb; k++) { const ii = i + k; if (ii >= 0 && ii < nx) { s += A[j * nx + ii]; n++; } } T[j * nx + i] = s / n; }
+      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { let s = 0, n = 0; for (let k = -rb; k <= rb; k++) { const jj = j + k; if (jj >= 0 && jj < ny) { s += T[jj * nx + i]; n++; } } A[j * nx + i] = s / n; }
+    }
+    return A;
+  }
+  function preparar(ref, lista){
+    lista = (lista || []).filter(p => p.png || (p.tr && p.tr.length));
+    if (!gl || !ref || !lista.length) { G = null; return; }
+    const d = dimsDe(ref); if (!d.w || !d.h) { G = null; return; }
+    const chave = d.w + "x" + d.h + "|" + lista.map(p => p.id + ":" + (p.v || 0) + ":" + p.borda).join(",");
+    if (G && G.ref === ref && G.chave === chave) { G.lista = lista; return; }
+    const b = caixa(ref);
+    let cols = 90, rows = Math.round(cols * b.h / b.w); if (rows > 130) { rows = 130; cols = Math.max(20, Math.round(rows * b.w / b.h)); } rows = Math.max(20, rows);
+    const nx = cols + 1, ny = rows + 1, base = new Float32Array(nx * ny * 2), uv = new Float32Array(nx * ny * 2), idx = new Uint16Array(cols * rows * 6);
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { const k = (j * nx + i) * 2; base[k] = b.x + i / cols * b.w; base[k + 1] = b.y + j / rows * b.h; uv[k] = i / cols; uv[k + 1] = j / rows; }
+    let q = 0; for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) { const a = j * nx + i, c = a + nx; idx.set([a, a + 1, c, a + 1, c + 1, c], q); q += 6; }
+    const pad = .25 * Math.max(b.w, b.h), R = {x: b.x - pad, y: b.y - pad, w: b.w + 2 * pad, h: b.h + 2 * pad};
+    const W = {}, novos = {}; for (const p of lista) { const kk = p.id + ":" + (p.v || 0) + ":" + p.borda + ":" + chave.split("|")[0]; W[p.id] = novos[kk] = pesos[kk] || rasterizar(p, nx, ny, b.x, b.y, b.w, b.h, d); } pesos = novos;
+    G = {ref, chave, b, R, nx, ny, base, clip: new Float32Array(nx * ny * 2), W, lista, H: d.h, Wd: d.w}; ultimo = 0; enviado = -1;
+    gl.bindBuffer(gl.ARRAY_BUFFER, bUV); gl.bufferData(gl.ARRAY_BUFFER, uv, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bIdx); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW); nIdx = idx.length;
+  }
+  function atualizar(now, info){
+    if (!G) return;
+    const dt = ultimo ? Math.min(.05, Math.max(0, (now - ultimo) / 1000)) : 0; if (dt === 0 && ultimo) return; ultimo = now; quadro++;
+    const t = now / 1000, fala = Math.max(0, Math.min(1, info.fala || 0)), cy = info.corpoY || 0, H = G.H, R = G.R;
+    const pos = G.clip; pos.set(G.base);
+    for (const p of G.lista) {
+      const Wp = G.W[p.id]; if (!Wp) continue;
+      const f = p.quando == "falando" ? fala : p.quando == "mais" ? 1 + fala : 1;
+      const m = molas[p.id] || (molas[p.id] = {x: 0, v: 0, y: cy});
+      if (dt > 0) { const vy = (cy - m.y) / dt; m.v += (-110 * m.x - 8 * m.v - vy * .02 * (+p.reage || 0)) * dt; m.x += m.v * dt; m.x = Math.max(-15, Math.min(15, m.x)); }
+      m.y = cy;
+      const lag = m.x, w = 2 * Math.PI * .5 * (+p.vel || 1), fase = +p.fase || 0, amp = (+p.amp || 0) * f, onda = +p.onda || 0;
+      const Px = (+p.px || .5) * G.Wd, Py = (+p.py || .5) * H, meio = H * .5, tipo = p.tipo;
+      const ang0 = (tipo == "acenar" ? amp * 8 * Math.sin(w * t + fase) : 0) + lag;
+      const c0 = Math.cos(ang0 * Math.PI / 180), s0 = Math.sin(ang0 * Math.PI / 180);
+      for (let k = 0, n = Wp.length; k < n; k++) {
+        const wk = Wp[k]; if (wk < .002) continue;
+        const X = G.base[2 * k], Y = G.base[2 * k + 1], dx = X - Px, dy = Y - Py; let ux = 0, uy = 0;
+        if (tipo == "balanco") { const dn = Math.hypot(dx, dy) / meio, a = (amp * 4 * Math.sin(w * t - onda * dn * 3 + fase) + lag) * Math.PI / 180, c = Math.cos(a), s = Math.sin(a); ux = dx * c - dy * s - dx; uy = dx * s + dy * c - dy; }
+        else if (tipo == "ondular") { const dn = Math.hypot(dx, dy) / meio; ux = (amp * .015 * Math.sin(w * t - onda * dn * 5 + fase) + lag * .004) * H * dn; uy = amp * .004 * H * dn * Math.sin(w * t * 1.3 - onda * dn * 4 + fase); }
+        else if (tipo == "acenar") { ux = dx * c0 - dy * s0 - dx; uy = dx * s0 + dy * c0 - dy; }
+        else { ux = lag * .003 * H; uy = amp * .008 * H * Math.sin(w * t + fase); }
+        pos[2 * k] += wk * ux; pos[2 * k + 1] += wk * uy;
+      }
+    }
+    for (let k = 0, n = pos.length; k < n; k += 2) { pos[k] = (pos[k] - R.x) / R.w * 2 - 1; pos[k + 1] = 1 - (pos[k + 1] - R.y) / R.h * 2; }
+  }
+  function textura(img){
+    let T = texs.get(img); if (T && T.b === G.b) return T.tex;
+    const b = G.b, s = Math.min(1, 2048 / Math.max(b.w, b.h)), c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(b.w * s)); c.height = Math.max(1, Math.round(b.h * s));
+    c.getContext("2d").drawImage(img, b.x, b.y, b.w, b.h, 0, 0, c.width, c.height);
+    const tex = T ? T.tex : gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    texs.set(img, {tex, b: G.b}); return tex;
+  }
+  function pintar(ctx, img, dx, dy, dw, dh){
+    if (!G || !gl || gl.isContextLost()) { ctx.drawImage(img, dx, dy, dw, dh); return; }
+    const d = dimsDe(img), sx = dw / d.w, sy = dh / d.h, R = G.R, T = ctx.getTransform ? ctx.getTransform() : {a: 1, b: 0}, real = Math.max(1, Math.hypot(T.a, T.b));
+    const ow = Math.max(1, Math.min(2048, Math.ceil(R.w * Math.abs(sx) * real))), oh = Math.max(1, Math.min(2048, Math.ceil(R.h * Math.abs(sy) * real)));
+    if (gc.width != ow || gc.height != oh) { gc.width = ow; gc.height = oh; }
+    gl.viewport(0, 0, ow, oh); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(prog); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bPos); if (enviado != quadro) { gl.bufferData(gl.ARRAY_BUFFER, G.clip, gl.DYNAMIC_DRAW); enviado = quadro; }
+    gl.enableVertexAttribArray(aP); gl.vertexAttribPointer(aP, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bUV); gl.enableVertexAttribArray(aU); gl.vertexAttribPointer(aU, 2, gl.FLOAT, false, 0, 0);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textura(img)); gl.uniform1i(uT, 0);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bIdx); gl.drawElements(gl.TRIANGLES, nIdx, gl.UNSIGNED_SHORT, 0);
+    ctx.drawImage(gc, dx + R.x * sx, dy + R.y * sy, R.w * sx, R.h * sy);
+  }
+  return {preparar, atualizar, pintar, caixa, ativo: () => !!gl};
+}
+// partes em PNG separada: cada uma é uma camada própria, atrás ou na frente do corpo
+function criarSeparadas(){
+  const inst = {}, dimsDe = x => ({w: x.naturalWidth || x.width, h: x.naturalHeight || x.height});
+  const usar = (lista, img) => (lista || []).filter(p => p.png && img(p.id));
+  return {
+    passo(lista, img, now, info){ for (const p of usar(lista, img)) { const I = inst[p.id] || (inst[p.id] = criarPartes()); I.preparar(img(p.id), [p]); I.atualizar(now, info); } },
+    pintar(ctx, lista, img, lado, ox, oy, q){ for (const p of usar(lista, img)) { if ((p.camada || "atras") !== lado || !inst[p.id]) continue; const im = img(p.id), d = dimsDe(im); inst[p.id].pintar(ctx, im, ox, oy, d.w * q, d.h * q); } }
+  };
+}
+/* ---------- atores: as PNGtubers da aba Atriz (Animador) entram no palco ---------- */
+// Cada ator do Animador tem poses, movimentos e partes próprios, guardados neste mesmo endereço.
+const ATRIZ = (() => {
+  const SLOTS = ["idle", "talk", "talk2", "idleBlink", "talkBlink"];
+  const DEFS = {idleStyle: "respirar", idleAmt: 1, idleSpd: 1, talkStyle: "pulinho", talkAmt: 1, talkSpd: 1, swap: "corte", fadeMs: 90, pop: true, popAmt: 1, holdMs: 160, flapMs: 120, blinkEvery: 4, actAmt: 1, partes: []};
+  const NOMES = {respirar: "Respirar", flutuar: "Flutuar", balancar: "Balançar", nada: "Sem movimento", pulinho: "Pulinho", quicar: "Quicar com elástico", voz: "Seguir a voz", inclinar: "Inclinar a cabeça", tremer: "Tremidinha"};
+  const chaveCfg = id => id == "principal" ? "palco-animador-v1" : "palco-animador-v1:" + id;
+  const chaveImg = (id, k) => id == "principal" ? "img-" + k : id + "/img-" + k;
+  const D = {}, est = {}, miniaturas = new WeakMap();
+  const dims = x => ({w: x.naturalWidth || x.width, h: x.naturalHeight || x.height});
+  function atores(){ try { const o = JSON.parse(localStorage.getItem("palco-atores")); if (o && o.lista && o.lista.length) return o.lista; } catch (e) {} return [{id: "principal", nome: "Tamaki"}]; }
+  const nome = id => (atores().find(a => a.id == id) || {nome: "Ator"}).nome;
+  function dados(id){
+    id = id || "principal";
+    if (!D[id]) { D[id] = {id, S: Object.assign({}, DEFS), im: {}, pimg: {}, exemplo: true, PARTES: criarPartes(), SEP: criarSeparadas(), pronto: false}; lerCfg(id); lerImgs(id).then(() => { try { desenharLista(); } catch (e) {} }); }
+    return D[id];
+  }
+  function lerCfg(id){ const d = D[id]; if (!d) return; try { const o = JSON.parse(localStorage.getItem(chaveCfg(id))); d.S = Object.assign({}, DEFS, o || {}); } catch (e) {} }
+  const abrir = () => new Promise((ok, no) => { const r = indexedDB.open("palco-animador", 1); r.onupgradeneeded = () => r.result.createObjectStore("files"); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+  function boneco(open, blink){ // a mesma personagem de exemplo do Animador
+    const c = document.createElement("canvas"); c.width = 600; c.height = 700; const x = c.getContext("2d"), hair = "#5b6fd8";
+    x.fillStyle = "#3a3168"; x.beginPath(); x.ellipse(300, 720, 215, 190, 0, Math.PI, 2 * Math.PI); x.fill();
+    x.fillStyle = "#f2b544"; x.beginPath(); x.moveTo(255, 545); x.lineTo(300, 600); x.lineTo(345, 545); x.closePath(); x.fill();
+    x.fillStyle = hair; x.beginPath(); x.moveTo(130, 250); x.lineTo(150, 70); x.lineTo(265, 160); x.closePath(); x.fill(); x.beginPath(); x.moveTo(470, 250); x.lineTo(450, 70); x.lineTo(335, 160); x.closePath(); x.fill();
+    x.fillStyle = "#ffb9c9"; x.beginPath(); x.moveTo(165, 200); x.lineTo(170, 115); x.lineTo(225, 165); x.closePath(); x.fill(); x.beginPath(); x.moveTo(435, 200); x.lineTo(430, 115); x.lineTo(375, 165); x.closePath(); x.fill();
+    x.fillStyle = "#ffe1cc"; x.beginPath(); x.arc(300, 340, 190, 0, 2 * Math.PI); x.fill();
+    x.fillStyle = hair; x.beginPath(); x.arc(300, 330, 200, Math.PI, 2 * Math.PI); x.quadraticCurveTo(440, 230, 370, 250); x.quadraticCurveTo(330, 200, 290, 255); x.quadraticCurveTo(230, 205, 190, 255); x.quadraticCurveTo(140, 230, 100, 330); x.closePath(); x.fill();
+    x.fillStyle = "#26213d"; x.strokeStyle = "#26213d"; x.lineWidth = 9; x.lineCap = "round";
+    for (const ex of [225, 375]) { if (blink) { x.beginPath(); x.arc(ex, 352, 26, .15 * Math.PI, .85 * Math.PI); x.stroke(); } else { x.beginPath(); x.ellipse(ex, 350, 24, 34, 0, 0, 2 * Math.PI); x.fill(); x.fillStyle = "#fff"; x.beginPath(); x.arc(ex + 8, 336, 9, 0, 2 * Math.PI); x.fill(); x.fillStyle = "#26213d"; } }
+    x.fillStyle = "rgba(255,120,150,.35)"; x.beginPath(); x.ellipse(185, 420, 30, 18, 0, 0, 2 * Math.PI); x.fill(); x.beginPath(); x.ellipse(415, 420, 30, 18, 0, 0, 2 * Math.PI); x.fill();
+    if (open) { x.fillStyle = "#7a2140"; x.beginPath(); x.ellipse(300, 445, open == 2 ? 30 : 40, open == 2 ? 34 : 28, 0, 0, 2 * Math.PI); x.fill(); x.fillStyle = "#ff8fa8"; x.beginPath(); x.ellipse(300, 462, 22, 11, 0, 0, 2 * Math.PI); x.fill(); }
+    else { x.strokeStyle = "#7a2140"; x.lineWidth = 8; x.beginPath(); x.arc(300, 425, 24, .2 * Math.PI, .8 * Math.PI); x.stroke(); }
+    return c;
+  }
+  async function lerImgs(id){
+    const d = D[id]; if (!d) return;
+    const novo = {}, novasP = {};
+    const pega = (db, k) => new Promise(ok => { try { const q = db.transaction("files").objectStore("files").get(k); q.onsuccess = () => ok(q.result || null); q.onerror = () => ok(null); } catch (e) { ok(null); } });
+    const imagem = async b => { const i = new Image(); i.src = URL.createObjectURL(b); await new Promise(ok => { i.onload = i.onerror = ok; }); return i.naturalWidth ? i : null; };
+    try { const db = await abrir();
+      for (const k of SLOTS) { const b = await pega(db, chaveImg(id, k)); if (b) { const i = await imagem(b); if (i) novo[k] = i; } }
+      for (const p of d.S.partes || []) if (p.png) { const b = await pega(db, "parte-" + p.id); if (b) { const i = await imagem(b); if (i) novasP[p.id] = i; } }
+      db.close(); } catch (e) {}
+    for (const k in d.pimg) URL.revokeObjectURL(d.pimg[k].src);
+    for (const k in d.im) if (d.im[k].src && d.im[k].src.startsWith("blob:")) URL.revokeObjectURL(d.im[k].src);
+    d.pimg = novasP; d.exemplo = !Object.keys(novo).length;
+    d.im = d.exemplo ? {idle: boneco(0, false), talk: boneco(1, false), talk2: boneco(2, false), idleBlink: boneco(0, true), talkBlink: boneco(1, true)} : novo;
+    d.pronto = true;
+  }
+  function miniatura(id){ const d = dados(id), r = d.im.idle || d.im.talk; if (!r) return ""; if (r.src) return r.src; if (!miniaturas.has(r)) miniaturas.set(r, r.toDataURL()); return miniaturas.get(r); }
+  function larguraPadrao(id, W, H){ const d = dados(id), r = d.im.idle || d.im.talk; if (!r) return 38; const q = dims(r); return +Math.min(150, .78 * H / W * q.w / q.h * 100).toFixed(1); }
+  const estado = id => est[id] || (est[id] = {sx: 0, sv: 0, ph: 0, loud: -1e9, mouth: -1e9, fala: false, amt: 0, mix: 0, flap: false, flapT: 0, piscaAte: 0, prox: performance.now() + 2000, acts: [], last: performance.now(), t: 0, popAmt: 1});
+  const kick = (e, f) => { e.sv += f * 3.2 * (+e.popAmt || 1); };
+  const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+  const backOut = p => 1 + 2.70158 * Math.pow(p - 1, 3) + 1.70158 * Math.pow(p - 1, 2);
+  const ACOES = [
+    {id: "pulo", e: "⬆️", n: "Pulo", dur: .75, f: (p, A) => ({ty: -95 * A * Math.sin(p * Math.PI), sy: .06 * A * Math.sin(p * Math.PI), sx: -.04 * A * Math.sin(p * Math.PI)}), start: e => kick(e, -1.2), end: e => kick(e, -1.6)},
+    {id: "susto", e: "😱", n: "Susto", dur: .7, f: (p, A) => ({tx: (Math.random() - .5) * 26 * A * (1 - p), ty: -28 * A * Math.sin(Math.min(1, p * 3) * Math.PI) * (1 - p), sy: .08 * A * (1 - p)}), start: e => kick(e, 2)},
+    {id: "sim", e: "🙂", n: "Sim", dur: .9, f: (p, A) => { const w = Math.abs(Math.sin(p * 3 * Math.PI)) * (1 - p); return {ty: 12 * A * w, rot: 2 * A * w, sy: -.035 * A * w}; }},
+    {id: "nao", e: "🙅", n: "Não", dur: .9, f: (p, A) => { const w = Math.sin(p * 6 * Math.PI) * (1 - p); return {tx: 20 * A * w, rot: 2.5 * A * w}; }},
+    {id: "tchau", e: "👋", n: "Tchau", dur: 1.2, f: (p, A) => ({rot: 7 * A * Math.sin(p * 8 * Math.PI) * (1 - p * .6), ty: -6 * A * Math.abs(Math.sin(p * 8 * Math.PI))})},
+    {id: "girar", e: "🌀", n: "Girar", dur: .9, f: (p, A) => ({rot: 360 * ease(p), ty: -40 * A * Math.sin(p * Math.PI)}), end: e => kick(e, -1)},
+    {id: "entrada", e: "🎬", n: "Entrar de baixo", dur: .8, f: p => ({ty: (1 - backOut(p)) * 520})}
+  ];
+  function acao(id, L){ if (!L) return; const e = estado(L.id), a = ACOES.find(x => x.id == id); if (!a) return; if (a.start) a.start(e); e.acts.push({a, t0: performance.now()}); }
+  function passo(S, im, e, now){
+    e.popAmt = S.popAmt;
+    const dt = Math.min(.05, (now - e.last) / 1000); e.last = now; e.t += dt; const t = e.t;
+    const loud = sp ? ((t * 6.5 * (+cfg.speed || 1)) % 1) < .72 : lvl > cfg.thr; // voz do aparelho: sílabas simuladas
+    if (loud) { e.mouth = now; e.loud = now; }
+    const aberta = sp ? loud : now - e.mouth < +S.holdMs, antes = e.fala;
+    e.fala = sp || now - e.loud < +S.holdMs + 350;
+    if (S.pop && e.fala && !antes) kick(e, 1); if (S.pop && !e.fala && antes) kick(e, -.35);
+    e.amt += ((e.fala ? 1 : 0) - e.amt) * Math.min(1, dt * 10);
+    const fr = S.swap == "suave" ? dt / (Math.max(30, +S.fadeMs) / 1000) : 1;
+    e.mix = aberta ? Math.min(1, e.mix + fr) : Math.max(0, e.mix - fr);
+    if (aberta && im.talk2) { e.flapT += dt * 1000; if (e.flapT > +S.flapMs) { e.flapT = 0; e.flap = !e.flap; } } else { e.flap = false; e.flapT = 0; }
+    if (now > e.prox) { e.piscaAte = now + 120; e.prox = now + (Math.random() < .2 ? 260 : +S.blinkEvery * 1000 * (.6 + Math.random() * .8)); }
+    e.sv += (-260 * e.sx - 13 * e.sv) * dt; e.sx += e.sv * dt;
+    let tx = 0, ty = 0, rot = 0, sx = 1, sy = 1;
+    const iA = S.idleAmt * (1 - .55 * e.amt), w = S.idleSpd * 2 * Math.PI * .32;
+    if (S.idleStyle == "respirar") { const b = Math.sin(t * w); sy += .02 * iA * b; sx -= .01 * iA * b; }
+    else if (S.idleStyle == "flutuar") { ty -= 12 * iA * (Math.sin(t * w) * .5 + .5); rot += 1.3 * iA * Math.sin(t * w * .5 + 1); sy += .008 * iA * Math.sin(t * w); }
+    else if (S.idleStyle == "balancar") { rot += 3 * iA * Math.sin(t * w); sy += .008 * iA * Math.sin(t * w * 2); }
+    const tA = S.talkAmt * e.amt, v = Math.min(1, lvl);
+    if (e.fala) e.ph += dt * S.talkSpd * 7 * (.7 + .6 * v);
+    const bw = Math.abs(Math.sin(e.ph));
+    if (S.talkStyle == "pulinho") ty -= 16 * tA * bw;
+    else if (S.talkStyle == "quicar") { ty -= 30 * tA * bw; const q = Math.pow(1 - bw, 6); sy += tA * (.035 * bw - .07 * q); sx += tA * (-.02 * bw + .05 * q); }
+    else if (S.talkStyle == "voz") { ty -= 34 * tA * v; sy += .05 * tA * v; sx -= .025 * tA * v; }
+    else if (S.talkStyle == "inclinar") { rot += 4.5 * tA * Math.sin(e.ph * .45); ty -= 6 * tA * bw; }
+    else if (S.talkStyle == "tremer") { tx += (Math.random() - .5) * 7 * tA * (.4 + v); ty += (Math.random() - .5) * 5 * tA * (.4 + v) - 4 * tA * bw; }
+    sy += e.sx * .5; sx -= e.sx * .28;
+    for (let i = e.acts.length - 1; i >= 0; i--) { const it = e.acts[i], p = (now - it.t0) / (it.a.dur * 1000);
+      if (p >= 1) { if (it.a.end) it.a.end(e); e.acts.splice(i, 1); continue; }
+      const d = it.a.f(p, +S.actAmt || 1); tx += d.tx || 0; ty += d.ty || 0; rot += d.rot || 0; sx += d.sx || 0; sy += d.sy || 0; }
+    return {tx, ty, rot, sx, sy, pisc: now < e.piscaAte};
+  }
+  function pose(im, e, aberta, pisc){
+    if (aberta) { let b = e.flap && im.talk2 ? im.talk2 : im.talk || im.idle; if (pisc && im.talkBlink && b != im.talk2) b = im.talkBlink; return b; }
+    return pisc && im.idleBlink ? im.idleBlink : im.idle || im.talk;
+  }
+  function desenhar(L, G, W, H, base, now){
+    const d0 = dados(L.ator), S = d0.S, im = d0.im, ref = im.idle || im.talk; if (!d0.pronto || !ref) return;
+    const e = estado(L.id), m = passo(S, im, e, now), d = dims(ref), w = G.w / 100 * W, h = w * d.h / d.w, k = h / 560, q = w / d.w;
+    d0.PARTES.preparar(ref, (S.partes || []).filter(p => !p.png)); d0.PARTES.atualizar(now, {fala: e.amt, corpoY: m.ty});
+    const imgP = id => d0.pimg[id] || null; d0.SEP.passo(S.partes, imgP, now, {fala: e.amt, corpoY: m.ty});
+    mostrada[L.id] = {im: {naturalWidth: d.w, naturalHeight: d.h}, ox: 0, oy: 0, kk: 1};
+    base(); g.globalAlpha = Math.max(0, Math.min(1, L.op ?? 1));
+    g.translate(G.X / 100 * W, G.Y / 100 * H); g.rotate((+L.r || 0) * Math.PI / 180); g.scale(L.flip ? -1 : 1, 1);
+    if (cfg.guides && !rec && L.id == cfg.sel) { g.save(); g.globalAlpha = 1; g.setLineDash([10, 8]); g.strokeStyle = "#5fd9cf"; g.lineWidth = 3; g.strokeRect(-L.px * w, -L.py * h, w, h); g.setLineDash([]); g.fillStyle = "#ff9f45"; g.beginPath(); g.arc(0, 0, 9, 0, 7); g.fill(); g.restore(); }
+    g.translate(m.tx * k, m.ty * k); g.rotate(m.rot * Math.PI / 180); g.scale(m.sx, m.sy);
+    const pinta = (i, a) => { if (!i) return; const dd = dims(i), iw = dd.w * q, ih = dd.h * q, al = g.globalAlpha; g.globalAlpha = al * a; d0.PARTES.pintar(g, i, -L.px * iw, -L.py * ih, iw, ih); g.globalAlpha = al; };
+    d0.SEP.pintar(g, S.partes, imgP, "atras", -L.px * w, -L.py * h, q);
+    if (S.swap == "suave" && e.mix > 0 && e.mix < 1) { pinta(pose(im, e, false, m.pisc), 1); pinta(pose(im, e, true, m.pisc), e.mix); }
+    else pinta(pose(im, e, e.mix >= .5, m.pisc), 1);
+    d0.SEP.pintar(g, S.partes, imgP, "frente", -L.px * w, -L.py * h, q);
+    g.globalAlpha = 1;
+  }
+  const resumo = id => { const S = dados(id).S; return `Parada: ${NOMES[S.idleStyle] || S.idleStyle}. Falando: ${NOMES[S.talkStyle] || S.talkStyle}. Troca: ${S.swap == "suave" ? "suave" : "corte seco"}. ${(S.partes || []).length} parte(s) que mexem.`; };
+  const faltaParte = id => { const d = D[id]; return !!d && (d.S.partes || []).some(p => p.png && !d.pimg[p.id]); };
+  const carregados = () => Object.keys(D);
+  return {atores, nome, dados, lerCfg, lerImgs, miniatura, larguraPadrao, desenhar, acao, ACOES, resumo, faltaParte, carregados, exemplo: id => dados(id).exemplo};
+})();
+function novaAtriz(ator){
+  ator = ator || ATRIZ.atores()[0].id;
+  const f = pastaSel(), L = {id: uid(), tipo: "atriz", ator, name: ATRIZ.nome(ator), img: null, x: 50, y: 100, w: ATRIZ.larguraPadrao(ator, cv.width, cv.height), r: 0, px: .5, py: 1, vis: 1, flip: 0, op: 1, lock: 0, parent: f ? f.id : null, role: "always", idle: "none", ia: 3, is: 1, talk: "none", ta: 5};
+  cfg.layers.push(L); cfg.sel = L.id; aba = "camada"; salvar(); desenharLista(); painel();
+  toast(ATRIZ.exemplo(ator) ? "Ator de exemplo no palco. Ponha as PNGs na aba Atriz" : ATRIZ.nome(ator) + " entrou no palco");
+}
+const lerAviso = k => { let v = null; try { v = localStorage.getItem(k); } catch (e) {} if (!v) return {t: 0, ator: "principal"}; try { const o = JSON.parse(v); if (typeof o == "number") return {t: o, ator: "principal"}; return {t: +o.t || 0, ator: o.ator || "principal"}; } catch (e) { return {t: +v || 0, ator: "principal"}; } };
+async function checarPedido(){ // o botão "Mandar para o Palco" do Animador
+  const p = lerAviso("palco-atriz-pedido"); if (p.t <= (+cfg.atrizPedido || 0)) return;
+  cfg.atrizPedido = p.t; const d = ATRIZ.dados(p.ator); ATRIZ.lerCfg(p.ator); await ATRIZ.lerImgs(p.ator);
+  if (cfg.layers.some(L => L.tipo == "atriz" && (L.ator || "principal") == p.ator)) { toast(ATRIZ.nome(p.ator) + " já está no palco, com as mudanças novas"); salvar(); desenharLista(); } else novaAtriz(p.ator);
+}
+window.addEventListener("storage", async e => {
+  if (!e.key) return;
+  if (e.key.startsWith("palco-animador-v1")) { const id = e.key.includes(":") ? e.key.split(":")[1] : "principal"; if (ATRIZ.carregados().includes(id)) { ATRIZ.lerCfg(id); if (ATRIZ.faltaParte(id)) await ATRIZ.lerImgs(id); } }
+  else if (e.key == "palco-atriz-versao") { const id = lerAviso(e.key).ator; if (ATRIZ.carregados().includes(id)) { await ATRIZ.lerImgs(id); desenharLista(); } }
+  else if (e.key == "palco-atriz-pedido") await checarPedido();
+  else if (e.key == "palco-atores") { desenharLista(); if (aba == "camada") painel(); }
+});
+const lixo = (t) => `<button class="bt" data-a="apaga">🗑 ${t || "Apagar camada"}</button>`;
+function cabecalhoCamada(L){
+  return `${tx("k", "name", "Nome", L.name)}${sl("k", "parent", "Pasta", [["", "(sem pasta)"], ...cfg.folders.map(f => [f.id, (f.icon || "📁") + " " + f.name])], L.parent || "")}`;
+}
+function trava(L){ return travada(L) ? `<p class="dica">🔒 Travada${L.lock ? "" : " pela pasta"}. <button class="bt" data-lock="${L.lock ? L.id : "f:" + L.parent}">Destravar</button></p>` : ""; }
+function painelAtriz(L, modo){
+  const tr = travada(L), botoes = `<div class="chips">${ATRIZ.ACOES.map(a => `<button data-atriz="${a.id}">${a.e} ${a.n}</button>`).join("")}</div>`;
+  if (modo == "anim") return `<div class="g"><div class="f"><b>Ações do ator (toque para fazer uma vez)</b>${botoes}</div>
+    <div class="btns"><button class="bt pri" data-a="teste">▶ Testar fala</button></div></div>
+    <p class="dica">${esc(ATRIZ.resumo(L.ator))} Os movimentos e as poses vêm da aba Atriz: o que você muda lá aparece aqui na hora.</p>`;
+  const lista = ATRIZ.atores().map(a => [a.id, a.nome]);
+  if (!lista.some(a => a[0] == (L.ator || "principal"))) lista.push([L.ator, "(ator apagado)"]);
+  return `<fieldset${tr ? " disabled" : ""}><div class="g">${sl("k", "ator", "Qual ator aparece", lista, L.ator || "principal")}${cabecalhoCamada(L)}</div><div class="g">
+    ${rg("k", "op", "Opacidade", 0, 1, .01, L.op ?? 1)}${rg("k", "w", "Tamanho (%)", 2, 300, .5, L.w)}
+    ${rg("k", "x", "Horizontal (%)", -20, 120, .1, L.x)}${rg("k", "y", "Vertical (%)", -20, 140, .1, L.y)}${rg("k", "r", "Rotação (°)", -180, 180, 1, L.r)}
+    <div class="btns">${ck("k", "flip", "Espelhar", L.flip)}<button class="bt" data-a="centro">Centralizar embaixo</button>${lixo()}</div></div></fieldset>
+    <p class="dica">🎭 Os atores são as PNGtubers da aba Atriz. Arraste no palco para encaixar no cenário e use ▲ Frente / ▼ Atrás para a ordem. Para trocar quem aparece, mude “Qual ator aparece” ou use o 👁 na lista.</p>${trava(L)}`;
+}
+
+/* ---------- luz ---------- */
+const FORMAS = [["circulo", "Círculo (abajur, vela, magia)"], ["feixe", "Feixe (luz de janela, holofote)"]];
+function novaLuz(){
+  const f = pastaSel(), L = {id: uid(), tipo: "luz", name: "Luz", img: null, x: 50, y: 40, w: 30, h: 60, r: 0, px: .5, py: .5, vis: 1, flip: 0, op: 1, lock: 0, parent: f ? f.id : null, role: "always", idle: "none", ia: 3, is: 1, talk: "none", ta: 5,
+    forma: "circulo", cor: "#ffd38a", forca: .8, cint: .15, pulso: 0, fala: 0, escuro: 0};
+  cfg.layers.push(L); cfg.sel = L.id; aba = "camada"; salvar(); desenharLista(); painel(); toast("Luz adicionada. Arraste para o lugar");
+}
+function desenharLuz(L, G, W, H, base, now){
+  const t = now / 1000, ph = (L.id.charCodeAt(0) || 1) * .37;
+  const tremor = .5 + .25 * Math.sin(t * 13 + ph) + .15 * Math.sin(t * 29 + ph * 2) + .1 * Math.sin(t * 7.3 + ph);
+  const I = Math.max(0, (+L.forca || 0) * (1 - (+L.cint || 0) * tremor) * (1 + (+L.pulso || 0) * .35 * Math.sin(t * 2.4 + ph)) * (1 + (+L.fala || 0) * lvl) * (L.op ?? 1));
+  const bw = G.w / 100 * W, feixe = L.forma == "feixe", bh = feixe ? (+L.h || 60) / 100 * H * G.s : bw;
+  mostrada[L.id] = {im: {naturalWidth: bw, naturalHeight: bh}, ox: 0, oy: 0, kk: 1};
+  base(); g.translate(G.X / 100 * W, G.Y / 100 * H); g.rotate((+L.r || 0) * Math.PI / 180);
+  const cx = feixe ? 0 : 0, cy = feixe ? bh / 2 : 0, R = feixe ? Math.max(bw, bh) * .6 : bw / 2;
+  if (+L.escuro > 0) { const gr = g.createRadialGradient(cx, cy, R * .15, cx, cy, R * 1.25); gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(1, `rgba(0,0,0,${Math.min(.95, +L.escuro)})`); g.fillStyle = gr; g.fillRect(-2e4, -2e4, 4e4, 4e4); }
+  g.globalCompositeOperation = "lighter";
+  if (!feixe) { const gr = g.createRadialGradient(0, 0, 0, 0, 0, R); gr.addColorStop(0, hexA(L.cor, Math.min(1, I))); gr.addColorStop(.35, hexA(L.cor, Math.min(1, I * .45))); gr.addColorStop(1, hexA(L.cor, 0)); g.fillStyle = gr; g.fillRect(-R, -R, 2 * R, 2 * R); }
+  else for (const [larg, a] of [[1, .55], [1.35, .25]]) {
+    const gr = g.createLinearGradient(0, 0, 0, bh); gr.addColorStop(0, hexA(L.cor, Math.min(1, I * a))); gr.addColorStop(1, hexA(L.cor, 0)); g.fillStyle = gr;
+    g.beginPath(); g.moveTo(-bw * .14 * larg, 0); g.lineTo(bw * .14 * larg, 0); g.lineTo(bw * .5 * larg, bh); g.lineTo(-bw * .5 * larg, bh); g.closePath(); g.fill(); }
+  g.globalCompositeOperation = "source-over";
+  if (cfg.guides && !rec && L.id == cfg.sel) { g.setLineDash([10, 8]); g.strokeStyle = "#5fd9cf"; g.lineWidth = 3; g.strokeRect(-L.px * bw, -L.py * bh, bw, bh); g.setLineDash([]); g.fillStyle = "#ff9f45"; g.beginPath(); g.arc(0, 0, 9, 0, 7); g.fill(); }
+}
+function painelLuz(L){
+  const fe = L.forma == "feixe";
+  return `<fieldset${travada(L) ? " disabled" : ""}><div class="g">${sl("k", "forma", "Forma da luz", FORMAS, L.forma)}${co("k", "cor", "Cor", L.cor)}${cabecalhoCamada(L)}</div><div class="g">
+    ${rg("k", "forca", "Força", 0, 2, .01, L.forca)}${rg("k", "w", fe ? "Largura (%)" : "Tamanho (%)", 2, 200, .5, L.w)}${fe ? rg("k", "h", "Comprimento (%)", 5, 200, .5, L.h) : ""}
+    ${rg("k", "cint", "Tremeluzir (vela, fogo)", 0, 1, .01, L.cint)}${rg("k", "pulso", "Pulsar devagar", 0, 1, .01, L.pulso)}${rg("k", "fala", "Brilhar com a fala", 0, 2, .05, L.fala)}
+    ${rg("k", "escuro", "Escurecer em volta", 0, .9, .01, L.escuro)}${rg("k", "op", "Opacidade", 0, 1, .01, L.op ?? 1)}
+    ${rg("k", "x", "Horizontal (%)", -20, 120, .1, L.x)}${rg("k", "y", "Vertical (%)", -20, 120, .1, L.y)}${rg("k", "r", "Rotação (°)", -180, 180, 1, L.r)}
+    <div class="btns"><button class="bt" data-a="centro">Centralizar</button>${lixo()}</div></div></fieldset>
+    <p class="dica">💡 A luz clareia o que está atrás dela na lista; coloque com ▲ Frente acima do cenário. “Escurecer em volta” deixa o resto da cena mais escuro: use em uma luz só.</p>${trava(L)}`;
+}
+
+/* ---------- partículas ---------- */
+const EFEITOS = [["poeira", "Poeira no ar"], ["brilhos", "Brilhos"], ["vagalumes", "Vagalumes"], ["neve", "Neve"], ["chuva", "Chuva"], ["petalas", "Pétalas e folhas"], ["brasas", "Brasas subindo"]];
+const COR_EFEITO = {poeira: "#fff2d6", brilhos: "#ffffff", vagalumes: "#d9ff7a", neve: "#ffffff", chuva: "#bcd4ff", petalas: "#ffb3c8", brasas: "#ff9a3c"};
+const partEst = {};
+function novasParticulas(){
+  const f = pastaSel(), L = {id: uid(), tipo: "particulas", name: "Partículas", img: null, x: 50, y: 50, w: 100, h: 100, r: 0, px: .5, py: .5, vis: 1, flip: 0, op: 1, lock: 0, parent: f ? f.id : null, role: "always", idle: "none", ia: 3, is: 1, talk: "none", ta: 5,
+    efeito: "poeira", qtd: 60, tam: 1, vel: 1, cor: COR_EFEITO.poeira, brilho: 1};
+  cfg.layers.push(L); cfg.sel = L.id; aba = "camada"; salvar(); desenharLista(); painel(); toast("Partículas adicionadas");
+}
+function desenharParticulas(L, G, W, H, base, now){
+  const aw = G.w / 100 * W, ah = (+L.h || 100) / 100 * H * G.s, n = Math.max(1, Math.min(400, Math.round(+L.qtd || 1)));
+  let E = partEst[L.id];
+  if (!E || E.ef != L.efeito || E.ps.length != n) { E = partEst[L.id] = {ef: L.efeito, last: now, t: 0, ps: Array.from({length: n}, () => ({x: Math.random(), y: Math.random(), s: .5 + Math.random(), v: .6 + Math.random() * .8, f: Math.random() * 6.28, r: Math.random() * 6.28, c: 0}))}; }
+  const dt = Math.min(.05, (now - E.last) / 1000); E.last = now; E.t += dt; const t = E.t, V = +L.vel || 0, T = +L.tam || 1, ef = L.efeito;
+  mostrada[L.id] = {im: {naturalWidth: aw, naturalHeight: ah}, ox: 0, oy: 0, kk: 1};
+  base(); g.translate(G.X / 100 * W, G.Y / 100 * H); g.rotate((+L.r || 0) * Math.PI / 180); g.translate(-aw / 2, -ah / 2);
+  if (L.brilho) g.globalCompositeOperation = "lighter";
+  const op = L.op ?? 1, kpx = Math.min(W, H) / 720;
+  for (const p of E.ps) {
+    if (ef == "poeira") { p.x += Math.sin(t * .4 + p.f) * .02 * dt * V; p.y += (-.012 + Math.cos(t * .5 + p.f) * .015) * dt * V; }
+    else if (ef == "vagalumes") { p.x += Math.sin(t * .7 * p.v + p.f) * .05 * dt * V; p.y += Math.cos(t * .55 * p.v + p.f * 1.3) * .05 * dt * V; }
+    else if (ef == "neve") { p.y += .09 * p.v * dt * V; p.x += Math.sin(t + p.f) * .025 * dt * V; }
+    else if (ef == "chuva") { p.y += 1.3 * p.v * dt * V; p.x += .12 * dt * V; }
+    else if (ef == "petalas") { p.y += .07 * p.v * dt * V; p.x += (.03 + Math.sin(t * 1.2 + p.f) * .05) * dt * V; p.r += dt * p.v * 2 * V; }
+    else if (ef == "brasas") { p.y -= .11 * p.v * dt * V; p.x += Math.sin(t * 2 + p.f) * .03 * dt * V; }
+    else if (ef == "brilhos") { const c = Math.floor((t * 1.6 * p.v + p.f) / 6.283); if (c != p.c) { p.c = c; p.x = Math.random(); p.y = Math.random(); } }
+    p.x = (p.x % 1 + 1) % 1; p.y = (p.y % 1 + 1) % 1;
+    const borda = Math.min(1, Math.min(p.x, 1 - p.x, p.y, 1 - p.y) * 12), X = p.x * aw, Y = p.y * ah, sz = T * p.s * kpx;
+    let a = op * borda;
+    if (ef == "poeira") { a *= .25 + .45 * (.5 + .5 * Math.sin(t * 1.5 + p.f)); g.fillStyle = hexA(L.cor, a); g.beginPath(); g.arc(X, Y, 2.4 * sz, 0, 7); g.fill(); }
+    else if (ef == "vagalumes") { a *= .3 + .7 * Math.pow(.5 + .5 * Math.sin(t * 2.2 * p.v + p.f), 2); const R = 12 * sz, gr = g.createRadialGradient(X, Y, 0, X, Y, R); gr.addColorStop(0, hexA(L.cor, a)); gr.addColorStop(.25, hexA(L.cor, a * .5)); gr.addColorStop(1, hexA(L.cor, 0)); g.fillStyle = gr; g.fillRect(X - R, Y - R, 2 * R, 2 * R); }
+    else if (ef == "neve") { g.fillStyle = hexA(L.cor, a * .85); g.beginPath(); g.arc(X, Y, 3 * sz, 0, 7); g.fill(); }
+    else if (ef == "chuva") { g.strokeStyle = hexA(L.cor, a * .55); g.lineWidth = 1.6 * kpx * T; g.beginPath(); g.moveTo(X, Y); g.lineTo(X - 2.5 * sz, Y - 20 * sz); g.stroke(); }
+    else if (ef == "petalas") { g.save(); g.translate(X, Y); g.rotate(p.r); g.scale(1, .45 + .4 * Math.abs(Math.sin(p.r * 1.7))); g.fillStyle = hexA(L.cor, a * .9); g.beginPath(); g.ellipse(0, 0, 7 * sz, 3.6 * sz, 0, 0, 7); g.fill(); g.restore(); }
+    else if (ef == "brasas") { a *= .4 + .6 * Math.abs(Math.sin(t * 6 * p.v + p.f)); g.fillStyle = hexA(L.cor, a); g.beginPath(); g.arc(X, Y, 2.2 * sz, 0, 7); g.fill(); }
+    else if (ef == "brilhos") { const k = Math.pow(Math.max(0, Math.sin(t * 1.6 * p.v + p.f)), 3), R = 9 * sz * k; if (R < .3) continue; g.fillStyle = hexA(L.cor, a * k);
+      g.beginPath(); g.moveTo(X, Y - R); g.quadraticCurveTo(X, Y, X + R, Y); g.quadraticCurveTo(X, Y, X, Y + R); g.quadraticCurveTo(X, Y, X - R, Y); g.quadraticCurveTo(X, Y, X, Y - R); g.fill(); }
+  }
+  g.globalCompositeOperation = "source-over";
+  if (cfg.guides && !rec && L.id == cfg.sel) { g.setLineDash([10, 8]); g.strokeStyle = "#5fd9cf"; g.lineWidth = 3; g.strokeRect(0, 0, aw, ah); g.setLineDash([]); }
+}
+function painelParticulas(L){
+  return `<fieldset${travada(L) ? " disabled" : ""}><div class="g">${sl("k", "efeito", "Efeito", EFEITOS, L.efeito)}${co("k", "cor", "Cor", L.cor)}${cabecalhoCamada(L)}</div><div class="g">
+    ${rg("k", "qtd", "Quantidade", 5, 300, 5, L.qtd)}${rg("k", "tam", "Tamanho", .3, 4, .05, L.tam)}${rg("k", "vel", "Velocidade", 0, 3, .05, L.vel)}${rg("k", "op", "Opacidade", 0, 1, .01, L.op ?? 1)}
+    ${rg("k", "w", "Largura da área (%)", 5, 200, .5, L.w)}${rg("k", "h", "Altura da área (%)", 5, 200, .5, L.h)}
+    ${rg("k", "x", "Horizontal (%)", -20, 120, .1, L.x)}${rg("k", "y", "Vertical (%)", -20, 120, .1, L.y)}${rg("k", "r", "Rotação (°)", -180, 180, 1, L.r)}
+    <div class="btns">${ck("k", "brilho", "Brilhar (somar luz)", L.brilho)}<button class="bt" data-a="centro">Centralizar</button>${lixo()}</div></div></fieldset>
+    <p class="dica">✨ As partículas aparecem dentro da área tracejada. Coloque na frente ou atrás dos atores com ▲ Frente / ▼ Atrás.</p>${trava(L)}`;
+}
+
+/* ---------- formatos: cada um guarda as próprias posições ---------- */
+const TAM = {"16:9": [1280, 720], "9:16": [720, 1280]};
+function geoGuardar(fm){
+  for (const L of cfg.layers) { L.fmts = L.fmts || {}; L.fmts[fm] = {x: L.x, y: L.y, w: L.w, h: L.h}; }
+  for (const f of cfg.folders) { f.fmts = f.fmts || {}; f.fmts[fm] = {dx: +f.dx || 0, dy: +f.dy || 0, s: +f.s || 1}; }
+}
+function converter(de, para, x){ // mantém a cena enquadrada: a altura toda aparece e o centro fica no centro
+  const [Wo, Ho] = TAM[de], [Wn, Hn] = TAM[para], k = Math.max(Wn / Wo, Hn / Ho);
+  const r = v => +(+v).toFixed(1), o = {};
+  if (x.x != null) o.x = r((Wn / 2 + (x.x / 100 * Wo - Wo / 2) * k) / Wn * 100);
+  if (x.y != null) o.y = r((Hn / 2 + (x.y / 100 * Ho - Ho / 2) * k) / Hn * 100);
+  if (x.w != null) o.w = r(x.w / 100 * Wo * k / Wn * 100);
+  if (x.h != null) o.h = r(x.h / 100 * Ho * k / Hn * 100);
+  if (x.dx != null) o.dx = r(x.dx / 100 * Wo * k / Wn * 100);
+  if (x.dy != null) o.dy = r(x.dy / 100 * Ho * k / Hn * 100);
+  return o;
+}
+function aplicarGeo(L, de, para, fonte){
+  if (L.tipo == "particulas" && +fonte.w >= 95 && +fonte.h >= 95) { Object.assign(L, {x: fonte.x, y: fonte.y, w: fonte.w, h: fonte.h}); return; } // chuva na tela toda continua na tela toda
+  const o = converter(de, para, {x: fonte.x, y: fonte.y, w: fonte.w, h: fonte.h == null ? null : fonte.h});
+  L.x = o.x; L.y = o.y; L.w = o.w; if (o.h != null) L.h = o.h;
+}
+function trocarFormato(para){
+  const de = cfg.fmt; if (de == para) return 0; geoGuardar(de); let n = 0;
+  for (const L of cfg.layers) { const s = L.fmts[para]; if (s) Object.assign(L, {x: s.x, y: s.y, w: s.w}, s.h != null ? {h: s.h} : {}); else { aplicarGeo(L, de, para, L.fmts[de]); n++; } }
+  for (const f of cfg.folders) { const s = f.fmts[para]; if (s) Object.assign(f, s); else { const o = converter(de, para, {dx: +f.dx || 0, dy: +f.dy || 0}); f.dx = o.dx; f.dy = o.dy; n++; } }
+  cfg.fmt = para; return n;
+}
+function readaptar(){
+  const para = cfg.fmt, de = para == "16:9" ? "9:16" : "16:9"; let n = 0;
+  for (const L of cfg.layers) { const s = L.fmts && L.fmts[de]; if (s) { aplicarGeo(L, de, para, s); n++; } }
+  for (const f of cfg.folders) { const s = f.fmts && f.fmts[de]; if (s) { const o = converter(de, para, s); f.dx = o.dx; f.dy = o.dy; f.s = s.s; n++; } }
+  return n;
+}
+
 /* ---------- desenho ---------- */
-function tamanho(){ const v = cfg.fmt == "9:16"; cv.width = v ? 720 : 1280; cv.height = v ? 1280 : 720; caber(); }
+// o desenho é sempre pensado em 1280×720; na gravação o canvas cresce (ESC) para sair em HD de verdade
+let ESC = 1;
+const QUAL = {"720p": 1, "1080p": 1.5, "1440p": 2}, BITS = {"720p": 8e6, "1080p": 16e6, "1440p": 24e6};
+const qual = () => QUAL[cfg.qual] ? cfg.qual : "1080p";
+function tamanho(){ const v = cfg.fmt == "9:16"; cv.width = Math.round((v ? 720 : 1280) * ESC); cv.height = Math.round((v ? 1280 : 720) * ESC); caber(); }
 function caber(){ const t = $("#tela"), w = t.clientWidth - 16, h = t.clientHeight - 16; if (w <= 0 || h <= 0) return;
   const k = Math.min(w / cv.width, h / cv.height); cv.style.width = Math.floor(cv.width * k) + "px"; cv.style.height = Math.floor(cv.height * k) + "px"; }
 new ResizeObserver(caber).observe(document.querySelector("#tela"));
 function tick(now){
   requestAnimationFrame(tick);
-  const t = now / 1000, W = cv.width, H = cv.height;
+  const t = now / 1000, W = cv.width / ESC, H = cv.height / ESC;
   let alvo = 0;
   if (cur && an) { an.getByteTimeDomainData(buf); let s = 0; for (let i = 0; i < buf.length; i++) { const d = (buf[i] - 128) / 128; s += d * d; } alvo = Math.min(1, Math.sqrt(s / buf.length) * cfg.gain); }
   else if (sp) alvo = .45 + .4 * Math.abs(Math.sin(t * 13));
@@ -553,12 +976,16 @@ function tick(now){
   const pisca = now < piscaAte;
   for (const a of A.slice()) if (now > a.t0 + a.dur) { A.splice(A.indexOf(a), 1); fim(a); }
   const c = camera(now); camAtual = c;
-  g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.clearRect(0, 0, W, H);
+  g.setTransform(ESC, 0, 0, ESC, 0, 0); g.globalAlpha = 1; g.clearRect(0, 0, W, H);
   const bg = rec && cfg.bg == "check" ? "chroma" : cfg.bg;
   if (bg == "chroma") { g.fillStyle = "#00b140"; g.fillRect(0, 0, W, H); } else if (bg == "app") { g.fillStyle = "#120f24"; g.fillRect(0, 0, W, H); }
-  const base = () => { g.setTransform(1, 0, 0, 1, 0, 0); g.translate(W / 2, H / 2); g.rotate(c.rot * Math.PI / 180); g.scale(c.z, c.z); g.translate(-W / 2 - c.px / 100 * W, -H / 2 - c.py / 100 * H); };
+  const base = () => { g.setTransform(ESC, 0, 0, ESC, 0, 0); g.translate(W / 2, H / 2); g.rotate(c.rot * Math.PI / 180); g.scale(c.z, c.z); g.translate(-W / 2 - c.px / 100 * W, -H / 2 - c.py / 100 * H); };
   ancora = {}; const soma = {};
   for (const L of cfg.layers) {
+    if (L.tipo == "atriz" || L.tipo == "luz" || L.tipo == "particulas") { const G = geo(L); ancora[L.id] = {x: G.X, y: G.Y};
+      if (L.parent) { const s = soma[L.parent] || (soma[L.parent] = {x: 0, y: 0, n: 0}); s.x += G.X; s.y += G.Y; s.n++; }
+      if (visivel(L)) { g.save(); if (L.tipo == "atriz") ATRIZ.desenhar(L, G, W, H, base, now); else if (L.tipo == "luz") desenharLuz(L, G, W, H, base, now); else desenharParticulas(L, G, W, H, base, now); g.restore(); g.globalAlpha = 1; g.globalCompositeOperation = "source-over"; }
+      continue; }
     let dx = 0, dy = 0, dr = 0, ds = 1, op = L.op ?? 1; const k = L.is * 2, G = geo(L);
     if (L.idle == "bob") dy += Math.sin(t * k) * L.ia * .5;
     else if (L.idle == "sway") dr += Math.sin(t * k) * L.ia;
@@ -591,17 +1018,17 @@ function tick(now){
     if (cfg.guides && !rec && (sel || daPasta)) { g.globalAlpha = 1; g.setLineDash([10, 8]); g.strokeStyle = sel ? "#5fd9cf" : "#f2b632"; g.lineWidth = 3 / c.z; g.strokeRect(-L.px * w, -L.py * h, w, h); g.setLineDash([]); if (sel) { g.fillStyle = "#ff9f45"; g.beginPath(); g.arc(0, 0, 9, 0, 7); g.fill(); } }
   }
   for (const k in soma) ancora["f:" + k] = {x: soma[k].x / soma[k].n, y: soma[k].y / soma[k].n};
-  g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1;
+  g.setTransform(ESC, 0, 0, ESC, 0, 0); g.globalAlpha = 1;
   balao(now, W, H, base);
   sobreposicoes(now, W, H);
 }
 
 /* ---------- tocar no palco: escolher, arrastar e pinçar ---------- */
 const pontos = new Map(); let arr = null;
-function ponto(e){ const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * cv.width, (e.clientY - r.top) / r.height * cv.height]; }
+function ponto(e){ const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * cv.width / ESC, (e.clientY - r.top) / r.height * cv.height / ESC]; }
 function acertou(L, x, y){
   const M = mostrada[L.id]; if (!M) return false; const im = M.im; if (!im || !im.naturalWidth) return false;
-  const W = cv.width, H = cv.height, G = geo(L), w = G.w * M.kk / 100 * W, h = w * im.naturalHeight / im.naturalWidth, a = -L.r * Math.PI / 180;
+  const W = cv.width / ESC, H = cv.height / ESC, G = geo(L), w = G.w * M.kk / 100 * W, h = w * im.naturalHeight / im.naturalWidth, a = -L.r * Math.PI / 180;
   let px = x - (G.X + M.ox) / 100 * W, py = y - (G.Y + M.oy) / 100 * H; [px, py] = [px * Math.cos(a) - py * Math.sin(a), px * Math.sin(a) + py * Math.cos(a)];
   if (L.flip) px = -px; px += L.px * w; py += L.py * h; return px >= 0 && py >= 0 && px <= w && py <= h;
 }
@@ -648,8 +1075,8 @@ const icone = f => f.iconImg && imgs[f.iconImg] ? `<img class="fi" src="${imgs[f
 const cad = (id, on) => `<button class="ic${on ? " lk" : " off"}" data-lock="${id}" aria-label="${on ? "Destravar" : "Travar"}">${on ? "🔒" : "🔓"}</button>`;
 const olho = (id, on) => `<button class="ic${on ? "" : " off"}" data-vis="${id}" aria-label="Mostrar ou esconder">👁</button>`;
 function linhaCamada(L, filho){
-  return `<div class="ly${filho ? " filho" : ""}${L.id == cfg.sel ? " on" : ""}" data-sel="${L.id}"><img class="th" src="${imgs[L.img] ? imgs[L.img].src : ""}" alt="">
-    <div class="nm">${esc(L.name)}<small>${L.tipo == "personagem" ? "🧍 " + esc(L.pers) + " · " + NOMEPOSE[L.pose] : L.tipo == "cenario" ? "🏞 Cenário" : (PAPEIS.find(p => p[0] == L.role) || PAPEIS[0])[1]} · ${Math.round((L.op ?? 1) * 100)}%</small></div>${cad(L.id, L.lock)}${olho(L.id, L.vis)}</div>`;
+  return `<div class="ly${filho ? " filho" : ""}${L.id == cfg.sel ? " on" : ""}" data-sel="${L.id}">${L.tipo == "luz" ? '<span class="fi">💡</span>' : L.tipo == "particulas" ? '<span class="fi">✨</span>' : `<img class="th" src="${L.tipo == "atriz" ? ATRIZ.miniatura(L.ator) : imgs[L.img] ? imgs[L.img].src : ""}" alt="">`}
+    <div class="nm">${esc(L.name)}<small>${L.tipo == "atriz" ? "🎭 " + esc(ATRIZ.nome(L.ator || "principal")) : L.tipo == "luz" ? "💡 Luz" : L.tipo == "particulas" ? "✨ " + (EFEITOS.find(x => x[0] == L.efeito) || ["", "Partículas"])[1] : L.tipo == "personagem" ? "🧍 " + esc(L.pers) + " · " + NOMEPOSE[L.pose] : L.tipo == "cenario" ? "🏞 Cenário" : (PAPEIS.find(p => p[0] == L.role) || PAPEIS[0])[1]} · ${Math.round((L.op ?? 1) * 100)}%</small></div>${cad(L.id, L.lock)}${olho(L.id, L.vis)}</div>`;
 }
 function linhaPasta(f){
   const n = cfg.layers.filter(l => l.parent == f.id).length;
@@ -665,10 +1092,10 @@ function listaHTML(){
     else out.push(linhaCamada(L, false));
   }
   cfg.folders.filter(f => !feitas.has(f.id)).forEach(f => out.push(linhaPasta(f)));
-  if (!cfg.layers.length) out.push('<p class="vazio">Toque em + PNG e escolha as partes da Tamaki: corpo, cabeça, olhos, bocas, fundo…</p>');
+  if (!cfg.layers.length) out.push('<p class="vazio">Toque em + PNG para o cenário e os objetos, + Ator para trazer as PNGtubers da aba Atriz, + Luz e + Partículas para o clima da cena.</p>');
   return out.join("");
 }
-const BARRA = '<label class="add" for="fPng">+ PNG</label><button data-a="novapasta">+ Pasta</button><button data-a="renomear">Renomear</button><button data-a="dup">Duplicar</button><button data-a="sobe">▲ Frente</button><button data-a="desce">▼ Atrás</button><button data-a="apaga">Apagar</button>';
+const BARRA = '<label class="add" for="fPng">+ PNG</label><button data-a="atriz">+ Ator</button><button data-a="luz">+ Luz</button><button data-a="particulas">+ Partículas</button><button data-a="novapasta">+ Pasta</button><button data-a="renomear">Renomear</button><button data-a="dup">Duplicar</button><button data-a="sobe">▲ Frente</button><button data-a="desce">▼ Atrás</button><button data-a="apaga">Apagar</button>';
 function desenharLista(){ $("#lista").innerHTML = listaHTML(); $("#barra").innerHTML = BARRA; if (aba == "camadas") painel(); }
 function selecionar(id, doPalco){
   if (id != cfg.sel) subP = "parada";
@@ -690,7 +1117,11 @@ async function acao(a, el){
   const L = camada(), f = pastaSel(), tp = tipoSel();
   const sempre = {
     falar: () => { audio(); falar(cfg.text); }, parar: () => parar(), gravar, desfazer, refazer,
-    formato: () => { cfg.fmt = cfg.fmt == "16:9" ? "9:16" : "16:9"; tamanho(); topo(); salvar(); if (aba == "balao") painel(); },
+    qualidade: () => { if (rec) return toast("Pare a gravação para trocar a qualidade"); const q = Object.keys(QUAL), i = q.indexOf(qual()); cfg.qual = q[(i + 1) % q.length]; topo(); salvar();
+      toast(`Gravação em ${cfg.qual}` + (cfg.qual == "1440p" ? ". Pode pesar no tablet" : "")); },
+    formato: () => { const n = trocarFormato(cfg.fmt == "16:9" ? "9:16" : "16:9"); tamanho(); topo(); salvar(); painel(); toast(n ? `Posições adaptadas ao ${cfg.fmt}. Cada formato guarda as suas` : "Formato " + cfg.fmt); },
+    readaptar: () => { const el = $("#bReadaptar"); if (!el.dataset.s) { el.dataset.s = 1; el.textContent = "Confirmar"; setTimeout(() => { delete el.dataset.s; el.textContent = "⤢ Readaptar"; }, 3000); return; }
+      delete el.dataset.s; el.textContent = "⤢ Readaptar"; const n = readaptar(); salvar(); painel(); toast(n ? `Posições refeitas a partir do ${cfg.fmt == "16:9" ? "9:16" : "16:9"}` : "Nada para readaptar ainda"); },
     fundo: () => { const o = Object.keys(FUNDOS); cfg.bg = o[(o.indexOf(cfg.bg) + 1) % o.length]; topo(); salvar(); },
     teste: () => { fake = performance.now() + 4000; }, ping: testar, audio: () => $("#fAud").click(), exp: exportar, imp: () => $("#fImp").click(),
     cmd: async () => { try { await navigator.clipboard.writeText(CMD()); aviso("Comando copiado. Cole no Termux."); } catch (e) { prompt("Copie o comando:", CMD()); } },
@@ -699,6 +1130,7 @@ async function acao(a, el){
     balpadrao: () => { cfg.bal.pos[cfg.fmt] = copia(DEF.bal.pos[cfg.fmt]); cfg.bal.seguir = ""; salvar(); painel(); desenharLista(); },
     camcentro: () => { Object.assign(cfg.fx, {zoom: 1, px: 0, py: 0, rot: 0}); salvar(); painel(); },
     limpar: () => { A = []; hold = false; },
+    atriz: () => novaAtriz(), luz: novaLuz, particulas: novasParticulas,
     novapasta: () => { const n = (prompt("Nome da pasta:", "Pasta " + (cfg.folders.length + 1)) || "").trim(); if (!n) return;
       const nf = {id: uid(), name: n, icon: "📁", iconImg: null, vis: 1, lock: 0, open: 1, dx: 0, dy: 0, s: 1}; cfg.folders.push(nf);
       if (L && !L.parent) L.parent = nf.id; cfg.sel = "f:" + nf.id; aba = "camada"; salvar(); desenharLista(); painel(); toast(L ? "Pasta criada com a camada selecionada" : "Pasta criada"); },
@@ -708,6 +1140,9 @@ async function acao(a, el){
   if (tp == "pasta" && f) {
     if (a == "apaga") { if (!el.dataset.s) { el.dataset.s = 1; el.textContent = "Confirmar"; return; }
       cfg.layers.forEach(x => { if (x.parent == f.id) x.parent = null; }); cfg.folders = cfg.folders.filter(x => x != f); cfg.sel = null; salvar(); desenharLista(); painel(); toast("Pasta apagada; as camadas ficaram na lista"); }
+    else if (a == "apagatudo") { if (!el.dataset.s) { el.dataset.s = 1; el.textContent = "Confirmar: apagar tudo"; return; }
+      const fora = cfg.layers.filter(x => x.parent == f.id).map(x => x.id); cfg.layers = cfg.layers.filter(x => x.parent != f.id); if (fora.includes(cfg.bal.seguir) || cfg.bal.seguir == "f:" + f.id) cfg.bal.seguir = "";
+      cfg.folders = cfg.folders.filter(x => x != f); cfg.sel = null; salvar(); desenharLista(); painel(); toast("Pasta e camadas apagadas (dá para desfazer com ↶)"); }
     else if (a == "dup" || a == "sobe" || a == "desce") toast("Faça isso nas camadas da pasta");
     return;
   }
@@ -718,7 +1153,7 @@ async function acao(a, el){
   else if (a == "sobe" || a == "desce") { const i = cfg.layers.indexOf(L), j = i + (a == "sobe" ? 1 : -1); if (j < 0 || j >= cfg.layers.length) return; [cfg.layers[i], cfg.layers[j]] = [cfg.layers[j], cfg.layers[i]]; salvar(); desenharLista(); }
   else if (a == "apaga") { if (!el.dataset.s) { el.dataset.s = 1; el.textContent = "Confirmar"; return; }
     cfg.layers = cfg.layers.filter(x => x != L); if (cfg.bal.seguir == L.id) cfg.bal.seguir = ""; cfg.sel = null; salvar(); desenharLista(); painel(); }
-  else if (a == "centro") { L.x = 50; L.y = 50; sincronizar(); salvar(); }
+  else if (a == "centro") { L.x = 50; L.y = L.tipo == "atriz" ? 100 : 50; sincronizar(); salvar(); }
 }
 
 /* ---------- painéis de baixo ---------- */
@@ -734,6 +1169,7 @@ function painelPasta(f){
   const tem = cfg.layers.filter(l => l.parent == f.id || !l.parent);
   return `<fieldset class="g"${f.lock ? " disabled" : ""}>${tx("p", "name", "Nome da pasta", f.name)}
     ${rg("p", "dx", "Mover horizontal (%)", -60, 60, .1, +f.dx || 0)}${rg("p", "dy", "Mover vertical (%)", -60, 60, .1, +f.dy || 0)}${rg("p", "s", "Escala", .2, 3, .01, +f.s || 1)}</fieldset>
+    <div class="btns" style="margin-top:6px"><button class="bt" data-a="apaga">🗑 Apagar só a pasta</button><button class="bt" data-a="apagatudo">🗑 Apagar a pasta e as camadas dela</button></div>
     ${f.lock ? `<p class="dica">🔒 Pasta travada. <button class="bt" data-lock="f:${f.id}">Destravar</button></p>` : ""}
     <div class="g" style="margin-top:8px"><div class="f"><b>Ícone da pasta</b><div class="icones">${ICONES.map(i => `<button data-icone="${i}" class="${!f.iconImg && f.icon == i ? "on" : ""}">${i}</button>`).join("")}<label for="fIco" title="Usar uma imagem">🖼</label></div></div>
     <div class="f"><b>Camadas nesta pasta (toque para pôr ou tirar)</b><div class="chips">${tem.length ? tem.slice().reverse().map(l => `<button data-membro="${l.id}" class="${l.parent == f.id ? "on" : ""}">${esc(l.name)}</button>`).join("") : '<span class="dica">Nenhuma camada livre.</span>'}</div></div></div>`;
@@ -742,7 +1178,7 @@ const PAINEIS = {
   camadas: () => `<div class="lista">${listaHTML()}</div><div class="barra">${BARRA}</div>`,
   camada: () => {
     const tp = tipoSel(); if (tp == "bal") return PAINEIS.balao(); if (tp == "pasta") return pastaSel() ? painelPasta(pastaSel()) : semNada;
-    const L = camada(); if (!L) return semNada; const tr = travada(L), per = L.tipo == "personagem", tipo = sl("k", "tipo", "O que é na cena", TIPOS, L.tipo || "decoracao");
+    const L = camada(); if (!L) return semNada; if (L.tipo == "atriz") return painelAtriz(L, "camada"); if (L.tipo == "luz") return painelLuz(L); if (L.tipo == "particulas") return painelParticulas(L); const tr = travada(L), per = L.tipo == "personagem", tipo = sl("k", "tipo", "O que é na cena", TIPOS, L.tipo || "decoracao");
     const trava = tr ? `<p class="dica">🔒 Travada${L.lock ? "" : " pela pasta"}. <button class="bt" data-lock="${L.lock ? L.id : "f:" + L.parent}">Destravar</button></p>` : "";
     let extra = "", dica = "";
     if (per) {
@@ -757,10 +1193,12 @@ const PAINEIS = {
       ${per || L.tipo == "cenario" ? "" : sl("k", "role", "Papel da peça", PAPEIS, L.role)}</div><div class="g">
       ${rg("k", "op", "Opacidade", 0, 1, .01, L.op ?? 1)}${rg("k", "w", "Tamanho (%)", 2, 300, .5, L.w)}
       ${rg("k", "x", "Horizontal (%)", -20, 120, .1, L.x)}${rg("k", "y", "Vertical (%)", -20, 120, .1, L.y)}${rg("k", "r", "Rotação (°)", -180, 180, 1, L.r)}
-      <div class="btns">${ck("k", "flip", "Espelhar", L.flip)}<button class="bt" data-a="centro">Centralizar</button><button class="bt" data-a="trocaimg">Trocar imagem</button></div></div></fieldset>${dica}${trava}`;
+      <div class="btns">${ck("k", "flip", "Espelhar", L.flip)}<button class="bt" data-a="centro">Centralizar</button><button class="bt" data-a="trocaimg">Trocar imagem</button>${lixo()}</div></div></fieldset>${dica}${trava}`;
   },
   anim: () => {
     const L = camada(); if (!L) return tipoSel() == "camada" ? semNada : '<p class="vazio">A animação é por camada. Escolha uma camada.</p>';
+    if (L.tipo == "atriz") return painelAtriz(L, "anim");
+    if (L.tipo == "luz") return painelLuz(L); if (L.tipo == "particulas") return painelParticulas(L);
     const per = L.tipo == "personagem", c = per ? subs("a", subA, [["mov", "Movimento"], ["trans", "Transição da fala"]]) : "";
     if (per && subA == "trans") { const P = persDe(L); return c + `<div class="g">
       ${sl("q", "trans", "Ao começar e ao parar de falar", [["corte", "Corte seco"], ["fade", "Esmaecer"], ["pulo", "Pulinho"], ["pulsar", "Pulsar"], ["deslize", "Deslizar"]], P.trans)}
@@ -799,7 +1237,7 @@ const PAINEIS = {
     return c;
   },
   fala: () => `<div class="fala"><textarea data-c="text" placeholder="O que a Tamaki vai falar. Uma frase por linha.">${esc(cfg.text)}</textarea>
-    <div class="lado"><label class="f vozfala"><b>🎙 Voz desta fala</b><select data-vozfala>${opcoesVoz()}</select></label><button class="bt" data-a="ouvir">🔊 Ouvir a voz</button><button class="bt pri" data-a="falar">▶ Falar</button><button class="bt" data-a="audio">Tocar áudio…</button><button class="bt" data-a="testebal">Testar balão</button><p class="dica" id="msg">Cada linha vira uma fala no balão.</p></div></div>`,
+    <div class="lado"><button class="bt pri" data-a="falar">▶ Falar</button><button class="bt" data-a="audio">Tocar áudio…</button><button class="bt" data-a="testebal">Testar balão</button><p class="dica" id="msg">Cada linha vira uma fala no balão.</p></div></div>`,
   efeitos: () => {
     const F = cfg.fx, bot = (k, n) => `<button class="bt" data-fx="${k}">${n}</button>`;
     let c = subs("e", subE, [["cam", "Câmera"], ["trans", "Transições"], ["intro", "Intros"], ["grav", "Ao gravar"]]);
@@ -869,6 +1307,9 @@ function entrada(e){
   }
   if (d.k == "pose" && o.pose != v && v != "parada") { o.pose = v; copiarParada(o); toast("A pose " + NOMEPOSE[v] + " começou na posição e tamanho da Parada"); }
   if (d.k == "pers" && o.pers != v) { o.pers = v; persDe(o); }
+  if (d.k == "efeito" && o.efeito != v && COR_EFEITO[v]) o.cor = COR_EFEITO[v];
+  if (d.k == "forma") o.py = v == "feixe" ? 0 : .5;
+  if (d.k == "ator" && o.ator != v) { const novo = ATRIZ.nome(v); if (!o.name || o.name == ATRIZ.nome(o.ator || "principal") || /\(atriz\)$/.test(o.name)) o.name = novo; }
   if (d.k && o.tipo == "personagem" && persDe(o).juntas && GEO.includes(k) && o[k] != v) { // as outras poses acompanham
     const ir = irmas(o);
     if (k == "x" || k == "y") { const dd = v - o[k]; ir.forEach(x => x[k] = +(x[k] + dd).toFixed(1)); }
@@ -881,7 +1322,7 @@ function entrada(e){
   if (d.ch) { guardarChaves(); return; }
   if (d.ed && cadV) cadV.ajustar();
   if (e.type == "change" && (d.c == "motor" || d.v == "azVoz")) painel();
-  if (["name", "role", "op", "parent", "estilo", "seguir", "on", "lock", "tipo", "pose", "pers"].includes(k) && (d.k || d.p || d.b)) { $("#lista").innerHTML = listaHTML(); if (e.type == "change" && (k == "parent" || k == "lock" || k == "seguir" || k == "tipo" || k == "pose" || k == "pers")) painel(); }
+  if (["name", "role", "op", "parent", "estilo", "seguir", "on", "lock", "tipo", "pose", "pers", "ator", "efeito", "forma"].includes(k) && (d.k || d.p || d.b)) { $("#lista").innerHTML = listaHTML(); if (e.type == "change" && (k == "parent" || k == "lock" || k == "seguir" || k == "tipo" || k == "pose" || k == "pers" || k == "ator" || k == "efeito" || k == "forma")) painel(); }
   salvar();
 }
 document.addEventListener("input", entrada); document.addEventListener("change", entrada);
@@ -890,6 +1331,7 @@ document.addEventListener("click", e => {
   let b;
   if ((b = q("button[data-a]"))) return acao(b.dataset.a, b);
   if ((b = q("[data-fx]"))) return disparar(b.dataset.fx);
+  if ((b = q("[data-atriz]"))) return ATRIZ.acao(b.dataset.atriz, camada());
   if ((b = q("[data-preset]"))) { Object.assign(cfg.ed, PRESET[b.dataset.preset]); if (cadV) cadV.ajustar(); salvar(); painel(); toast("Predefinição: " + b.textContent); return; }
   if ((b = q("[data-icone]"))) { const f = pastaSel(); if (f) { f.icon = b.dataset.icone; f.iconImg = null; salvar(); desenharLista(); painel(); } return; }
   if ((b = q("[data-membro]"))) { const f = pastaSel(), L = cfg.layers.find(l => l.id == b.dataset.membro); if (f && L) { L.parent = L.parent == f.id ? null : f.id; salvar(); desenharLista(); painel(); } return; }
@@ -900,7 +1342,7 @@ document.addEventListener("click", e => {
   if ((b = q("[data-t]"))) { aba = b.dataset.t; painel(); return; }
   if ((b = q("[data-sub]"))) { const [n, v] = b.dataset.sub.split(":"); if (n == "b") subB = v; else if (n == "a") subA = v; else if (n == "v") subV = v; else subE = v; painel(); }
 });
-function topo(){ $("#bFmt").textContent = cfg.fmt; $("#bFundo").textContent = FUNDOS[cfg.bg] || FUNDOS.check; $("#guias").checked = !!cfg.guides; }
+function topo(){ $("#bFmt").textContent = cfg.fmt; $("#bQual").textContent = "🎥 " + qual(); $("#bFundo").textContent = FUNDOS[cfg.bg] || FUNDOS.check; $("#guias").checked = !!cfg.guides; }
 $("#guias").onchange = e => { cfg.guides = e.target.checked ? 1 : 0; salvar(); };
 $("#fPng").onchange = async e => { await adicionar(e.target.files); e.target.value = ""; };
 $("#fAud").onchange = async e => { const f = e.target.files[0]; e.target.value = ""; if (!f) return; audio(); try { await tocar(f, ""); } catch (x) { aviso("Não consegui tocar esse arquivo."); } };
@@ -938,12 +1380,51 @@ async function importar(f){
   const chaves = chavesImgs();
   for (const k of chaves) { try { const b = await idbGet(k); if (b && !imgs[k]) carregarImg(k, b); } catch (e) {} }
   const prontas = Object.values(imgs).map(im => new Promise(ok => { im.onload = im.onerror = ok; }));
+  for (const L of cfg.layers) if (L.tipo == "atriz") ATRIZ.dados(L.ator);
   tamanho(); topo(); desenharLista(); painel(); selo(); hist = [foto()]; requestAnimationFrame(tick);
+  checarPedido(); setTimeout(desenharLista, 800);
   await Promise.all(prontas); desenharLista();
   try { conectar(); } catch (e) {}
 })();
+/* ---------- linha de produção da Central: toca as falas do roteiro e grava a cena (mesmo código de palco-gravar.js, aqui dentro para enxergar o Palco) ---------- */
+/* Injetado pela Central dentro da aba Palco (funciona com qualquer versão do Palco, até código guardado no aparelho).
+   Toca as falas do roteiro (a boca anima com o áudio), grava a cena e guarda na Biblioteca.
+   Usa as variáveis do próprio Palco: cv, cfg, audio(), tocarBuffer(), parar(), rec, hold, cap. */
+window.__tamakiGravar = async function (d, sinal) {
+  sinal = sinal || (() => {});
+  const espera = ms => new Promise(r => setTimeout(r, ms));
+  const abrir = () => new Promise((ok, no) => { const r = indexedDB.open("tamaki-biblioteca", 1); r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains("itens")) r.result.createObjectStore("itens", {keyPath: "id"}); }; r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+  const tx = async (modo, fn) => { const db = await abrir(); try { return await new Promise((ok, no) => { const t = db.transaction("itens", modo), q = fn(t.objectStore("itens")); t.oncomplete = () => ok(q && q.result); t.onerror = () => no(t.error); }); } finally { db.close(); } };
+  if (rec) throw new Error("o Palco já está gravando (toque em ■ Parar gravação)");
+  const c = audio(); try { await c.resume(); } catch (e) {}
+  if (c.state != "running") throw new Error("o som do Palco está bloqueado: toque uma vez na cena do Palco e produza de novo");
+  sinal("Palco: carregando as falas…");
+  const bufs = []; for (const id of d.ids) { const it = await tx("readonly", s => s.get(id)); if (!it || !it.blob) throw new Error("uma fala não chegou na Biblioteca"); bufs.push(await c.decodeAudioData(await it.blob.arrayBuffer())); }
+  const antes = {bal: cfg.bal.on, guias: cfg.guides};
+  try { parar(); } catch (e) {}
+  if (d.semBalao) cfg.bal.on = 0; cfg.guides = 0; hold = false;
+  rec = {stop() {}, state: "recording", roteiro: true}; // o Palco esconde guias e marcações enquanto "grava"
+  try {
+    const st = cv.captureStream(30), tipo = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find(m => MediaRecorder.isTypeSupported(m));
+    const r = new MediaRecorder(st, tipo ? {mimeType: tipo, videoBitsPerSecond: 4e6} : {}), pts = [], fim = new Promise(ok => r.onstop = ok);
+    r.ondataavailable = e => { if (e.data.size) pts.push(e.data); };
+    r.start(250); const t0 = performance.now();
+    await espera((d.ini ?? .2) * 1000);
+    for (const [i, ab] of bufs.entries()) {
+      sinal(`Palco: fala ${i + 1} de ${bufs.length}`);
+      await tocarBuffer(ab, (d.textos || [])[i] || "");
+      await espera(((d.pausas || [])[i] ?? .3) * 1000);
+    }
+    await espera(400); r.stop(); await fim; cap = "";
+    const dur = (performance.now() - t0) / 1000, blob = new Blob(pts, {type: "video/webm"});
+    if (blob.size < 2000) throw new Error("a gravação da cena saiu vazia");
+    const it = {id: "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), origem: "palco", tipo: "video", nome: "Palco · " + (d.titulo || "Roteiro"), nomeManual: 1, pasta: d.pasta || null, texto: "", mime: "video/webm", tamanho: blob.size, criado: Date.now(), dur, blob};
+    await tx("readwrite", s => s.put(it));
+    try { const b = new BroadcastChannel("tamaki-biblioteca"); b.postMessage({novo: it.id}); b.close(); } catch (e) {}
+    return {id: it.id, dur, w: cv.width, h: cv.height};
+  } finally { rec = null; cfg.bal.on = antes.bal; cfg.guides = antes.guias; }
+};
 })();
-
 </script>
 </body>
 </html>
