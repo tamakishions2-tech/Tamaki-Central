@@ -154,7 +154,8 @@
         const t = l.tom || {}, VIVO = {exaggeration: Math.max(conf.exaggeration ?? .5, .65), cfg_weight: Math.min(conf.cfg_weight ?? .5, .42), temperature: Math.max(conf.temperature ?? .8, .9)};
         const r = await est("/falar", {resp: true, body: {texto: l.texto, emocao: emoId(l.emo), exaggeration: t.exaggeration ?? VIVO.exaggeration, cfg_weight: t.cfg_weight ?? VIVO.cfg_weight, temperature: t.temperature ?? VIVO.temperature}});
         const nome = `${nota.titulo || "Roteiro"} · ${String(i + 1).padStart(2, "0")}${l.emo ? " · " + l.emo.toLowerCase() : ""}`;
-        ids.push(await guardar(await r.blob(), {origem: "voz", nome, nomeManual: 1, texto: l.linha, pasta: pasta.id, roteiro: nota.id, ordem: i}));
+        let blobFala = await r.blob(); if (window.TamakiPolir) blobFala = await window.TamakiPolir(blobFala);   // som macio (sem o metálico)
+        ids.push(await guardar(blobFala, {origem: "voz", nome, nomeManual: 1, texto: l.linha, pasta: pasta.id, roteiro: nota.id, ordem: i}));
       }
       // gameplay: o vídeo mais novo da pasta (de preferência do Emulador)
       const todos = await bib("readonly", s => s.getAll()), vids = todos.filter(it => it.pasta === pasta.id && it.tipo === "video" && it.blob).sort((a, b) => (b.origem === "emulador") - (a.origem === "emulador") || b.criado - a.criado);

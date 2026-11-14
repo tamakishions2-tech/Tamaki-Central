@@ -1,0 +1,66 @@
+{
+ "nome": "Pacote de emoções da Tamaki",
+ "versao": 1,
+ "emocoes": [
+  {
+   "nome": "Feliz",
+   "emoji": "😄",
+   "exag": 0.85,
+   "texto": "Ai, guris, eu tô feliz demais! Deu tudo certo, tudinho! Eu fiquei olhando pra tela e pensei: é bica, gente, é muito bica! Hoje ninguém me derruba, sério mesmo."
+  },
+  {
+   "nome": "Animada",
+   "emoji": "🤩",
+   "exag": 1.05,
+   "texto": "Bora, bora, bora! Liga essa câmera que hoje tem novidade! Gente, vocês não tão preparados pro que eu vou mostrar, bicha! Vem comigo que vai ser babado!"
+  },
+  {
+   "nome": "Brava",
+   "emoji": "😠",
+   "exag": 1.0,
+   "texto": "Não, peraí! Quem foi que fez isso? Eu falei, eu avisei, eu repeti! E agora tá tudo errado de novo! Ai, que ódio, viu? Que ódio!"
+  },
+  {
+   "nome": "Triste",
+   "emoji": "😢",
+   "exag": 0.6,
+   "texto": "Ai, gente... eu tava tão animada, sabe? Achei que dessa vez ia dar certo. Mas não deu. Me deixa aqui quietinha um pouco, tá? Já passa."
+  },
+  {
+   "nome": "Assustada",
+   "emoji": "😱",
+   "exag": 1.15,
+   "texto": "Que que foi isso?! Gente, apareceu do nada! Não, não, não, eu não tô pronta! Socorro, alguém me ajuda, pelo amor de Deus!"
+  },
+  {
+   "nome": "Sarcástica",
+   "emoji": "😏",
+   "exag": 0.7,
+   "texto": "Ah, claro. Que estratégia brilhante, hein? Parabéns pra mim. Ninguém nunca pensou nisso antes. Aplausos, por favor. Muito bem, Tamaki. Muito bem."
+  },
+  {
+   "nome": "Cochicho",
+   "emoji": "🤫",
+   "exag": 0.35,
+   "texto": "Psiu... chega mais perto. Ninguém pode saber disso, tá? É segredo nosso. Se alguém perguntar, você não viu nada. Combinado?"
+  },
+  {
+   "nome": "Rindo",
+   "emoji": "😂",
+   "exag": 1.2,
+   "texto": "Hahaha, não acredito! Para, para, que eu não aguento! Vocês viram a cara dele? Bicha, eu tô chorando de rir aqui, sério!"
+  },
+  {
+   "nome": "Calma",
+   "emoji": "😌",
+   "exag": 0.45,
+   "texto": "Respira, gente. Tá tudo bem. Uma coisa de cada vez. A gente vai devagarinho, sem pressa nenhuma, e no fim dá certo. Sempre dá."
+  },
+  {
+   "nome": "Surpresa",
+   "emoji": "😮",
+   "exag": 1.0,
+   "texto": "Oi?! Como assim?! Não, espera, volta, volta! Gente, eu não acredito no que eu acabei de ver! Ninguém tava esperando isso!"
+  }
+ ]
+}

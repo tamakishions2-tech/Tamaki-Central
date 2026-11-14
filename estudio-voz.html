@@ -31,7 +31,7 @@ html,body{margin:0;height:100%;background:#120f24}
 &lt;html lang="pt-BR" data-tema="noite">
 &lt;head>
 &lt;meta charset="utf-8">
-&lt;meta name="tvz-versao" content="4.3">
+&lt;meta name="tvz-versao" content="5.0">
 &lt;meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 &lt;title>Estúdio de voz · Tamaki&lt;/title>
 &lt;link rel="preconnect" href="https://fonts.googleapis.com">
@@ -213,6 +213,7 @@ Tô até agora sem acreditar, sério mesmo. Gente, que dia!&lt;/textarea>
         &lt;div class="f">&lt;b>Variação &lt;i id="vTemp">&lt;/i>&lt;/b>&lt;input type="range" id="temp" min="0.4" max="1.2" step="0.05">&lt;/div>
         &lt;div class="regua">&lt;span>sempre igual&lt;/span>&lt;span>mais solta&lt;/span>&lt;/div>
         &lt;p class="dica" style="margin-top:8px">No meio costuma soar mais natural.&lt;/p>
+        &lt;label class="opcao" style="margin-top:8px">&lt;input type="checkbox" id="macio" checked>&lt;span>&lt;b>Som macio&lt;/b>&lt;br>&lt;span class="dica">Tira o chiado metálico e o estridente (no aparelho, sem mexer no Kaggle).&lt;/span>&lt;/span>&lt;/label>
       &lt;/details>
       &lt;div class="btns">&lt;button class="btn pri largo" id="gerar">▶ Gerar falas&lt;/button>&lt;button class="btn" id="pararGerar">■ Parar&lt;/button>&lt;/div>
       &lt;p class="msg" id="gerarMsg">&lt;/p>
@@ -312,6 +313,12 @@ Tô até agora sem acreditar, sério mesmo. Gente, que dia!&lt;/textarea>
     &lt;div class="bloco em-uso">&lt;div class="avatar" id="emFoto">&lt;/div>&lt;div style="flex:1">&lt;div class="dica">Emoções da voz&lt;/div>&lt;b id="emVoz">—&lt;/b>&lt;/div>&lt;/div>
     &lt;div class="aviso ruim" id="emAntigo" hidden>O Kaggle está com o código antigo, sem emoções. Troque a célula pelo &lt;b>tamaki_estudio_voz_kaggle.py&lt;/b> versão 3 e rode de novo (Save &amp;amp; Run All).&lt;/div>
     &lt;div class="aviso ruim" id="emSemVoz" hidden>Escolha ou crie uma voz sua na aba Vozes para treinar emoções.&lt;/div>
+    &lt;div class="bloco">
+      &lt;h3 style="margin:0 0 4px">📦 Pacote de emoções da Tamaki&lt;/h3>
+      &lt;p class="dica" style="margin:0 0 8px">10 emoções com frases no jeito dela (feliz, animada, brava, triste, assustada, sarcástica, cochicho, rindo, calma e surpresa). Entra na voz em uso como um extra: a voz não muda, só ganha as emoções. Leva uns 10–15 min.&lt;/p>
+      &lt;div class="btns">&lt;button class="btn pri" id="pacInstalar">📦 Instalar na voz em uso&lt;/button>&lt;/div>
+      &lt;p class="dica" id="pacMsg" style="margin:8px 0 0">&lt;/p>
+    &lt;/div>
     &lt;div class="bloco passo">&lt;span class="num">1&lt;/span>&lt;div>
       &lt;h3>Escolha as emoções&lt;/h3>
       &lt;p class="dica">Marque quantas quiser. O Kaggle faz uma depois da outra, e cada uma entra na voz (e no cartão) assim que fica pronta.&lt;/p>
@@ -410,6 +417,7 @@ Tô até agora sem acreditar, sério mesmo. Gente, que dia!&lt;/textarea>
 &lt;/dialog>
 &lt;div id="toast" role="status">&lt;/div>
 
+&lt;script src="voz/polir.js">&lt;/script>
 &lt;script>
 (() => {
 "use strict";
@@ -736,7 +744,8 @@ async function gerarAudio(texto) {
   const r = await api("/falar", {resp: true, body: {texto, emocao: $("#falaEmo").value, exaggeration: +$("#exag").value, cfg_weight: +$("#cfg").value, temperature: +$("#temp").value}});
   const falta = r.headers.get("X-Emocoes-Faltando");
   if (falta) toast("Ainda não treinada: " + falta.split(",").map(nomeEmo).join(", ") + ". Essa parte saiu com a voz normal.");
-  return r.blob();
+  const b = await r.blob();
+  return $("#macio").checked &amp;&amp; window.TamakiPolir ? window.TamakiPolir(b) : b;
 }
 $("#gerar").onclick = async () => {
   const linhas = $("#texto").value.split(/\n+/).map(s => s.trim()).filter(Boolean);
@@ -896,6 +905,17 @@ async function treinarEmocoes(ids) {
   await api("/emocoes/treinar", {body: corpo}); toast("Começou. Cada emoção entra na voz assim que fica pronta."); EM.sig = ""; await atualizar();
 }
 $("#emTreinar").onclick = () => acao($("#emTreinar"), async () => { const ids = listaEmocoes().map(x => x.id).filter(i => EM.marcadas.has(i)); if (!ids.length) throw new Error("Marque pelo menos uma emoção"); await treinarEmocoes(ids); });
+$("#pacInstalar").onclick = () => acao($("#pacInstalar"), async () => {
+  let pac = null;
+  for (const u of ["voz/pacote-emocoes-tamaki.json", "https://raw.githubusercontent.com/tamakishions2-tech/Tamaki-Central/main/voz/pacote-emocoes-tamaki.json"]) {
+    try { const r = await fetch(u + "?v=" + Date.now(), {cache: "no-store"}); if (r.ok) { pac = await r.json(); break; } } catch (e) {} }
+  if (!pac || !pac.emocoes) throw new Error("Não consegui baixar o pacote. Confira a internet e tente de novo.");
+  const v = vozAtiva(); if (!v || v.id === "padrao") throw new Error("Escolha a voz da Tamaki em Vozes primeiro");
+  if (!confirm(`Instalar as ${pac.emocoes.length} emoções em “${v.nome}”? As emoções com o mesmo nome são trocadas pelas do pacote.`)) return;
+  await api("/emocoes/treinar", {body: {ids: [], sua: pac.emocoes, ajustes: {}, versoes: +$("#emVersoes").value || 3}});
+  $("#pacMsg").textContent = `Instalando ${pac.nome} v${pac.versao}. Cada emoção entra na voz assim que fica pronta (veja em “Emoções prontas”).`;
+  EM.sig = ""; await atualizar();
+});
 $("#emParar").onclick = () => acao($("#emParar"), () => api("/emocoes/parar", {body: {}}));
 $("#emProntas").addEventListener("click", async e => { const b = e.target.closest("button"); if (!b) return; const d = b.closest(".fala"), id = d.dataset.id, x = listaEmocoes().find(y => y.id === id) || {}, el = d.querySelector("audio");
   const ouvir = async () => { el.src = URL.createObjectURL(await api(`/emocoes/${encodeURIComponent(id)}/audio`, {blob: true})); el.play().catch(() => {}); };

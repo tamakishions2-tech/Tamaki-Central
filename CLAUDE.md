@@ -93,10 +93,13 @@ Só depois que o Tama aprovar o roteiro na conversa (a reunião é no chat: o Cl
 Tom das séries de gameplay: **diário em call com os amigos** — a Tamaki conta o que aconteceu ("Gente, …"), título "Diário da Tamaki #N · …", gancho e chamada em `[close]`, e a chamada final aponta para o próximo episódio.
 
 ## Voz da Tamaki: naturalidade
-- O código do Kaggle fica em `kaggle/tamaki_estudio_voz_kaggle.py` (versão 6). Ao mudar, mande o arquivo pro Tama colar na célula (Save & Run All) e suba a versão em `/status`.
+- O código do Kaggle fica em `kaggle/tamaki_estudio_voz_kaggle.py` (versão 6). A célula do Kaggle é só `kaggle/celula.py` (define CODIGO e baixa o .py do GitHub a cada execução): para atualizar o Kaggle, basta commitar o .py e pedir pro Tama rodar de novo (Save & Run All). Nunca ponha o CODIGO no repositório (é público).
 - O treino só ajusta o T3 do Chatterbox (texto → códigos de fala); o timbre vem da referência (conds). Por isso treinar com fala de outras pessoas muda o ritmo, não o timbre.
 - Não treinar a voz com frases faladas por ela mesma (Treinar › Gerar frases): é cópia de cópia e deixa a voz metálica.
 - Estúdio de voz › Treinar › 🗣️ Baixar conversas reais: `/dataset/coraa` baixa a parte dev do CORAA v1.1 (gabrielrstan/CORAA-v1.1, 1,3 GB), pega só falas espontâneas sem ruído/hesitação, de preferência de SP, e põe como frases de treino. Depois: treinar como voz nova com "Começar do português original" (`do_zero`). O Tama liberou o uso.
 - Versão 5: `/falar` confere cada pedaço com o Whisper e refaz até 3 vezes se embolar (`conferir`, ligado por padrão); o CORAA só entra quando o Whisper confirma que o texto bate com o áudio (≥ 0,85).
 - Versão 6: o treino de 2026-11-14 do zero com o CORAA deixou a voz com "língua presa" (gravações antigas NURC/ALIP abafam o "s"). Agora o CORAA exclui NURC e ALIP, e o padrão é **treino leve** (`leve`: 2 voltas, lr 4e-6) partindo da Tamaki Shion (sem `do_zero`), que tem a dicção boa.
+- O Tama voltou para a Tamaki Shion original: não treinar mais o jeito de falar (os testes com o CORAA ficaram ruins). Foco: emoções e som.
+- Som macio: `voz/polir.js` (`TamakiPolir(blob)`) filtra o metálico/estridente no aparelho (EQ + compressor). Usado no Estúdio de voz (opção "Som macio", ligada) e nas falas da linha de produção.
+- Emoções como "DLC": `voz/pacote-emocoes-tamaki.json` (frases no jeito dela). Estúdio de voz › Emoções › 📦 Instalar na voz em uso manda o pacote para `/emocoes/treinar` como emoções "sua" (mesmo nome = troca a do catálogo). Para melhorar as emoções, edite esse JSON e suba `versao`; não precisa mexer no Kaggle.
 - O pajubá e os trejeitos vêm do roteiro, não do treino.

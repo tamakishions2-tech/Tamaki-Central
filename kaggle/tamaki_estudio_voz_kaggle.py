@@ -4,7 +4,8 @@
 #  Criar voz do nada: Qwen3-TTS VoiceDesign (só para criar o timbre)
 #
 #  1. Settings: Accelerator = GPU T4 x2 e Internet = On.
-#  2. Cole TUDO isto numa célula só (apague as células antigas).
+#  2. Na célula do Kaggle fica só o kaggle/celula.py: ela baixa ESTE arquivo do GitHub a cada execução,
+#     então as atualizações do Claude entram sozinhas (é só rodar de novo).
 #  3. Save Version → "Save & Run All (Commit)" → Save.
 #     Roda em segundo plano por até 12 h. Pode fechar o Kaggle.
 #  Opcional: Add-ons → Secrets → HF_TOKEN (guarda vozes, frases e treinos no Hugging Face).
@@ -24,7 +25,10 @@
 #  - Depois que essa sessão terminar: Add Input → Your Work → Notebooks → este notebook.
 #  - Nas próximas, ele acha o pacote sozinho e só desempacota (2–3 min).
 # ============================================================
-CODIGO = "tamaki-f7d1a24c4ee30ad1f758"   # tem que ser o mesmo do HTML
+try:
+    CODIGO   # vem da célula do Kaggle (kaggle/celula.py), que baixa este arquivo do GitHub
+except NameError:
+    raise SystemExit("Defina CODIGO na célula antes de rodar (o mesmo código da aba Kaggle do Estúdio de voz).")
 NOME   = "tamaki"                        # prefixo dos arquivos (tamaki_0000.wav…)
 HORAS  = 2.5                            # o Kaggle corta em 12 h: antes disso salva tudo
 
