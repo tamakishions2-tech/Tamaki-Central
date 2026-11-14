@@ -9,6 +9,8 @@
 #     Roda em segundo plano por até 12 h. Pode fechar o Kaggle.
 #  Opcional: Add-ons → Secrets → HF_TOKEN (guarda vozes, frases e treinos no Hugging Face).
 #  Versão 2: várias vozes salvas com nome e foto, cartão de voz e treino que atualiza a mesma voz.
+#  Versão 5: confere cada fala (ouve de volta e refaz se embolar) e só usa trechos do CORAA
+#            em que o texto bate com o áudio.
 #  Versão 4: treino com conversas reais (CORAA): a Tamaki aprende o ritmo de gente conversando,
 #            sem perder o timbre dela (o timbre vem da voz de referência, não do treino).
 #  Versão 3: emoções. Cada voz guarda um exemplo de cada emoção (feliz, brava, triste…),
@@ -785,7 +787,7 @@ def texto_coraa(t):
     return t if t[-1] in ".!?" else t + "."
 
 def job_coraa(qtd):
-    CO.update(rodando=True, parar=False, msg="baixando a lista de conversas…", feitas=0, total=qtd)
+    CO.update(rodando=True, parar=False, msg="baixando a lista de conversas…", feitas=0, total=qtd, descartados=0)
     pasta = f"{TMP}/coraa"
     try:
         from huggingface_hub import hf_hub_download
@@ -801,7 +803,7 @@ def job_coraa(qtd):
                 continue
             if num(r, "votes_for_noise_or_overlap") or num(r, "votes_for_filled_pause") or num(r, "votes_for_hesitation"):
                 continue
-            if num(r, "up_votes") <= num(r, "down_votes"):
+            if num(r, "down_votes") or num(r, "up_votes") < 1:
                 continue
             sot = sem_acento((r.get("accent") or "misc").lower())
             boas.append((SOTAQUES.index(sot) if sot in SOTAQUES else 2, random.random(), r, texto))
@@ -831,9 +833,15 @@ def job_coraa(qtd):
                 if not 2.0 <= len(w) / sr <= 12.0 or float(np.abs(w).max()) < 0.02:
                     continue
                 w = (w / max(1e-6, float(np.abs(w).max())) * 0.9).astype(np.float32)   # volume parecido em todas
-                sf.write(f"{WAVS}/{nome_arq(len(frases))}.wav", w, sr)
+                arq = f"{WAVS}/{nome_arq(len(frases))}.wav"
+                sf.write(arq, w, sr)
+                try:   # o texto tem que bater com o que a pessoa falou, senão a voz aprende a embolar
+                    if parecido(transcrever(arq), texto) < 0.85:
+                        os.remove(arq); CO["descartados"] = CO.get("descartados", 0) + 1; continue
+                except Exception as er:
+                    erro("conferir trecho do CORAA", er)
                 frases.append(texto)
-                CO.update(feitas=len(frases), msg=f"separando os trechos ({len(frases)} de {qtd})")
+                CO.update(feitas=len(frases), msg=f"separando os trechos ({len(frases)} de {qtd}, {CO.get('descartados', 0)} descartados por não baterem)")
         open(f"{DS}/frases.txt", "w", encoding="utf-8").write("\n".join(frases))
         json.dump({"voz": CONF["ativa"], "origem": "coraa"}, open(DSINFO, "w"))
         CONF["quantidade"] = max(20, len(frases)); gravar_cfg(); escrever_metadata()
@@ -1078,7 +1086,7 @@ def emocoes_publicas(vid):
 def status():
     info = W["info"] or {}
     dv = voz_do_dataset()
-    return {"ok": True, "versao": 4, "coraa": CO, "fim_em": int(FIM - time.time()), "nuvem": NUVEM["estado"], "conf": CONF, "cache": CACHE["estado"],
+    return {"ok": True, "versao": 5, "coraa": CO, "fim_em": int(FIM - time.time()), "nuvem": NUVEM["estado"], "conf": CONF, "cache": CACHE["estado"],
             "motor": {"estado": W["estado"], "msg": W["msg"], "pack": info.get("pack", ""), "aviso": info.get("aviso", "")},
             "ativa": CONF["ativa"], "vozes": lista_vozes(), "vozes_rev": VREV[0], "tarefa": TAREFA["msg"],
             "design": {"rodando": VD["rodando"], "n": len(VD["versoes"]), "msg": VD["msg"], "texto": VD["texto"]},
@@ -1341,7 +1349,25 @@ def falar(corpo: dict = Body(...)):
                           "conds": arq_emo_conds(vid, eid)}
             else:
                 params = {p: float(corpo.get(p, CONF[p])) for p in ("exaggeration", "cfg_weight", "temperature")}
-            motor("/falar", {"texto": parte, "saida": arq, "padrao": bool(corpo.get("padrao")), **params})
+            # confere: ouve de volta e, se embolou, refaz (até 3 vezes, cada vez mais firme) e fica com a melhor
+            melhor, nota_m = None, -1.0
+            for tent in range(3 if corpo.get("conferir", True) else 1):
+                p2 = dict(params)
+                if tent:
+                    p2["temperature"] = max(0.5, p2["temperature"] - 0.15 * tent); p2["cfg_weight"] = min(0.7, p2["cfg_weight"] + 0.1 * tent)
+                alvo = f"{arq}.t{tent}.wav"
+                motor("/falar", {"texto": parte, "saida": alvo, "padrao": bool(corpo.get("padrao")), **p2})
+                if not corpo.get("conferir", True):
+                    melhor = alvo; break
+                try:
+                    nota = parecido(transcrever(alvo), parte)
+                except Exception as er:
+                    erro("conferir a fala", er); melhor = alvo; break
+                if nota > nota_m:
+                    melhor, nota_m = alvo, nota
+                if nota >= 0.85:
+                    break
+            shutil.move(melhor, arq)
             w, sr = sf.read(arq)
             audios += [np.asarray(w, dtype=np.float32), np.zeros(int(sr * .3), dtype=np.float32)]
     if not audios:
