@@ -71,5 +71,5 @@ Ao escrever o roteiro (você é o editor e criador dos Shorts dela):
 
 ### Layout do Tama (`montarLayoutPalco`, padrão da linha de produção)
 9:16 em 720×1280: em cima (0–520) a cena gravada do Palco (a Tamaki falando, sem o balão do Palco); no meio (530–780) caixa de diálogo preta com borda branca dupla e o texto da fala digitando em Press Start 2P; embaixo (800–1280) a tela do jogo inteira (crop só das bordas do XRecorder), sem zoom.
-Som: só as falas. O áudio da gravação do jogo é mudo (é um vídeo que ele assiste de fundo). O Palco grava pelo canal `tamaki-palco` (`{tipo:"gravar", ids, textos, pausas, ini}` → `{tipo:"gravado", id, dur}`) e precisa estar na tela enquanto grava.
+Som: só as falas. O áudio da gravação do jogo é mudo (é um vídeo que ele assiste de fundo). A Central abre a aba Palco, injeta `palco-gravar.js` (`window.__tamakiGravar({ids, textos, pausas, ini, semBalao})` → `{id, dur}`) e o Palco toca as falas e grava a cena; funciona até com código do Palco guardado no aparelho. O Palco precisa estar na tela enquanto grava.
 Futuro: poses/expressões da Tamaki por emoção no Palco (por enquanto só parada/falando/falando2).

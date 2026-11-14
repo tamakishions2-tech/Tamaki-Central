@@ -111,6 +111,7 @@
   function sinal(etapa, texto, extra) { try { const c = new BroadcastChannel("tamaki-producao"); c.postMessage(Object.assign({etapa, texto, quando: Date.now()}, extra || {})); c.close(); } catch (e) {} }
   /* ---------- Palco (aba da Central): toca as falas e grava a cena de cima ---------- */
   async function palco(dados, aviso) {
+    if (window.TamakiPalcoGravar) { aviso("🎭 Palco gravando a cena da Tamaki…"); return await window.TamakiPalcoGravar(dados); }
     abrirAba("palco", false); // o Palco precisa estar na tela para desenhar
     const eu = "pr" + Date.now().toString(36), bc = new BroadcastChannel("tamaki-palco");
     try {

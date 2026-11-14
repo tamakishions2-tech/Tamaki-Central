@@ -905,6 +905,18 @@ $("#prodIr").onclick = () => { const t = $("#prodCola").value.trim(); if (!t) re
   $("#dProd").close(); $("#prodCola").value = ""; produzirRoteiro(r, true); };
 prodTela();
 
+/* a Central abre o Palco, injeta palco-gravar.js e manda gravar a cena com as falas */
+function abaPalco(){ const ks = Object.keys(ABAS).filter(k => !ABAS[k].arq && k != "palcoanim" && k != "reuniao");
+  return ks.find(k => k == "palco") || ks.find(k => /^palco$/i.test(ABAS[k].n.trim())) || ks.find(k => /palco/i.test(ABAS[k].n) && !/anima/i.test(ABAS[k].n)) || "palco"; }
+window.TamakiPalcoGravar = async dados => {
+  const k = abaPalco(); if (!ABAS[k]) return {erro: "não achei a aba Palco"};
+  prodSinal({etapa: "info", texto: `Abrindo a aba ${ABAS[k].n}…` + ((await cGet("o-" + k)) ? " (com código guardado no aparelho)" : "")});
+  await ir(k); await prontos[k]; await new Promise(ok => setTimeout(ok, 2500)); // espera os PNGs da cena
+  const f = frames[k]; let w, doc; try { w = f.contentWindow; doc = f.contentDocument; } catch (e) { return {erro: "não consigo entrar na aba Palco"}; }
+  if (!w.__tamakiGravar) { try { const t = await (await fetch("palco-gravar.js?v=" + Date.now(), {cache: "no-store"})).text(); const sc = doc.createElement("script"); sc.textContent = t; doc.body.appendChild(sc); } catch (e) { return {erro: "não baixei o gravador do Palco"}; } }
+  if (!w.__tamakiGravar) return {erro: "o gravador não entrou na aba Palco"};
+  try { return await w.__tamakiGravar(dados, t => prodSinal({etapa: "info", texto: t})); } catch (e) { return {erro: e.message || String(e)}; }
+};
 const lerRoteiro = b => { try { return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0)))); } catch (e) { return null; } };
 // link do Claude: #roteiro=<base64 de {titulo, texto, pasta, video}> cria o roteiro na Escrita e produz o vídeo
 async function roteiroDoLink(){
