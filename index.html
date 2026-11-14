@@ -88,6 +88,13 @@ dialog textarea{width:100%;min-height:40vh;background:#0d0d0d;color:var(--tx);bo
 .cores button.on{border-color:#fff;box-shadow:0 0 0 2px #151515 inset}
 .vazio{color:var(--mut);background:#1b1b1b;border:1px dashed var(--ln);border-radius:12px;padding:14px}
 #toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#2b2b2b;border:1px solid var(--ln);border-radius:14px;padding:12px 16px;z-index:50;max-width:90vw;box-shadow:0 10px 30px #000a;display:flex;gap:12px;align-items:center}
+#prod{display:flex;align-items:center;gap:10px;width:100%;border:0;border-bottom:1px solid var(--ln);background:#1b1b1b;color:var(--tx);padding:9px 12px;font:inherit;text-align:left;cursor:pointer}
+#prod.hide{display:none}#prod .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.9rem}
+#prod .br{width:70px;height:6px;border-radius:4px;background:#333;overflow:hidden}#prod .br i{display:block;height:100%;width:0;background:var(--am);transition:width .3s}
+#prod.ok{background:#1d2a1b}#prod.ok .br i{background:#93d67f}#prod.erro{background:#2e1a1a}#prod.erro .br i{background:#ff8a73}
+#prod .gi{display:inline-block;animation:gira 1.2s linear infinite}@keyframes gira{to{transform:rotate(360deg)}}
+.etapas{list-style:none;margin:0 0 10px;padding:0}.etapas li{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--ln)}.etapas li b{width:1.4em;text-align:center}
+.etapas li.esp{opacity:.45}#prodLog{max-height:22vh;overflow:auto;font:12px/1.5 ui-monospace,monospace;color:var(--mut);background:#0d0d0d;border-radius:10px;padding:8px;margin:0 0 10px;white-space:pre-wrap}
 #toast button{background:var(--am);color:#151515;border:0;border-radius:10px;padding:8px 12px;font-weight:700}
 .ord li .tgb{width:6px;align-self:stretch;border-radius:3px;background:var(--c,transparent)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -112,8 +119,10 @@ dialog textarea{width:100%;min-height:40vh;background:#0d0d0d;color:var(--tx);bo
     <button id="verLeit" role="menuitem">Aa Leitura e letra</button>
     <hr>
     <button id="verGit" role="menuitem">🐙 GitHub (salvar sozinho)</button>
+    <button id="verProd" role="menuitem">🎬 Produção (roteiro → vídeo)</button>
   </div>
 </header>
+<button id="prod" class="hide" aria-live="polite"><span class="gi" id="prodI">⏳</span><span class="tx" id="prodT"></span><span class="br"><i id="prodB"></i></span></button>
 <main id="area">
   <section id="v-reuniao" class="hide"><div class="pn">
     <h2>Reunião</h2>
@@ -208,6 +217,16 @@ dialog textarea{width:100%;min-height:40vh;background:#0d0d0d;color:var(--tx);bo
   <div class="row" style="margin-top:8px"><button class="bt" id="gitColar">📋 Colar</button><button class="bt" id="gitEsc">📁 Escolher arquivos</button><button class="bt pri" id="gitVer">Ver o que muda</button></div>
   <ul class="lista" id="gitPrev" style="margin-top:10px"></ul>
   <div class="row"><button class="bt pri hide" id="gitMandar">⬆ Mandar pro GitHub</button><button class="bt" id="gitFechar">Fechar</button></div>
+</dialog>
+
+<dialog id="dProd">
+  <h2 style="margin:0 0 6px;font-family:var(--fonte)">🎬 Produção</h2>
+  <p class="mut" id="prodResumo" style="margin-bottom:8px">Nenhum vídeo sendo produzido agora.</p>
+  <ul class="etapas" id="prodEtapas"></ul>
+  <div id="prodLog" aria-label="O que aconteceu"></div>
+  <p class="rot">Roteiro do Claude<small>Se o link não funcionar, cole aqui o link inteiro ou o roteiro (primeira linha = título).</small></p>
+  <textarea id="prodCola" spellcheck="false" style="min-height:16vh" placeholder="https://…#roteiro=…"></textarea>
+  <div class="row" style="margin-top:8px"><button class="bt" id="prodColar">📋 Colar</button><button class="bt pri" id="prodIr">🎬 Produzir</button><button class="bt" id="prodCopiar">Copiar o registro</button><button class="bt" id="prodFechar">Fechar</button></div>
 </dialog>
 
 <div id="toast" class="hide" role="status"><span id="toastT"></span><button id="toastB" class="hide">Desfazer</button></div>
@@ -842,17 +861,69 @@ aplicarLeitura();
 // abas da Central podem pedir para abrir outra (a linha de produção abre o Editor)
 addEventListener("message", e => { const d = e.data || {}; if (e.origin !== location.origin || d.central !== "abrir" || !ABAS[d.aba]) return;
   if (d.fica) { if (!frames[d.aba]) srcDe(d.aba).then(s => frame(d.aba, s)); } else ir(d.aba); });
-// link do Claude: #roteiro=<base64 de {titulo, texto, pasta}> cria o roteiro na Escrita e produz o vídeo
+/* ---------- 🎬 acompanhar a produção: barra no topo + janela com as etapas ---------- */
+const ETAPAS = [["recebido", "Roteiro recebido"], ["escrita", "Escrita salvou o roteiro"], ["voz", "Estúdio de voz ligado"], ["falas", "Falas geradas"], ["editor", "Editor montando"], ["pronto", "Vídeo pronto no Editor"]];
+let PROD = lerJ("central-producao", {log: [], feito: {}, erro: false});
+const salvaProd = () => gravaJ("central-producao", {log: PROD.log.slice(-60), feito: PROD.feito, erro: PROD.erro, n: PROD.n, total: PROD.total, quando: PROD.quando});
+const hora = t => new Date(t).toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit", second: "2-digit"});
+let prodVigia = 0;
+function prodSinal(d){
+  if (d.etapa == "inicio") PROD = {log: [], feito: {}, erro: false};
+  PROD.quando = Date.now();
+  if (d.etapa == "falas" && d.total) { PROD.n = d.n; PROD.total = d.total; PROD.feito.voz = 1; }
+  if (ETAPAS.some(e => e[0] == d.etapa)) { const i = ETAPAS.findIndex(e => e[0] == d.etapa); ETAPAS.slice(0, i).forEach(e => { if (e[0] != "falas" || d.etapa != "falas") PROD.feito[e[0]] = 1; }); if (d.etapa == "pronto") { PROD.feito.pronto = 1; PROD.feito.falas = 1; } }
+  if (d.etapa == "erro") PROD.erro = true; else if (d.etapa != "info") PROD.erro = false;
+  if (d.texto) PROD.log.push(hora(d.quando || Date.now()) + "  " + d.texto);
+  clearTimeout(prodVigia); if (!PROD.feito.pronto && !PROD.erro) prodVigia = setTimeout(() => prodSinal({etapa: "erro", texto: "⚠ Nada aconteceu nos últimos 3 minutos. Veja se o Kaggle está ligado e se a aba Escrita abriu."}), 180000);
+  salvaProd(); prodTela();
+}
+function prodTela(){
+  const fim = !!PROD.feito.pronto, pct = fim ? 100 : Math.round(((Object.keys(PROD.feito).length + (PROD.total ? (PROD.n || 0) / PROD.total : 0)) / ETAPAS.length) * 100);
+  const ult = PROD.log[PROD.log.length - 1] || "";
+  $("#prod").classList.toggle("hide", !PROD.log.length || (fim && Date.now() - PROD.quando > 60000));
+  $("#prod").classList.toggle("ok", fim); $("#prod").classList.toggle("erro", PROD.erro);
+  $("#prodI").textContent = PROD.erro ? "⚠" : fim ? "✓" : "⏳"; $("#prodI").className = PROD.erro || fim ? "" : "gi";
+  $("#prodT").textContent = ult.replace(/^\S+\s+/, ""); $("#prodB").style.width = pct + "%";
+  $("#prodResumo").textContent = !PROD.log.length ? "Nenhum vídeo sendo produzido agora." : PROD.erro ? "Parou com erro. Veja o registro abaixo." : fim ? "Pronto! O vídeo está montado no Editor." : "Produzindo… pode trocar de aba, a barra continua aqui em cima.";
+  $("#prodEtapas").innerHTML = ETAPAS.map(([k, n]) => { const ok = PROD.feito[k], agora = !ok && !PROD.erro && ETAPAS.findIndex(e => !PROD.feito[e[0]]) == ETAPAS.findIndex(e => e[0] == k) && PROD.log.length;
+    return `<li class="${ok || agora ? "" : "esp"}"><b>${ok ? "✅" : agora ? "⏳" : "○"}</b><span>${n}${k == "falas" && PROD.total ? ` (${Math.min(PROD.total, (PROD.n || 0) + (ok ? 1 : 0))} de ${PROD.total})` : ""}</span></li>`; }).join("");
+  $("#prodLog").textContent = PROD.log.join("\n") || "Ainda nada.";
+  $("#prodLog").scrollTop = 1e9;
+}
+try { new BroadcastChannel("tamaki-producao").onmessage = e => prodSinal(e.data || {}); } catch (e) {}
+$("#prod").onclick = () => { prodTela(); $("#dProd").showModal(); };
+$("#verProd").onclick = () => { fecharMenu(); prodTela(); $("#dProd").showModal(); };
+$("#prodFechar").onclick = () => $("#dProd").close();
+$("#prodColar").onclick = async () => { try { $("#prodCola").value = await navigator.clipboard.readText(); } catch (e) { aviso("Toque e segure no campo para colar."); } };
+$("#prodCopiar").onclick = async () => { try { await navigator.clipboard.writeText(PROD.log.join("\n")); aviso("Registro copiado: cole no chat do Claude."); } catch (e) {} };
+$("#prodIr").onclick = () => { const t = $("#prodCola").value.trim(); if (!t) return aviso("Cole o link ou o roteiro primeiro.");
+  let r = null; const m = t.match(/#roteiro=([A-Za-z0-9_\-+/=]+)/);
+  if (m) r = lerRoteiro(m[1]); else { try { r = JSON.parse(t); } catch (e) { const ls = t.split("\n"); r = {titulo: ls[0].replace(/^título:\s*/i, "").trim(), texto: ls.slice(1).join("\n").trim()}; } }
+  if (!r || !r.texto) return aviso("Não achei o roteiro aí. Cole o link inteiro do Claude.");
+  $("#dProd").close(); $("#prodCola").value = ""; produzirRoteiro(r, true); };
+prodTela();
+
+const lerRoteiro = b => { try { return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0)))); } catch (e) { return null; } };
+// link do Claude: #roteiro=<base64 de {titulo, texto, pasta, video}> cria o roteiro na Escrita e produz o vídeo
 async function roteiroDoLink(){
   const m = location.hash.match(/#roteiro=([A-Za-z0-9_\-+/=]+)/); if (!m) return;
   history.replaceState(null, "", location.pathname + location.search);
-  let r; try { r = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(m[1].replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0)))); } catch (e) { return aviso("Esse link de roteiro veio quebrado."); }
-  if (!confirm(`🎬 Produzir “${r.titulo}” agora?\n\nO roteiro vai para Roteiros da Tamaki${r.pasta ? ", as falas para a pasta “" + r.pasta + "”" : ""} e o vídeo é montado no Editor. O Kaggle do Estúdio de voz precisa estar ligado.`)) return;
+  const r = lerRoteiro(m[1]); if (!r) return prodSinal({etapa: "erro", texto: "⚠ O link do roteiro veio quebrado. Abra ⋮ › 🎬 Produção e cole o link lá."});
+  produzirRoteiro(r, false);
+}
+async function produzirRoteiro(r, jaConfirmou){
+  if (!jaConfirmou && !confirm(`🎬 Produzir “${r.titulo}” agora?\n\nO roteiro vai para Roteiros da Tamaki${r.pasta ? ", as falas para a pasta “" + r.pasta + "”" : ""} e o vídeo é montado no Editor. O Kaggle do Estúdio de voz precisa estar ligado.`)) return;
   if (r.pasta && window.TamakiOrganizador) { let P = lerJ("tamaki-bib-pastas", []), p = P.find(x => x.nome.trim().toLowerCase() == String(r.pasta).trim().toLowerCase());
     if (!p) { p = {id: "p" + Date.now().toString(36), nome: String(r.pasta), rot: []}; P.push(p); gravaJ("tamaki-bib-pastas", P); }
     const c = TamakiOrganizador.cfg(); c.ligado = true; TamakiOrganizador.salvaCfg(c); if (c.pasta != p.id) TamakiOrganizador.usarPasta(p.id); }
+  prodSinal({etapa: "inicio"}); prodSinal({etapa: "recebido", texto: `📥 Roteiro “${r.titulo}” recebido · ${String(r.texto).split("\n").filter(l => l.trim() && !l.trim().startsWith("#")).length} falas`});
+  if (await cGet("o-escrita")) prodSinal({etapa: "info", texto: "⚠ A aba Escrita está usando um código guardado só neste aparelho. Se nada acontecer: segure a aba Escrita › ↺ Voltar ao original."});
+  prodSinal({etapa: "info", texto: "Abrindo a aba Escrita…"});
   await ir("escrita"); await prontos.escrita; await new Promise(ok => setTimeout(ok, 800));
-  frames.escrita.contentWindow.postMessage({roteiroNovo: r}, location.origin);
+  let chegou = false; const bc = new BroadcastChannel("tamaki-producao"); bc.addEventListener("message", e => { if ((e.data || {}).etapa == "escrita") chegou = true; });
+  for (let i = 0; i < 6 && !chegou; i++) { frames.escrita.contentWindow.postMessage({roteiroNovo: r}, location.origin); await new Promise(ok => setTimeout(ok, 1500)); }
+  bc.close();
+  if (!chegou) prodSinal({etapa: "erro", texto: "⚠ A aba Escrita não respondeu. Recarregue a Central (⋮ › ⟳) e tente de novo em ⋮ › 🎬 Produção."});
 }
 if (window.TamakiOrganizador) TamakiOrganizador.iniciar({aviso: t => aviso(t)}); // a Biblioteca se arruma sozinha, mesmo com a aba fechada
 const salvo = localStorage.getItem("central_aba");

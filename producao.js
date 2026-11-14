@@ -106,9 +106,14 @@
     } finally { bc.close(); }
   }
 
+  // sinais para a Central mostrar o andamento (barra 🎬 no topo)
+  function sinal(etapa, texto, extra) { try { const c = new BroadcastChannel("tamaki-producao"); c.postMessage(Object.assign({etapa, texto, quando: Date.now()}, extra || {})); c.close(); } catch (e) {} }
   let rodando = false;
-  async function produzir(nota, aviso) {
-    aviso = aviso || (() => {});
+  async function produzir(nota, aviso0) {
+    const ETAPA = {"🔌": "voz", "🎙": "falas", "🎞": "editor", "✓": "pronto"};
+    const aviso = t => { (aviso0 || (() => {}))(t); const e = Object.keys(ETAPA).find(k => t.startsWith(k));
+      sinal(e ? ETAPA[e] : /^(Parei|Estúdio de voz desligado|O motor|O roteiro está vazio|As \d+ falas|Já estou)/.test(t) ? "erro" : "info", t); };
+    sinal("recebido", `📥 Roteiro “${nota.titulo || "Roteiro"}” recebido na Escrita`);
     if (rodando) return aviso("Já estou produzindo um vídeo. Espere terminar.");
     const linhas = linhasDe(nota.html); if (!linhas.length) return aviso("O roteiro está vazio: escreva uma fala por linha.");
     rodando = true;
@@ -121,6 +126,7 @@
       const emoId = x => { if (!x) return ""; const e = lista.find(e => norm(e.id) === norm(x) || norm(e.nome) === norm(x)); if (!e || e.pronta === false) { semEmo.add(x); return ""; } return e.id; };
       const pasta = pastaDoVideo(nota.titulo, nota.id), ids = [];
       for (const [i, l] of linhas.entries()) {
+        sinal("falas", "", {n: i, total: linhas.length});
         aviso(`🎙 Fala ${i + 1} de ${linhas.length}: ${l.texto.slice(0, 40)}${l.texto.length > 40 ? "…" : ""}`);
         const t = l.tom || {}, r = await est("/falar", {resp: true, body: {texto: l.texto, emocao: emoId(l.emo), exaggeration: t.exaggeration ?? conf.exaggeration ?? .5, cfg_weight: t.cfg_weight ?? conf.cfg_weight ?? .5, temperature: t.temperature ?? conf.temperature ?? .8}});
         const nome = `${nota.titulo || "Roteiro"} · ${String(i + 1).padStart(2, "0")}${l.emo ? " · " + l.emo.toLowerCase() : ""}`;

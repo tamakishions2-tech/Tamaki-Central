@@ -434,7 +434,11 @@ function produzirNota(n){ if (!window.TamakiProducao) return toast("A linha de p
 $("#fVideo").onclick = () => { if (!atual) return; if (!gravarNota()) return toast("Escreva o roteiro primeiro.");
   if (atual.pasta != "roteiros" && !confirm("Esta nota não está em Roteiros da Tamaki. Produzir o vídeo mesmo assim?")) return; produzirNota(Object.assign({}, atual)); };
 // a Central manda um roteiro pronto (link do Claude): vira nota em Roteiros da Tamaki e já produz
+let roteiroVisto = "";
 addEventListener("message", e => { const d = e.data || {}; if (e.origin !== location.origin || !d.roteiroNovo) return;
+  const chave = JSON.stringify(d.roteiroNovo); if (chave === roteiroVisto) return; roteiroVisto = chave; // a Central reenvia até eu responder
+  if (!window.TamakiProducao) { try { const c = new BroadcastChannel("tamaki-producao"); c.postMessage({etapa: "erro", texto: "⚠ A Escrita não carregou a linha de produção (producao.js). Recarregue a Central.", quando: Date.now()}); c.close(); } catch (er) {} return; }
+  try { const c = new BroadcastChannel("tamaki-producao"); c.postMessage({etapa: "escrita", texto: "✍️ A Escrita recebeu o roteiro", quando: Date.now()}); c.close(); } catch (er) {}
   const r = d.roteiroNovo, html = String(r.texto || "").split("\n").map(l => "<div>" + esc(l) + "</div>").join("");
   let n = N.find(x => x.pasta == "roteiros" && x.titulo == r.titulo && x.html == html);
   if (!n) { n = {id: uid(), pasta: "roteiros", titulo: String(r.titulo || "Roteiro"), html, criado: Date.now(), editado: Date.now(), fav: false, papel: "", ordem: N.length}; N.push(n); guardar(); tudo(); }
