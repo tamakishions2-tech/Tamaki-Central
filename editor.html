@@ -2590,12 +2590,17 @@ async function montarRoteiro(d){
     if(!falas.length)return {erro:'as falas não chegaram na Biblioteca'};
     let vm=null;if(d.video){const r=await TamakiBib.ler(d.video).catch(()=>null);if(r&&r.blob)vm=await loadMedia(arq(r)).catch(()=>null);}
     commit();if(S.ratio!=='9:16'){try{applyRatio('9:16');}catch(_){}}
-    const t0=videoEnd(),gap=.35;let t=t0+(d.titulo?1.4:.3);
-    falas.forEach((x,i)=>{S.audios.push(newAudio(x.m,{start:t}));makePeaks(x.m,x.f);const p=(d.pausas||[])[x.i??i];t+=(isFinite(x.m.dur)?x.m.dur:2)+(p!=null&&isFinite(p)?+p:gap);});
+    const t0=videoEnd(),gap=.35;let t=t0+(d.titulo?1.4:.3);const marcas=[];// [início na linha do tempo, cena no gameplay]
+    falas.forEach((x,i)=>{const k=x.i??i,c=(d.cenas||[])[k];if(c!=null&&isFinite(c))marcas.push([marcas.length?t:t0,+c]);
+      S.audios.push(newAudio(x.m,{start:t}));makePeaks(x.m,x.f);const p=(d.pausas||[])[k];t+=(isFinite(x.m.dur)?x.m.dur:2)+(p!=null&&isFinite(p)?+p:gap);});
     const fim=t+(d.final?2.4:.6);
     if(vm&&vm.type==='video'&&isFinite(vm.dur)&&vm.dur>.2){
       const [w,h]=srcSize(vm),xr=w===1152&&h===720,crop=xr?{l:.215,t:.1,r:.045,b:.1,rot:0,ratio:'free'}:{l:0,t:0,r:0,b:0,rot:0,ratio:'free'};
-      let resto=fim-t0;for(let i=0;i<30&&resto>.05;i++){const len=Math.min(vm.dur,resto);S.clips.push(newVisual(vm,{in:0,out:len,vol:.15,fit:'cover',crop,tr:{type:'none',dur:.5}}));resto-=len;}
+      const clip=(a,len)=>S.clips.push(newVisual(vm,{in:a,out:a+len,vol:.15,fit:'cover',crop,tr:{type:'none',dur:.5}}));
+      if(marcas.length){// cada cena do roteiro: do momento marcado até a próxima marca
+        marcas.forEach(([ini,c],j)=>{const ate=j+1<marcas.length?marcas[j+1][0]:fim;let a=Math.min(Math.max(0,c),vm.dur-.2),len=ate-ini;
+          for(let i=0;i<10&&len>.05;i++){const l=Math.min(vm.dur-a,len);if(l<=.05){a=0;continue;}clip(a,l);len-=l;a=0;}});
+      }else{let resto=fim-t0;for(let i=0;i<30&&resto>.05;i++){const len=Math.min(vm.dur,resto);clip(0,len);resto-=len;}}
       makeThumbs(vm);
     }
     if(d.titulo)S.texts.push(newText({start:t0+.1,dur:2.8,text:d.titulo,size:78,stroke:6,y:-.32,anim:{in:'zoomIn',inD:.45,out:'fade',outD:.4,combo:'none'}}));

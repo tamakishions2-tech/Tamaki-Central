@@ -44,7 +44,7 @@ Configuração em localStorage `tamaki-bib-auto` (`ligado`, `pasta`, `desde`, `r
 
 ## Linha de produção (`producao.js`)
 Aba Escrita › nota em Roteiros da Tamaki › 🎬 Vídeo (ou ao salvar um roteiro novo/mudado, ela pergunta).
-Roteiro: uma fala por linha, `(emoção) texto`; linhas com `#` são anotação. Gera cada fala no Estúdio de voz (mesmo `tvz_codigo`/ntfy),
+Roteiro: uma fala por linha, `[m:ss] (emoção, tom) texto`; linhas com `#` são anotação. Gera cada fala no Estúdio de voz (mesmo `tvz_codigo`/ntfy),
 guarda na Biblioteca na pasta do vídeo em andamento (ou cria uma com o título), e manda `{tipo:"montar"}` no BroadcastChannel `tamaki-editor`:
 o Editor (`montarRoteiro`) põe as falas em sequência, o gameplay da pasta por baixo (volume baixo, crop do XRecorder), título no começo e "Até a próxima!" no fim.
 A Central abre abas a pedido: `parent.postMessage({central:"abrir", aba:"editor", fica:true})` (`fica` carrega sem trocar de aba).
@@ -56,4 +56,5 @@ Dentro dos parênteses, depois da emoção, separado por vírgula: `(brava, fort
 - jeito: `firme` (sempre igual, temperature .6) · `solta` (mais variada, 1.0)
 - silêncio depois: `pausa` (.9 s) · `pausa longa` (1.6 s) · `sem pausa` (.1 s); padrão .35 s
 - números exatos (com ponto): `exag=1.1`, `cfg=.4`, `temp=.9`, `pausa=1.2`
+Cena do gameplay: `[6:24]` no começo da linha (antes dos parênteses) faz o vídeo de fundo pular para esse momento quando a fala entra; sem marca, ele continua de onde estava. Use os tempos das folhas de quadros do PDF do pedido.
 Sem tom, vale o que está ajustado no Estúdio de voz. Ao escrever roteiros a partir de um vídeo, use o tom para dar ritmo: falas de impacto `forte`, piadas com `pausa` antes da resposta, cochichos `suave, lenta`.

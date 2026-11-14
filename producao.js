@@ -15,7 +15,10 @@
     d.querySelectorAll("br").forEach(b => b.replaceWith("\n"));
     d.querySelectorAll("p,div,li,h1,h2,h3,h4").forEach(e => e.append("\n"));
     return d.textContent.split("\n").map(s => s.replace(/\s+/g, " ").trim()).filter(s => s && !s.startsWith("#"))
-      .map(s => { const m = s.match(/^\(([^)]{2,80})\)\s*(.*)$/); return m ? Object.assign(tomDe(m[1]), {texto: m[2].trim(), linha: s}) : {emo: "", tom: {}, texto: s, linha: s}; })
+      .map(s => { // [6:24] no começo: a partir de que momento do gameplay esta fala aparece
+        let cena = null; const c = s.match(/^\[\s*(?:(\d+):)?(\d{1,2}):(\d{2})\s*\]\s*/);
+        if (c) { cena = (+c[1] || 0) * 3600 + +c[2] * 60 + +c[3]; s = s.slice(c[0].length); }
+        const m = s.match(/^\(([^)]{2,80})\)\s*(.*)$/); return Object.assign(m ? tomDe(m[1]) : {emo: "", tom: {}}, {texto: (m ? m[2] : s).trim(), linha: s, cena}); })
       .filter(l => l.texto);
   }
   /* Tom de cada fala, dentro dos parênteses, separado por vírgula: (brava, forte, rápida, pausa)
@@ -125,7 +128,7 @@
       }
       // gameplay: o vídeo mais novo da pasta (de preferência do Emulador)
       const todos = await bib("readonly", s => s.getAll()), vids = todos.filter(it => it.pasta === pasta.id && it.tipo === "video" && it.blob).sort((a, b) => (b.origem === "emulador") - (a.origem === "emulador") || b.criado - a.criado);
-      const r = await editor({titulo: nota.titulo || "", final: "Até a próxima!", falas: ids, pausas: linhas.map(l => (l.tom || {}).pausa ?? null), video: vids[0] ? vids[0].id : null}, aviso);
+      const r = await editor({titulo: nota.titulo || "", final: "Até a próxima!", falas: ids, pausas: linhas.map(l => (l.tom || {}).pausa ?? null), cenas: linhas.map(l => l.cena), video: vids[0] ? vids[0].id : null}, aviso);
       const extra = semEmo.size ? ` · sem emoção treinada: ${[...semEmo].join(", ")}` : "";
       if (r.erro) return aviso(`As ${ids.length} falas estão na pasta “${pasta.nome}”, mas ${r.erro}.${extra}`);
       try { if (window.parent !== window) window.parent.postMessage({central: "abrir", aba: "editor"}, location.origin); } catch (e) {}
