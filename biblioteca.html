@@ -249,6 +249,7 @@ body.sel #toast{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
 <input type="file" id="fIn" accept="video/*,audio/*,image/*" multiple hidden>
 <div id="toast" role="status"></div>
 
+<script src="organizador.js"></script>
 <script>
 'use strict';
 /* ===== Biblioteca da Tamaki Central =====
@@ -647,7 +648,7 @@ function fecharView(){
 $('#vX').innerHTML=svg('x');$('#vX').onclick=fecharView;
 $('#vName').addEventListener('change',async()=>{
   const it=V.items.find(x=>x.id===V.view);if(!it)return;const n=$('#vName').value.trim();if(!n||n===it.nome){$('#vName').value=it.nome;return;}
-  it.nome=n;try{await dbPut(it);aviso();toast('Nome salvo');}catch(_){toast('Não consegui salvar o nome');}
+  it.nome=n;it.nomeManual=1;try{await dbPut(it);aviso();toast('Nome salvo');}catch(_){toast('Não consegui salvar o nome');}
   const c=document.querySelector(`.card[data-id="${it.id}"] .nm`);if(c)c.textContent=n;
 });
 $('#vName').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur();});
@@ -750,7 +751,9 @@ function notasEscrita(){let D={};try{D=JSON.parse(localStorage.getItem('kurogane
 const htmlTexto=h=>{const d=document.createElement('div');d.innerHTML=(h||'').replace(/<(br|\/p|\/div|\/li|\/h\d)>/gi,'\n$&');return d.textContent.replace(/\n{3,}/g,'\n\n').trim();};
 function renderPastas(){
   const n=id=>V.items.filter(it=>it.pasta===id).length;
-  $('#pastas').innerHTML=PASTAS.map(p=>`<button class="pch${V.pasta===p.id?' on':''}" data-p="${p.id}">${svg('folder')}${esc(p.nome)}<b>${n(p.id)+(p.rot||[]).length}</b></button>`).join('')+`<button class="pch nova" data-p="+">${svg('plus')}Pasta</button>`;
+  const A=TamakiOrganizador.cfg(),ativa=A.ligado&&A.pasta;
+  $('#pastas').innerHTML=`<button class="pch auto${A.ligado?' on':''}" data-p="auto" aria-label="Organizar sozinha">⚡ ${A.ligado?'Automático':'Manual'}</button>`
+    +PASTAS.map(p=>`<button class="pch${V.pasta===p.id?' on':''}" data-p="${p.id}">${ativa===p.id?'<span title="Vídeo em andamento">●</span>':''}${svg('folder')}${esc(p.nome)}<b>${n(p.id)+(p.rot||[]).length}</b></button>`).join('')+`<button class="pch nova" data-p="+">${svg('plus')}Pasta</button>`;
 }
 function pastaHead(){
   const p=pastaAtual();if(!p)return '';const its=V.items.filter(it=>it.pasta===p.id),notas=notasEscrita(),rots=(p.rot||[]).map(id=>notas.find(n=>n.id===id)).filter(Boolean);
@@ -814,6 +817,7 @@ async function baixarPasta(p){
 }
 $('#pastas').addEventListener('click',async e=>{const b=e.target.closest('[data-p]');if(!b)return;
   if(b.dataset.p==='+'){const p=await novaPasta();if(p){V.pasta=p.id;render();}return;}
+  if(b.dataset.p==='auto')return abrirAuto();
   V.pasta=V.pasta===b.dataset.p?null:b.dataset.p;render();$('#list').scrollTop=0;});
 $('#list').addEventListener('click',async e=>{const p=pastaAtual();if(!p)return;
   const t=e.target.closest('[data-tira]');if(t){p.rot=(p.rot||[]).filter(x=>x!==t.dataset.tira);salvaPastas();return render();}
@@ -823,6 +827,23 @@ $('#list').addEventListener('click',async e=>{const p=pastaAtual();if(!p)return;
   else if(a==='del'){if(!await confirmar('Apagar a pasta?','Os vídeos e áudios continuam na Biblioteca; só a pasta some.','Apagar pasta'))return;
     for(const it of V.items.filter(x=>x.pasta===p.id)){it.pasta=null;await dbPut(it);}PASTAS=PASTAS.filter(x=>x!==p);salvaPastas();V.pasta=null;render();}
 });
+
+/* ================= ⚡ automático: a Biblioteca se organiza sozinha (organizador.js) ================= */
+function abrirAuto(){
+  const draw=()=>{const A=TamakiOrganizador.cfg(),ck=(k,t,sub)=>`<label><input type="checkbox" data-k="${k}" ${A[k]?'checked':''}><span>${t}<br><small style="margin:0">${sub}</small></span></label>`;
+    $('#dlgBox').innerHTML=`<h2>⚡ Organizar sozinha</h2><p>Tudo que entra na Biblioteca (Palco, Voz, Editor, Emulador…) é arrumado na hora, mesmo com esta aba fechada.</p>
+      <div class="lst">${ck('ligado','Ligado','Desligue para arrumar tudo à mão')}${ck('renomear','Dar nomes claros','“Gravação” vira “Voz · 13/11 21:20 · brava”')}${ck('emocoes','Etiquetar emoções','As falas com (brava), (feliz)… viram #brava, #feliz')}${ck('repetidos','Marcar repetidos','O mesmo arquivo guardado duas vezes ganha #repetido')}</div>
+      <p style="margin-top:14px"><b style="color:var(--ink)">Vídeo em andamento</b><br>O que entrar daqui pra frente vai direto para esta pasta.</p>
+      <div class="chips"><button data-pa2="" class="${A.pasta?'':'on'}">Nenhuma</button>${PASTAS.map(p=>`<button data-pa2="${p.id}" class="${A.pasta===p.id?'on':''}">${esc(p.nome)}</button>`).join('')}<button data-pa2="+">＋ Nova pasta</button></div>
+      <div class="acts"><button data-r="tudo">Arrumar o que já está aqui</button><button class="pri" data-r="0">Pronto</button></div>`;
+    $('#dlgBox').querySelectorAll('[data-k]').forEach(i=>i.onchange=()=>{const c=TamakiOrganizador.cfg();c[i.dataset.k]=i.checked;TamakiOrganizador.salvaCfg(c);renderPastas();});
+    $('#dlgBox').querySelectorAll('[data-pa2]').forEach(b=>b.onclick=async()=>{let id=b.dataset.pa2;
+      if(id==='+'){$('#dlg').classList.remove('on');const p=await novaPasta();$('#dlg').classList.add('on');if(!p)return draw();id=p.id;}
+      TamakiOrganizador.usarPasta(id||null);renderPastas();draw();toast(id?`Novas gravações vão para “${PASTAS.find(p=>p.id===id).nome}”`:'Sem pasta automática');});
+    $('#dlgBox').querySelector('[data-r="tudo"]').onclick=async()=>{const r=await TamakiOrganizador.arrumarTudo();await load();toast(r.n?`${r.n} ${r.n===1?'item arrumado':'itens arrumados'}`:'Já estava tudo arrumado');};
+    $('#dlgBox').querySelector('[data-r="0"]').onclick=()=>{$('#dlg').classList.remove('on');render();};};
+  draw();$('#dlg').classList.add('on');
+}
 
 /* ================= eventos ================= */
 $('#addBtn').innerHTML=svg('plus')+'Adicionar';$('#addBtn').onclick=()=>$('#fIn').click();
@@ -874,6 +895,7 @@ try{new BroadcastChannel('tamaki-biblioteca').onmessage=()=>{if(!V.view&&!C.it)l
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!V.view&&!$('#capaUI').classList.contains('on'))load();});
 if(window.self!==window.top)$('#backLink').style.display='none';
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persisted().then(p=>{if(!p)navigator.storage.persist().catch(()=>{});}).catch(()=>{});
+TamakiOrganizador.iniciar();
 load();
 </script>
 </body>

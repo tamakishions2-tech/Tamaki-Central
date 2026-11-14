@@ -245,6 +245,7 @@ dialog textarea{width:100%;min-height:40vh;background:#0d0d0d;color:var(--tx);bo
   <div class="row" style="margin-top:10px"><button class="bt pri" id="aplicar">Aplicar no Universo</button><button class="bt" id="fechar">Cancelar</button></div>
 </dialog>
 
+<script src="organizador.js"></script>
 <script>
 // Se a Central abrir dentro dela mesma, o index.html dela foi parar no repositório de outro projeto.
 // Dentro do site Tamaki (window.tamakiHub) ela pode abrir normalmente.
@@ -838,6 +839,7 @@ $("#gitMandar").onclick = async () => { if (!PAC) return; if (!GIT.token) return
   b.disabled = false; b.textContent = "⬆ Mandar pro GitHub"; };
 
 aplicarLeitura();
+if (window.TamakiOrganizador) TamakiOrganizador.iniciar({aviso: t => aviso(t)}); // a Biblioteca se arruma sozinha, mesmo com a aba fechada
 const salvo = localStorage.getItem("central_aba");
 ir(salvo || "universo");
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});

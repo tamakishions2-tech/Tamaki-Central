@@ -37,3 +37,7 @@ um arquivo `.json` (pode ser grande) que ela aplica num commit só, mostrando an
 - Caminhos relativos a este repositório. Nunca mande nada para `universo` ou `Tamaki_Personagem`.
 - Sempre o arquivo completo em `texto` (não é patch). `apagar` é opcional.
 - Ele cola o pacote em ⋮ › 🐙 GitHub › Pacote do Claude, ou em Reunião › Colar resposta do Claude (a Central reconhece sozinha).
+
+## Biblioteca automática (`organizador.js`)
+Carregado pela Central e pela Biblioteca. Toda vez que algo entra no IndexedDB `tamaki-biblioteca` (aviso `{novo:id}` no BroadcastChannel do mesmo nome), ele dá nome claro aos genéricos, etiqueta emoções das falas, marca `#repetido` e põe na pasta do "vídeo em andamento".
+Configuração em localStorage `tamaki-bib-auto` (`ligado`, `pasta`, `desde`, `renomear`, `emocoes`, `repetidos`). Itens arrumados ganham `auto:1`; nome trocado à mão ganha `nomeManual:1`. Abas novas que guardarem na Biblioteca só precisam mandar `{novo:id}`.
