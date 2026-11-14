@@ -16,9 +16,10 @@
     d.querySelectorAll("p,div,li,h1,h2,h3,h4").forEach(e => e.append("\n"));
     return d.textContent.split("\n").map(s => s.replace(/\s+/g, " ").trim()).filter(s => s && !s.startsWith("#"))
       .map(s => { // [6:24] no começo: a partir de que momento do gameplay esta fala aparece
-        let cena = null; const c = s.match(/^\[\s*(?:(\d+):)?(\d{1,2}):(\d{2})\s*\]\s*/);
+        let cena = null, close = false; const c = s.match(/^\[\s*(?:(\d+):)?(\d{1,2}):(\d{2})\s*\]\s*/);
         if (c) { cena = (+c[1] || 0) * 3600 + +c[2] * 60 + +c[3]; s = s.slice(c[0].length); }
-        const m = s.match(/^\(([^)]{2,80})\)\s*(.*)$/); return Object.assign(m ? tomDe(m[1]) : {emo: "", tom: {}}, {texto: (m ? m[2] : s).trim(), linha: s, cena}); })
+        const cl = s.match(/^\[\s*(close|intro|fim|perto)\s*\]\s*/i); if (cl) { close = true; s = s.slice(cl[0].length); } // close na Tamaki (abertura e final)
+        const m = s.match(/^\(([^)]{2,80})\)\s*(.*)$/); return Object.assign(m ? tomDe(m[1]) : {emo: "", tom: {}}, {texto: (m ? m[2] : s).trim(), linha: s, cena, close}); })
       .filter(l => l.texto);
   }
   /* Tom de cada fala, dentro dos parênteses, separado por vírgula: (brava, forte, rápida, pausa)
@@ -161,7 +162,7 @@
       sinal("palco", "🎭 Abrindo o Palco…");
       const pr = await palco({ids, textos: linhas.map(l => l.texto), pausas, ini: .2, semBalao: true, titulo: nota.titulo, pasta: pasta.id, duracao: durTot + pausas.reduce((a, b) => a + b, 0)}, aviso);
       if (pr.erro) aviso(`⚠ Sem a cena do Palco (${pr.erro}). Monto só com o jogo.`);
-      const r = await editor({palco: pr.id || null, palcoDur: pr.dur || null, layout: "palco", pausasFinais: pausas, titulo: nota.titulo || "", final: nota.final || "", legendas: linhas.map(l => l.texto), emos: linhas.map(l => l.emo), tons: linhas.map(l => l.tom || {}), falas: ids, pausas: linhas.map(l => (l.tom || {}).pausa ?? null), cenas: linhas.map(l => l.cena), video: nota.video && todos.some(it => it.id === nota.video) ? nota.video : vids[0] ? vids[0].id : null}, aviso);
+      const r = await editor({palco: pr.id || null, palcoDur: pr.dur || null, layout: "palco", pausasFinais: pausas, titulo: nota.titulo || "", final: nota.final || "", legendas: linhas.map(l => l.texto), emos: linhas.map(l => l.emo), tons: linhas.map(l => l.tom || {}), falas: ids, pausas: linhas.map(l => (l.tom || {}).pausa ?? null), cenas: linhas.map(l => l.cena), closes: linhas.map(l => !!l.close), redes: nota.redes || "", video: nota.video && todos.some(it => it.id === nota.video) ? nota.video : vids[0] ? vids[0].id : null}, aviso);
       const extra = semEmo.size ? ` · sem emoção treinada: ${[...semEmo].join(", ")}` : "";
       if (r.erro) return aviso(`As ${ids.length} falas estão na pasta “${pasta.nome}”, mas ${r.erro}.${extra}`);
       abrirAba("editor", false);

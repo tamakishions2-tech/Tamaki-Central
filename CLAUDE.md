@@ -73,3 +73,17 @@ Ao escrever o roteiro (você é o editor e criador dos Shorts dela):
 9:16 em 720×1280: em cima (0–520) a cena gravada do Palco (a Tamaki falando, sem o balão do Palco); no meio (530–780) caixa de diálogo preta com borda branca dupla e o texto da fala digitando em Press Start 2P; embaixo (800–1280) a tela do jogo inteira (crop só das bordas do XRecorder), sem zoom.
 Som: só as falas. O áudio da gravação do jogo é mudo (é um vídeo que ele assiste de fundo). A Central abre a aba Palco, injeta `palco-gravar.js` (`window.__tamakiGravar({ids, textos, pausas, ini, semBalao})` → `{id, dur}`) e o Palco toca as falas e grava a cena; O palco.html do repositório é a versão do Tama (Ator, Luz, Partículas) com `window.__tamakiGravar` dentro do IIFE (o código do Palco é todo fechado num `(() => {…})()`, então injetar de fora não enxerga nada). Se a aba Palco estiver com código guardado no aparelho sem o gravador, a Central oferece trocar pela versão do GitHub. Ao mudar o Palco, mantenha o bloco do gravador no fim do IIFE. O Palco precisa estar na tela enquanto grava.
 Futuro: poses/expressões da Tamaki por emoção no Palco (por enquanto só parada/falando/falando2).
+
+### Close, intro e finalização
+`[close]` no começo da linha (no lugar do tempo) põe a câmera perto do rosto da Tamaki, com a cena do Palco na tela toda e legenda grande; a próxima fala sem `[close]` volta pro layout padrão (com um flash).
+Use `[close]` na 1ª fala (o gancho) e na última (a chamada). O link aceita `final` (faixa no topo, ex.: "Segue pra ver a vingança do Bulba!") e `redes` (linha amarela embaixo, ex.: "@tamakishion no YT e no Insta").
+Ajuste fino do close, se precisar: `closeAjuste:{s,x,y}` no montar (padrão s 1.15, y .07).
+
+### Como escrever o roteiro (estudo: estrutura de Shorts, timing de comédia, finalização)
+- **Gancho (0–3 s):** uma frase só, em close, que promete algo específico ou mostra o absurdo ("Hoje eu vou te mostrar como perder pra um RATTATA"). Nada de "oi gente".
+- **Ponte (1 fala):** contexto mínimo para quem não conhece o jogo.
+- **Corpo:** mudança visual a cada 3–5 s (cada fala = uma cena); nunca mais de 8 s de fala sem trocar de cena. Use "mas"/"aí" entre as falas (causa e virada), não "e depois".
+- **Piada = preparação + pausa + punchline.** A preparação cria a expectativa, um `pausa` (0,6–1 s) segura, o punchline é curto e vem por último na frase (a palavra engraçada no fim). Regra de três: duas iguais e a terceira quebra. Depois do punchline, `pausa` pra respirar antes da próxima preparação.
+- **Virada/payoff nos últimos 10–20%:** entrega exatamente o que o gancho prometeu.
+- **Final (2–4 s, em close):** um pedido só e ligado ao vídeo ("segue pra ver a vingança do Bulba"), sempre depois do payoff. A última frase deve poder emendar na primeira (loop). Só prometa parte 2 se ela vai existir.
+- 20–40 s no total (~2,5 palavras por segundo → 50–100 palavras).

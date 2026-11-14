@@ -2637,36 +2637,53 @@ function caixaDialogo(w,h){return new Promise(ok=>{const c=document.createElemen
   c.toBlob(b=>ok(new File([b],'caixa-dialogo.png',{type:'image/png'})),'image/png');});}
 async function montarLayoutPalco(d,falas,vm,pm){
   commit();if(S.ratio!=='9:16'){try{applyRatio('9:16');}catch(_){}}
-  try{await document.fonts.load('26px "Press Start 2P"');}catch(_){}
+  try{await document.fonts.load('26px "Press Start 2P"');await document.fonts.load('700 60px "Chakra Petch"');}catch(_){}
   const W=720,H=1280,t0=videoEnd(),blocos=[];let t=t0+.2;
   falas.forEach((x,ix)=>{const k=x.i??ix,dur=isFinite(x.m.dur)?x.m.dur:2,p=(d.pausasFinais||d.pausas||[])[k];
     S.audios.push(newAudio(x.m,{start:t}));makePeaks(x.m,x.f);const pausa=p!=null&&isFinite(p)?+p:.3;
-    blocos.push({ini:t,fala:dur,fim:t+dur+pausa,cena:(d.cenas||[])[k],k});t+=dur+pausa;});
-  const fim=t+.4;if(blocos.length)blocos[blocos.length-1].fim=fim;
+    blocos.push({ini:t,fala:dur,fim:t+dur+pausa,cena:(d.cenas||[])[k],close:!!(d.closes||[])[k]&&!!pm,k});t+=dur+pausa;});
+  const fim=t+.4;if(blocos.length)blocos[blocos.length-1].fim=fim;if(blocos.length)blocos[0].ini0=t0;
   S.bg={type:'color',color:'#000000'};
-  // embaixo: o jogo inteiro (crop só das bordas do XRecorder), sem zoom e sem som
+  const ini=b=>b.ini0??b.ini;
+  // embaixo: o jogo inteiro, sem zoom e sem som (atrás do close ele fica coberto)
   if(vm&&vm.type==='video'&&isFinite(vm.dur)&&vm.dur>.2){
     const [w,h]=srcSize(vm),xr=w===1152&&h===720,crop=xr?{l:.215,t:.1,r:.045,b:.1,rot:0,ratio:'free'}:{l:0,t:0,r:0,b:0,rot:0,ratio:'free'};
     const cw=w*(1-crop.l-crop.r),ch=h*(1-crop.t-crop.b),hJ=W*ch/cw,s=Math.min(1,LAY.jogoH/hJ),y=(H-LAY.jogoH/2-H/2)/H;
     let cur=0;
     blocos.forEach((b,bi)=>{if(b.cena!=null&&isFinite(b.cena))cur=Math.min(Math.max(0,+b.cena),vm.dur-.3);
-      let len=bi===0?b.fim-t0:b.fim-b.ini;
+      let len=b.fim-ini(b),pri=true;const volta=bi>0&&blocos[bi-1].close&&!b.close;// saindo do close: um flash
       for(let i=0;i<10&&len>.05;i++){const l=Math.min(len,vm.dur-cur);if(l<=.05){cur=0;continue;}
-        S.clips.push(newVisual(vm,{in:cur,out:cur+l,vol:0,fit:'contain',crop,tf:{x:0,y,s:s*W/W,r:0},tr:{type:'none',dur:.3}}));cur+=l;len-=l;}});
+        S.clips.push(newVisual(vm,{in:cur,out:cur+l,vol:0,fit:'contain',crop,fx:volta&&pri?'flash':'none',tf:{x:0,y,s,r:0},tr:{type:'none',dur:.3}}));cur+=l;len-=l;pri=false;}});
     makeThumbs(vm);
   }
-  // em cima: a cena do Palco, ocupando a largura (sem som: a voz já está nas falas)
-  if(pm){const [pw,ph]=srcSize(pm),hC=W*(ph||720)/(pw||1280),alto=hC>LAY.palcoH,f=LAY.palcoH/hC;
-    // cena alta (9:16): mostra a faixa do meio; cena larga (16:9): aumenta até encher a altura de cima
-    const o=newVisual(pm,{start:t0,in:0,out:Math.min(pm.dur||fim-t0,d.palcoDur||fim-t0,fim-t0),vol:0,fit:'contain',tf:{x:0,y:(LAY.palcoH/2-H/2)/H,s:alto?1:f,r:0}});
-    if(alto)o.crop={l:0,t:(1-f)/2,r:0,b:(1-f)/2,rot:0,ratio:'free'};
-    S.ovs.push(o);if(pm.type==='video')makeThumbs(pm);}
-  // no meio: a caixa de diálogo, e o texto de cada fala sendo digitado dentro dela
-  try{const cm=await loadMedia(await caixaDialogo(W,LAY.caixaH),'image');S.ovs.push(newVisual(cm,{start:t0,in:0,out:fim-t0,fit:'contain',tf:{x:0,y:(LAY.caixaY+LAY.caixaH/2-H/2)/H,s:1,r:0}}));}catch(_){}
+  // Palco: em cima no formato padrão; nas falas [close] ele ocupa a tela toda, perto do rosto da Tamaki
+  if(pm){const [pw,ph]=srcSize(pm),hC=W*(ph||720)/(pw||1280),alto=hC>LAY.palcoH,f=LAY.palcoH/hC,max=Math.min(pm.dur||1e9,d.palcoDur||1e9);
+    const Z=Object.assign({s:1.15,x:0,y:.07},d.closeAjuste||{}),sClose=H/hC*Z.s;
+    let seg=null;const segs=[];blocos.forEach(b=>{const a=ini(b)-t0,e=b.fim-t0;if(seg&&seg.close===b.close)seg.e=e;else{seg={close:b.close,a,e};segs.push(seg);}});
+    segs.forEach((g,gi)=>{const a=Math.min(g.a,max),e=Math.min(g.e,max);if(e-a<=.05)return;
+      const o=newVisual(pm,{start:t0+a,in:a,out:e,vol:0,fit:'contain',tf:g.close?{x:Z.x,y:Z.y,s:sClose,r:0}:{x:0,y:(LAY.palcoH/2-H/2)/H,s:alto?1:f,r:0}});
+      if(!g.close&&alto)o.crop={l:0,t:(1-f)/2,r:0,b:(1-f)/2,rot:0,ratio:'free'};
+      if(!g.close&&gi>0)o.anim=Object.assign(ANIM0(),{in:'zoomOut',inD:.3});
+      if(g.close&&gi>0)o.anim=Object.assign(ANIM0(),{in:'zoomIn',inD:.3});
+      S.ovs.push(o);});
+    makeThumbs(pm);}
+  // caixa de diálogo só nas partes do formato padrão
   const yT=(LAY.caixaY+LAY.caixaH/2-H/2)/H;
-  blocos.forEach(b=>{const txt=String(((d.legendas||[])[b.k])||'').trim();if(!txt)return;
-    S.texts.push(newText({start:b.ini,dur:Math.max(.6,b.fim-b.ini),text:txt,font:'Press Start 2P',size:25,color:'#FFFFFF',stroke:0,bold:false,ls:0,y:yT,anim:{in:'type',inD:Math.max(.4,b.fala*.85),out:'none',outD:.1,combo:'none'}}));});
-  if(d.titulo)S.texts.push(newText({start:t0,dur:Math.min(3,(blocos[0]||{fim:3}).fim-t0),text:d.titulo,size:44,stroke:6,y:(LAY.palcoH-40-H/2)/H,anim:{in:'slideD',inD:.3,out:'fade',outD:.3,combo:'none'}}));
+  try{const cf=await caixaDialogo(W,LAY.caixaH);let seg=null;const segs=[];
+    blocos.forEach(b=>{if(b.close){seg=null;return;}if(seg)seg.e=b.fim;else{seg={a:ini(b),e:b.fim};segs.push(seg);}});
+    for(const g of segs){const cm=await loadMedia(cf,'image');S.ovs.push(newVisual(cm,{start:g.a,in:0,out:g.e-g.a,fit:'contain',tf:{x:0,y:yT,s:1,r:0}}));}}catch(_){}
+  blocos.forEach((b,bi)=>{const txt=String(((d.legendas||[])[b.k])||'').trim();if(!txt)return;
+    if(b.close){// no close: legenda grande no estilo Shorts, 2 a 3 palavras por vez
+      const pal=txt.split(/\s+/),gr=[];for(let i=0;i<pal.length;){const n=pal.length-i===4?2:Math.min(3,pal.length-i);gr.push(pal.slice(i,i+n).join(' '));i+=n;}
+      const tot=gr.reduce((a,g)=>a+g.length+2,0);let tt=b.ini;
+      gr.forEach(g=>{const dd=Math.max(.35,b.fala*(g.length+2)/tot);S.texts.push(newText({start:tt,dur:dd,text:g,font:'Chakra Petch',size:72,color:/[A-ZÁÉÍÓÚÂÊÔÃÕÇ]{3,}|!/.test(g)?'#F2B51D':'#FFFFFF',stroke:8,y:.3,anim:{in:'zoomIn',inD:.12,out:'none',outD:.1,combo:'none'}}));tt+=dd;});
+    }else S.texts.push(newText({start:b.ini,dur:Math.max(.6,b.fim-b.ini),text:txt,font:'Press Start 2P',size:25,color:'#FFFFFF',stroke:0,bold:false,ls:0,y:yT,anim:{in:'type',inD:Math.max(.4,b.fala*.85),out:'none',outD:.1,combo:'none'}}));});
+  const b0=blocos[0]||{fim:t0+3},bN=blocos[blocos.length-1];
+  if(d.titulo)S.texts.push(newText({start:t0,dur:Math.min(3,b0.fim-t0),text:d.titulo,size:46,stroke:7,bg:b0.close,bgColor:'#151515',y:b0.close?-.36:(LAY.palcoH-40-H/2)/H,anim:{in:'slideD',inD:.3,out:'fade',outD:.3,combo:'none'}}));
+  // finalização: chamada pra seguir/ver mais, por cima do último trecho
+  if(bN&&(d.final||d.redes)){const a=bN.close?bN.ini:Math.max(bN.ini,fim-3);
+    if(d.final)S.texts.push(newText({start:a,dur:fim-a,text:d.final,size:50,stroke:7,color:'#FFFFFF',bg:true,bgColor:'#151515',y:-.36,anim:{in:'bounce',inD:.4,out:'none',outD:.2,combo:'none'}}));
+    if(d.redes)S.texts.push(newText({start:a+.3,dur:fim-a-.3,text:d.redes,size:40,stroke:6,color:'#F2B51D',y:-.27,anim:{in:'slideU',inD:.3,out:'none',outD:.2,combo:'none'}}));}
   select(null);seek(t0);renderTL();renderTools();needDraw=true;updateTime();
   return {n:falas.length,v:!!vm,p:!!pm};
 }
