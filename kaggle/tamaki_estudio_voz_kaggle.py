@@ -9,6 +9,8 @@
 #     Roda em segundo plano por até 12 h. Pode fechar o Kaggle.
 #  Opcional: Add-ons → Secrets → HF_TOKEN (guarda vozes, frases e treinos no Hugging Face).
 #  Versão 2: várias vozes salvas com nome e foto, cartão de voz e treino que atualiza a mesma voz.
+#  Versão 6: CORAA só das gravações limpas (sem NURC/ALIP, que são antigas e abafam o "s")
+#            e treino leve (mexe pouco: não estraga a dicção).
 #  Versão 5: confere cada fala (ouve de volta e refaz se embolar) e só usa trechos do CORAA
 #            em que o texto bate com o áudio.
 #  Versão 4: treino com conversas reais (CORAA): a Tamaki aprende o ritmo de gente conversando,
@@ -801,6 +803,9 @@ def job_coraa(qtd):
             texto = texto_coraa(r.get("text", ""))
             if "spont" not in estilo or not 4 <= len(texto.split()) <= 30:
                 continue
+            fonte = (r.get("dataset") or "").lower()
+            if "nurc" in fonte or "alip" in fonte:   # gravações antigas/abafadas: deixam a voz com "língua presa"
+                continue
             if num(r, "votes_for_noise_or_overlap") or num(r, "votes_for_filled_pause") or num(r, "votes_for_hesitation"):
                 continue
             if num(r, "down_votes") or num(r, "up_votes") < 1:
@@ -1086,7 +1091,7 @@ def emocoes_publicas(vid):
 def status():
     info = W["info"] or {}
     dv = voz_do_dataset()
-    return {"ok": True, "versao": 5, "coraa": CO, "fim_em": int(FIM - time.time()), "nuvem": NUVEM["estado"], "conf": CONF, "cache": CACHE["estado"],
+    return {"ok": True, "versao": 6, "coraa": CO, "fim_em": int(FIM - time.time()), "nuvem": NUVEM["estado"], "conf": CONF, "cache": CACHE["estado"],
             "motor": {"estado": W["estado"], "msg": W["msg"], "pack": info.get("pack", ""), "aviso": info.get("aviso", "")},
             "ativa": CONF["ativa"], "vozes": lista_vozes(), "vozes_rev": VREV[0], "tarefa": TAREFA["msg"],
             "design": {"rodando": VD["rodando"], "n": len(VD["versoes"]), "msg": VD["msg"], "texto": VD["texto"]},
@@ -1636,7 +1641,8 @@ def treino_iniciar(corpo: dict = Body({})):
     saida = f"{MODELO}/treinando_{destino}.pt"
     TREINO["pendente"] = {"destino": destino, "nova": nova, "origem": ativa, "saida": saida,
                           "nome": " ".join(str(corpo.get("nome", "")).split())[:60], "foto": str(corpo.get("foto") or "")[:400_000]}
-    motor("/treinar", {"pasta": DS, "epocas": CONF["epocas"], "lr": 1e-5, "saida": saida, "conds": arq_conds(ativa),
+    leve = bool(corpo.get("leve"))
+    motor("/treinar", {"pasta": DS, "epocas": min(CONF["epocas"], 2) if leve else CONF["epocas"], "lr": 4e-6 if leve else 1e-5, "saida": saida, "conds": arq_conds(ativa),
                        "t3_inicio": arq_t3(ativa) if os.path.exists(arq_t3(ativa)) and not corpo.get("do_zero") else None})
     log(f"Treino começou ({CONF['epocas']} voltas, {contar()} frases) · " + ("vai virar uma voz nova" if nova else f"vai atualizar “{nome_voz(ativa)}”"))
     return {"ok": True}

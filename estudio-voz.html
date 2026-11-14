@@ -31,7 +31,7 @@ html,body{margin:0;height:100%;background:#120f24}
 &lt;html lang="pt-BR" data-tema="noite">
 &lt;head>
 &lt;meta charset="utf-8">
-&lt;meta name="tvz-versao" content="4.2">
+&lt;meta name="tvz-versao" content="4.3">
 &lt;meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 &lt;title>Estúdio de voz · Tamaki&lt;/title>
 &lt;link rel="preconnect" href="https://fonts.googleapis.com">
@@ -286,7 +286,8 @@ Tô até agora sem acreditar, sério mesmo. Gente, que dia!&lt;/textarea>
       &lt;h3>Treinar e salvar&lt;/h3>
       &lt;label class="rot" for="epocas">Voltas no treino&lt;/label>
       &lt;select id="epocas">&lt;option value="3">3 (rápido)&lt;/option>&lt;option value="5" selected>5 (recomendado)&lt;/option>&lt;option value="8">8 (mais firme)&lt;/option>&lt;/select>
-      &lt;label class="opcao">&lt;input type="checkbox" id="trZero">&lt;span>&lt;b>Começar do português original&lt;/b>&lt;br>&lt;span class="dica">Recomendado com as conversas reais: não aproveita treinos antigos (que deixaram a voz robótica).&lt;/span>&lt;/span>&lt;/label>
+      &lt;label class="opcao">&lt;input type="checkbox" id="trLeve">&lt;span>&lt;b>Treino leve&lt;/b>&lt;br>&lt;span class="dica">Recomendado com as conversas reais: só 2 voltas, bem de leve. Ganha ritmo sem estragar a dicção.&lt;/span>&lt;/span>&lt;/label>
+      &lt;label class="opcao">&lt;input type="checkbox" id="trZero">&lt;span>&lt;b>Começar do português original&lt;/b>&lt;br>&lt;span class="dica">Não aproveita treinos antigos. Deixe desmarcado para partir da voz que você já gosta.&lt;/span>&lt;/span>&lt;/label>
       &lt;label class="opcao">&lt;input type="radio" name="destino" value="atualizar" checked>&lt;span>&lt;b id="optAtualizar">Atualizar esta voz&lt;/b>&lt;br>&lt;span class="dica">O treino novo entra na mesma voz. O cartão dela continua valendo.&lt;/span>&lt;/span>&lt;/label>
       &lt;label class="opcao">&lt;input type="radio" name="destino" value="nova">&lt;span>&lt;b>Salvar como voz nova&lt;/b>&lt;br>&lt;span class="dica">Fica uma voz separada, com nome e foto. A atual continua igual.&lt;/span>&lt;/span>&lt;/label>
       &lt;div id="novaCampos" hidden>
@@ -930,7 +931,7 @@ async function acao(b, fn) { b.disabled = true; try { await fn(); } catch (e) { 
 $("#trIniciar").onclick = () => acao($("#trIniciar"), async () => {
   const destino = document.querySelector('input[name="destino"]:checked').value;
   if (destino === "nova" &amp;&amp; !$("#trNome").value.trim()) throw new Error("Escreva o nome da voz nova");
-  await api("/treino/iniciar", {body: {epocas: +$("#epocas").value, destino, nome: $("#trNome").value.trim(), foto: NV.foto, do_zero: $("#trZero").checked}});
+  await api("/treino/iniciar", {body: {epocas: +$("#epocas").value, destino, nome: $("#trNome").value.trim(), foto: NV.foto, do_zero: $("#trZero").checked, leve: $("#trLeve").checked}});
   toast("Treino começou");
 });
 $("#trParar").onclick = () => acao($("#trParar"), () => api("/treino/parar", {method: "POST", body: {}}));
@@ -939,8 +940,8 @@ $("#dsIniciar").onclick = () => acao($("#dsIniciar"), () => api("/dataset/inicia
 $("#coBaixar").onclick = () => acao($("#coBaixar"), async () => {
   if (!confirm("Trocar as frases de treino pelas conversas reais? As frases atuais desta voz são apagadas (a voz em si não muda).")) return;
   await api("/dataset/coraa", {body: {qtd: +$("#coQtd").value}});
-  $("#trZero").checked = true; const nv = document.querySelector('input[name="destino"][value="nova"]'); if (nv) { nv.checked = true; nv.dispatchEvent(new Event("change", {bubbles: true})); }
-  if (!$("#trNome").value.trim()) $("#trNome").value = "Tamaki natural";
+  $("#trZero").checked = false; $("#trLeve").checked = true; const nv = document.querySelector('input[name="destino"][value="nova"]'); if (nv) { nv.checked = true; nv.dispatchEvent(new Event("change", {bubbles: true})); }
+  if (!$("#trNome").value.trim()) $("#trNome").value = "Tamaki solta";
   toast("Baixando as conversas…"); });
 $("#coParar").onclick = () => acao($("#coParar"), () => api("/dataset/coraa/parar", {body: {}}));
 $("#dsParar").onclick = () => acao($("#dsParar"), () => api("/dataset/parar", {body: {}}));
