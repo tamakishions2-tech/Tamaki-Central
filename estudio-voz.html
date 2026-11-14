@@ -31,7 +31,7 @@ html,body{margin:0;height:100%;background:#120f24}
 &lt;html lang="pt-BR" data-tema="noite">
 &lt;head>
 &lt;meta charset="utf-8">
-&lt;meta name="tvz-versao" content="4.0">
+&lt;meta name="tvz-versao" content="4.1">
 &lt;meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 &lt;title>Estúdio de voz · Tamaki&lt;/title>
 &lt;link rel="preconnect" href="https://fonts.googleapis.com">
@@ -513,6 +513,7 @@ async function atualizar() {
     if (!st.versao || st.versao &lt; 2) { selo("mal", "Kaggle antigo"); msg($("#ligarMsg"), "O Kaggle está com o código antigo. Troque a célula pelo tamaki_estudio_voz_kaggle.py novo.", 1); return; }
     if (st.vozes_rev !== S.rev) { S.rev = st.vozes_rev; await carregarVozes(); }
     desenhar();
+    if (S.pendente &amp;&amp; st.motor &amp;&amp; st.motor.estado === "pronto") { const v = S.pendente; S.pendente = null; tocarVoz(v); }
   } catch (e) { if (++S.falhas >= 3) { S.url = null; selo("mal", "link caiu"); desligado(); procurar(); } }
 }
 
@@ -556,6 +557,7 @@ function desligado() { S.st = null; desenharVozes(); }
 async function tocarVoz(v) {
   if (!S.url) return toast("Ligue o Kaggle para trocar de voz");
   if (v.id === ativa()) return;
+  if (S.st &amp;&amp; S.st.motor &amp;&amp; S.st.motor.estado !== "pronto") { S.pendente = v; return toast(`O motor ainda está carregando. Assim que ficar pronto eu troco para “${v.nome}” sozinho.`); }
   try {
     if (!v.noKaggle) { await api("/vozes/importar", {body: {cartao: S.cartoes[v.id]}}); toast("Preparando a voz no Kaggle…"); }
     else { toast("Trocando a voz…"); await api("/vozes/usar", {body: {id: v.id}}); toast(`Usando “${v.nome}”`); }
