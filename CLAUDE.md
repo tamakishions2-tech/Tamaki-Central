@@ -89,5 +89,5 @@ Ajuste fino do close, se precisar: `closeAjuste:{s,x,y}` no montar (padrão s 1.
 - 20–40 s no total (~2,5 palavras por segundo → 50–100 palavras).
 
 ### Séries de roteiros (`roteiros/`)
-Para uma série, salve `roteiros/<nome>.json` = `{"serie", "episodios":[{titulo, texto, pasta, video, final, redes}]}` e acrescente `{arquivo, nome}` em `roteiros/indice.json` (a mais nova por último). Aparece em ⋮ › 🎬 Produção › Roteiros prontos, com 🎬 por episódio e 🎬 Todos (um depois do outro na mesma linha do tempo, para ele cortar depois).
+Só depois que o Tama aprovar o roteiro na conversa (a reunião é no chat: o Claude mostra o roteiro numa página com ▶ Ouvir, eles ajustam, e só então vai pra Central). Para uma série aprovada, salve `roteiros/<nome>.json` = `{"serie", "episodios":[{titulo, texto, pasta, video, final, redes}]}` e acrescente `{arquivo, nome}` em `roteiros/indice.json` (a mais nova por último). Aparece em ⋮ › 🎬 Produção › Roteiros prontos, com 🎬 por episódio e 🎬 Todos (um depois do outro na mesma linha do tempo, para ele cortar depois).
 Tom das séries de gameplay: **diário em call com os amigos** — a Tamaki conta o que aconteceu ("Gente, …"), título "Diário da Tamaki #N · …", gancho e chamada em `[close]`, e a chamada final aponta para o próximo episódio.
