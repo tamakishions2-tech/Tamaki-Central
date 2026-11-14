@@ -842,9 +842,21 @@ aplicarLeitura();
 // abas da Central podem pedir para abrir outra (a linha de produção abre o Editor)
 addEventListener("message", e => { const d = e.data || {}; if (e.origin !== location.origin || d.central !== "abrir" || !ABAS[d.aba]) return;
   if (d.fica) { if (!frames[d.aba]) srcDe(d.aba).then(s => frame(d.aba, s)); } else ir(d.aba); });
+// link do Claude: #roteiro=<base64 de {titulo, texto, pasta}> cria o roteiro na Escrita e produz o vídeo
+async function roteiroDoLink(){
+  const m = location.hash.match(/#roteiro=([A-Za-z0-9_\-+/=]+)/); if (!m) return;
+  history.replaceState(null, "", location.pathname + location.search);
+  let r; try { r = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(m[1].replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0)))); } catch (e) { return aviso("Esse link de roteiro veio quebrado."); }
+  if (!confirm(`🎬 Produzir “${r.titulo}” agora?\n\nO roteiro vai para Roteiros da Tamaki${r.pasta ? ", as falas para a pasta “" + r.pasta + "”" : ""} e o vídeo é montado no Editor. O Kaggle do Estúdio de voz precisa estar ligado.`)) return;
+  if (r.pasta && window.TamakiOrganizador) { let P = lerJ("tamaki-bib-pastas", []), p = P.find(x => x.nome.trim().toLowerCase() == String(r.pasta).trim().toLowerCase());
+    if (!p) { p = {id: "p" + Date.now().toString(36), nome: String(r.pasta), rot: []}; P.push(p); gravaJ("tamaki-bib-pastas", P); }
+    const c = TamakiOrganizador.cfg(); c.ligado = true; TamakiOrganizador.salvaCfg(c); if (c.pasta != p.id) TamakiOrganizador.usarPasta(p.id); }
+  await ir("escrita"); await prontos.escrita; await new Promise(ok => setTimeout(ok, 800));
+  frames.escrita.contentWindow.postMessage({roteiroNovo: r}, location.origin);
+}
 if (window.TamakiOrganizador) TamakiOrganizador.iniciar({aviso: t => aviso(t)}); // a Biblioteca se arruma sozinha, mesmo com a aba fechada
 const salvo = localStorage.getItem("central_aba");
-ir(salvo || "universo");
+ir(salvo || "universo").then(roteiroDoLink);
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
 </body>

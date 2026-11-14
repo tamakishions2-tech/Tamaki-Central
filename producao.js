@@ -128,11 +128,11 @@
       }
       // gameplay: o vídeo mais novo da pasta (de preferência do Emulador)
       const todos = await bib("readonly", s => s.getAll()), vids = todos.filter(it => it.pasta === pasta.id && it.tipo === "video" && it.blob).sort((a, b) => (b.origem === "emulador") - (a.origem === "emulador") || b.criado - a.criado);
-      const r = await editor({titulo: nota.titulo || "", final: "Até a próxima!", falas: ids, pausas: linhas.map(l => (l.tom || {}).pausa ?? null), cenas: linhas.map(l => l.cena), video: vids[0] ? vids[0].id : null}, aviso);
+      const r = await editor({titulo: nota.titulo || "", final: "Até a próxima!", falas: ids, pausas: linhas.map(l => (l.tom || {}).pausa ?? null), cenas: linhas.map(l => l.cena), video: vids[0] ? vids[0].id : (nota.video || null)}, aviso);
       const extra = semEmo.size ? ` · sem emoção treinada: ${[...semEmo].join(", ")}` : "";
       if (r.erro) return aviso(`As ${ids.length} falas estão na pasta “${pasta.nome}”, mas ${r.erro}.${extra}`);
       try { if (window.parent !== window) window.parent.postMessage({central: "abrir", aba: "editor"}, location.origin); } catch (e) {}
-      aviso(`✓ Vídeo montado no Editor: ${ids.length} falas${vids[0] ? " + gameplay" : " (sem gameplay na pasta)"}, título e final.${extra}`);
+      aviso(`✓ Vídeo montado no Editor: ${ids.length} falas${vids[0] || nota.video ? " + gameplay" : " (sem gameplay na pasta)"}, título e final.${extra}`);
       gravaJ("tamaki-producao-feito", Object.assign(lerJ("tamaki-producao-feito", {}), {[nota.id]: assinatura(nota)}));
     } catch (e) { aviso("Parei: " + e.message); }
     finally { rodando = false; }
