@@ -51,13 +51,13 @@ A Central abre abas a pedido: `parent.postMessage({central:"abrir", aba:"editor"
 
 ### Tom das falas (o Claude escolhe por linha)
 Dentro dos parênteses, depois da emoção, separado por vírgula: `(brava, forte, rápida, pausa) Chamei ele na chincha!`
-- intensidade: `suave` · `normal` · `forte` · `exagerada` (exaggeration .3 / .5 / .85 / 1.2)
+- intensidade: `suave` · `normal` · `forte` · `exagerada` (exaggeration .35 / .6 / .85 / 1.2)
 - ritmo: `lenta` · `calma` · `rápida` (cfg_weight .3 / .35 / .7)
 - jeito: `firme` (sempre igual, temperature .6) · `solta` (mais variada, 1.0)
 - silêncio depois: `pausa` (.9 s) · `pausa longa` (1.6 s) · `sem pausa` (.1 s); padrão .35 s
 - números exatos (com ponto): `exag=1.1`, `cfg=.4`, `temp=.9`, `pausa=1.2`
 Cena do gameplay: `[6:24]` no começo da linha (antes dos parênteses) faz o vídeo de fundo pular para esse momento quando a fala entra; sem marca, ele continua de onde estava. Use os tempos das folhas de quadros do PDF do pedido.
-Sem tom, vale o que está ajustado no Estúdio de voz. Ao escrever roteiros a partir de um vídeo, use o tom para dar ritmo: falas de impacto `forte`, piadas com `pausa` antes da resposta, cochichos `suave, lenta`.
+Sem tom, vale o padrão "vivo" (exaggeration ≥ .65, cfg_weight ≤ .42, temperature ≥ .9), porque o padrão do Estúdio soava robótico. Ao escrever roteiros a partir de um vídeo, use o tom para dar ritmo: falas de impacto `forte`, piadas com `pausa` antes da resposta, cochichos `suave, lenta`.
 
 ### Montagem estilo Shorts (`montarRoteiro` no editor.html)
 Regras aplicadas sozinhas: sem abertura parada (a primeira fala entra em 0,2 s; o título é um texto no topo por cima da ação); jogo inteiro com fundo desfocado no 9:16;
@@ -91,3 +91,7 @@ Ajuste fino do close, se precisar: `closeAjuste:{s,x,y}` no montar (padrão s 1.
 ### Séries de roteiros (`roteiros/`)
 Só depois que o Tama aprovar o roteiro na conversa (a reunião é no chat: o Claude escreve o roteiro na própria mensagem, em texto bom de ouvir — ele escuta as mensagens com o áudio do app —, um episódio por vez, com as falas numeradas; eles ajustam e só então vai pra Central). Para uma série aprovada, salve `roteiros/<nome>.json` = `{"serie", "episodios":[{titulo, texto, pasta, video, final, redes}]}` e acrescente `{arquivo, nome}` em `roteiros/indice.json` (a mais nova por último). Aparece em ⋮ › 🎬 Produção › Roteiros prontos, com 🎬 por episódio e 🎬 Todos (um depois do outro na mesma linha do tempo, para ele cortar depois).
 Tom das séries de gameplay: **diário em call com os amigos** — a Tamaki conta o que aconteceu ("Gente, …"), título "Diário da Tamaki #N · …", gancho e chamada em `[close]`, e a chamada final aponta para o próximo episódio.
+
+## Voz da Tamaki: naturalidade (pendente)
+- Não treinar a voz com frases faladas por ela mesma (aba Treinar › Gerar frases): é cópia de cópia e deixa a voz metálica.
+- Próximo passo combinado (sem data): célula no Kaggle que baixa 1–2 h das conversas espontâneas do CORAA (Hugging Face, PT-BR, entrevistas/diálogos de SP, MG, Recife) e faz o fine-tune do timbre da Tamaki com elas, para o ritmo ficar natural. O Tama liberou o uso. O pajubá e os trejeitos vêm do roteiro, não do treino.

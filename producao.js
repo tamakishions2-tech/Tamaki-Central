@@ -29,7 +29,7 @@
      pausa / pausa longa: silêncio depois da fala
      Ou números exatos: (brava, exag=1.1, cfg=.4, temp=.9, pausa=1.2) */
   const TONS = {
-    suave: {exaggeration: .3}, leve: {exaggeration: .3}, normal: {exaggeration: .5}, forte: {exaggeration: .85}, intensa: {exaggeration: .85}, exagerada: {exaggeration: 1.2}, "muito forte": {exaggeration: 1.2},
+    suave: {exaggeration: .35}, leve: {exaggeration: .35}, normal: {exaggeration: .6}, forte: {exaggeration: .85}, intensa: {exaggeration: .85}, exagerada: {exaggeration: 1.2}, "muito forte": {exaggeration: 1.2},
     lenta: {cfg_weight: .3}, devagar: {cfg_weight: .3}, calma: {cfg_weight: .35}, "rapida": {cfg_weight: .7}, acelerada: {cfg_weight: .7},
     firme: {temperature: .6}, estavel: {temperature: .6}, solta: {temperature: 1}, variada: {temperature: 1},
     pausa: {pausa: .9}, "pausa longa": {pausa: 1.6}, "sem pausa": {pausa: .1}
@@ -150,7 +150,9 @@
       for (const [i, l] of linhas.entries()) {
         sinal("falas", "", {n: i, total: linhas.length});
         aviso(`🎙 Fala ${i + 1} de ${linhas.length}: ${l.texto.slice(0, 40)}${l.texto.length > 40 ? "…" : ""}`);
-        const t = l.tom || {}, r = await est("/falar", {resp: true, body: {texto: l.texto, emocao: emoId(l.emo), exaggeration: t.exaggeration ?? conf.exaggeration ?? .5, cfg_weight: t.cfg_weight ?? conf.cfg_weight ?? .5, temperature: t.temperature ?? conf.temperature ?? .8}});
+        // padrão "vivo" (menos robótico): mais emoção e variação, ritmo menos preso; o tom de cada fala manda quando existe
+        const t = l.tom || {}, VIVO = {exaggeration: Math.max(conf.exaggeration ?? .5, .65), cfg_weight: Math.min(conf.cfg_weight ?? .5, .42), temperature: Math.max(conf.temperature ?? .8, .9)};
+        const r = await est("/falar", {resp: true, body: {texto: l.texto, emocao: emoId(l.emo), exaggeration: t.exaggeration ?? VIVO.exaggeration, cfg_weight: t.cfg_weight ?? VIVO.cfg_weight, temperature: t.temperature ?? VIVO.temperature}});
         const nome = `${nota.titulo || "Roteiro"} · ${String(i + 1).padStart(2, "0")}${l.emo ? " · " + l.emo.toLowerCase() : ""}`;
         ids.push(await guardar(await r.blob(), {origem: "voz", nome, nomeManual: 1, texto: l.linha, pasta: pasta.id, roteiro: nota.id, ordem: i}));
       }
