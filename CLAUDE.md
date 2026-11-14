@@ -58,3 +58,13 @@ Dentro dos parênteses, depois da emoção, separado por vírgula: `(brava, fort
 - números exatos (com ponto): `exag=1.1`, `cfg=.4`, `temp=.9`, `pausa=1.2`
 Cena do gameplay: `[6:24]` no começo da linha (antes dos parênteses) faz o vídeo de fundo pular para esse momento quando a fala entra; sem marca, ele continua de onde estava. Use os tempos das folhas de quadros do PDF do pedido.
 Sem tom, vale o que está ajustado no Estúdio de voz. Ao escrever roteiros a partir de um vídeo, use o tom para dar ritmo: falas de impacto `forte`, piadas com `pausa` antes da resposta, cochichos `suave, lenta`.
+
+### Montagem estilo Shorts (`montarRoteiro` no editor.html)
+Regras aplicadas sozinhas: sem abertura parada (a primeira fala entra em 0,2 s; o título é um texto no topo por cima da ação); jogo inteiro com fundo desfocado no 9:16;
+corte a cada ~2,4 s dentro da fala com zoom alternado (1,06 / 1,28); efeito curto no começo da fala pela emoção (brava/assustada = shake, animada/feliz/rindo = pulse, forte = flash);
+legendas de 2–3 palavras no terço de baixo (y .26), amarelas quando a fala é forte, tem MAIÚSCULAS ou "!". Sem cartão de "Até a próxima" (só se o link trouxer `final`).
+Ao escrever o roteiro (você é o editor e criador dos Shorts dela):
+- A 1ª fala é o gancho: o momento mais surpreendente ou a pergunta/promessa, com a cena do clímax (`[11:48]`), não o começo do jogo.
+- 15–40 s, 6–10 falas curtas (até ~12 palavras), cada uma com a cena exata em que aquilo acontece no vídeo; uma ideia por fala.
+- Arco: gancho → contexto rápido → escalada → virada → reação; a última fala puxa de volta pro gancho (loop).
+- Ênfase em MAIÚSCULAS em 1 palavra por fala no máximo. Link `#roteiro=` em base64url de `{titulo, texto, pasta, video, final}`.

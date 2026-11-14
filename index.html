@@ -921,7 +921,7 @@ async function produzirRoteiro(r, jaConfirmou){
   prodSinal({etapa: "inicio"}); prodSinal({etapa: "recebido", texto: `📥 Roteiro “${r.titulo}” recebido · ${String(r.texto).split("\n").filter(l => l.trim() && !l.trim().startsWith("#")).length} falas`});
   if (await cGet("o-escrita")) prodSinal({etapa: "info", texto: "⚠ A aba Escrita está usando um código guardado só neste aparelho. Se nada acontecer: segure a aba Escrita › ↺ Voltar ao original."});
   // guarda o roteiro na Escrita (sem esperar por ela) e a própria Central produz
-  const html = String(r.texto || "").split("\n").map(l => "<div>" + esc(l) + "</div>").join(""), nota = {id: "c" + Date.now().toString(36), titulo: String(r.titulo || "Roteiro"), html, video: r.video || null};
+  const html = String(r.texto || "").split("\n").map(l => "<div>" + esc(l) + "</div>").join(""), nota = {id: "c" + Date.now().toString(36), titulo: String(r.titulo || "Roteiro"), html, video: r.video || null, final: r.final || ""};
   if (frames.escrita) { try { frames.escrita.contentWindow.postMessage({roteiroNovo: r, soSalvar: true}, location.origin); } catch (e) {} }
   else { try { const D = lerJ("kurogane:data", {}); D.notas = D.notas || []; if (!D.notas.some(n => n.pasta == "roteiros" && n.titulo == nota.titulo && n.html == html)) { D.notas.push({id: nota.id, titulo: nota.titulo, html, pasta: "roteiros", criado: Date.now(), editado: Date.now()}); gravaJ("kurogane:data", D); } } catch (e) {} }
   if (!window.TamakiProducao) return prodSinal({etapa: "erro", texto: "⚠ A linha de produção (producao.js) não carregou. Toque no ⟳ do navegador e tente de novo."});

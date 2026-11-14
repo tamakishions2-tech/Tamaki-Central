@@ -2579,7 +2579,12 @@ addEventListener('storage',e=>{if(e.key==='tamaki-caixa-aviso')toast('📥 Chego
   history.replaceState(null,'',location.pathname);toast('Trazendo da Biblioteca…');
   toast(msgBib(await addFromBib(ids,q.get('modo')||'fim')));
 })();
-/* linha de produção (producao.js): falas em sequência, gameplay por baixo, título e final */
+/* linha de produção (producao.js) · montagem estilo Shorts
+   - gancho: nada de abertura parada; a primeira fala entra em 0,2 s e o título vira um texto no topo por cima da ação
+   - cada fala em cima da cena dela ([m:ss] do roteiro); dentro da fala, corte a cada ~2,4 s com zoom alternado (o "reset" de atenção)
+   - o jogo inteiro aparece (sem cortar as caixas de diálogo), com o fundo desfocado ocupando o 9:16
+   - legendas grandes, 2 a 3 palavras por vez, no terço de baixo; palavras de ênfase em amarelo
+   - efeito no começo da fala conforme a emoção (brava/assustada tremem, animada pulsa, impacto pisca) */
 async function montarRoteiro(d){
   if(exporting)return {erro:'o Editor está exportando agora'};
   while(bibBusy)await new Promise(r=>setTimeout(r,150));
@@ -2590,21 +2595,34 @@ async function montarRoteiro(d){
     if(!falas.length)return {erro:'as falas não chegaram na Biblioteca'};
     let vm=null;if(d.video){const r=await TamakiBib.ler(d.video).catch(()=>null);if(r&&r.blob)vm=await loadMedia(arq(r)).catch(()=>null);}
     commit();if(S.ratio!=='9:16'){try{applyRatio('9:16');}catch(_){}}
-    const t0=videoEnd(),gap=.35;let t=t0+(d.titulo?1.4:.3);const marcas=[];// [início na linha do tempo, cena no gameplay]
-    falas.forEach((x,i)=>{const k=x.i??i,c=(d.cenas||[])[k];if(c!=null&&isFinite(c))marcas.push([marcas.length?t:t0,+c]);
-      S.audios.push(newAudio(x.m,{start:t}));makePeaks(x.m,x.f);const p=(d.pausas||[])[k];t+=(isFinite(x.m.dur)?x.m.dur:2)+(p!=null&&isFinite(p)?+p:gap);});
-    const fim=t+(d.final?2.4:.6);
+    const t0=videoEnd(),gap=.3;let t=t0+.2;const blocos=[];// cada fala: {ini, fim, cena, k}
+    falas.forEach((x,ix)=>{const k=x.i??ix,dur=isFinite(x.m.dur)?x.m.dur:2,p=(d.pausas||[])[k];
+      S.audios.push(newAudio(x.m,{start:t}));makePeaks(x.m,x.f);
+      const pausa=p!=null&&isFinite(p)?+p:gap;blocos.push({ini:t,fala:dur,fim:t+dur+pausa,cena:(d.cenas||[])[k],k});t+=dur+pausa;});
+    const fim=t+.4;if(blocos.length)blocos[blocos.length-1].fim=fim;
+    const emo=k=>String(((d.emos||[])[k])||'').toLowerCase(),forte=k=>((d.tons||[])[k]||{}).exaggeration>=.8;
     if(vm&&vm.type==='video'&&isFinite(vm.dur)&&vm.dur>.2){
       const [w,h]=srcSize(vm),xr=w===1152&&h===720,crop=xr?{l:.215,t:.1,r:.045,b:.1,rot:0,ratio:'free'}:{l:0,t:0,r:0,b:0,rot:0,ratio:'free'};
-      const clip=(a,len)=>S.clips.push(newVisual(vm,{in:a,out:a+len,vol:.15,fit:'cover',crop,tr:{type:'none',dur:.5}}));
-      if(marcas.length){// cada cena do roteiro: do momento marcado até a próxima marca
-        marcas.forEach(([ini,c],j)=>{const ate=j+1<marcas.length?marcas[j+1][0]:fim;let a=Math.min(Math.max(0,c),vm.dur-.2),len=ate-ini;
-          for(let i=0;i<10&&len>.05;i++){const l=Math.min(vm.dur-a,len);if(l<=.05){a=0;continue;}clip(a,l);len-=l;a=0;}});
-      }else{let resto=fim-t0;for(let i=0;i<30&&resto>.05;i++){const len=Math.min(vm.dur,resto);clip(0,len);resto-=len;}}
+      S.bg={type:'blur'};
+      let cur=0,z=0;
+      blocos.forEach((b,bi)=>{if(b.cena!=null&&isFinite(b.cena))cur=Math.min(Math.max(0,+b.cena),vm.dur-.3);
+        let len=(bi===0?b.fim-t0:b.fim-b.ini),primeiro=true;
+        while(len>.05){const e=emo(b.k),fx=!primeiro?'none':/brava|assustad/.test(e)?'shake':/animad|rindo|feliz/.test(e)?'pulse':forte(b.k)?'flash':'none';
+          const pedaco=fx!=='none'&&len>1.2?.7:len>3.2?2.4:len,l=Math.min(pedaco,vm.dur-cur);if(l<=.05){cur=0;continue;}
+          S.clips.push(newVisual(vm,{in:cur,out:cur+l,vol:.12,fit:'contain',crop,fx,tf:{x:0,y:-.07,s:z%2?1.28:1.06,r:0},tr:{type:'none',dur:.3}}));
+          cur+=l;len-=l;z++;primeiro=false;}
+      });
       makeThumbs(vm);
     }
-    if(d.titulo)S.texts.push(newText({start:t0+.1,dur:2.8,text:d.titulo,size:78,stroke:6,y:-.32,anim:{in:'zoomIn',inD:.45,out:'fade',outD:.4,combo:'none'}}));
-    if(d.final)S.texts.push(newText({start:fim-2.4,dur:2.4,text:d.final,size:64,stroke:5,y:0,anim:{in:'bounce',inD:.5,out:'fade',outD:.4,combo:'none'}}));
+    // legendas: 2 a 3 palavras por vez, no tempo da fala
+    blocos.forEach(b=>{const txt=String(((d.legendas||[])[b.k])||'').trim();if(!txt)return;
+      const pal=txt.split(/\s+/),grupos=[];for(let i=0;i<pal.length;){const n=pal.length-i===4?2:Math.min(3,pal.length-i);grupos.push(pal.slice(i,i+n).join(' '));i+=n;}
+      const total=grupos.reduce((a,g)=>a+g.length+2,0);let tt=b.ini;
+      grupos.forEach(g=>{const dd=Math.max(.35,b.fala*(g.length+2)/total),enf=/[A-ZÁÉÍÓÚÂÊÔÃÕÇ]{3,}|!/.test(g)||forte(b.k);
+        S.texts.push(newText({start:tt,dur:dd,text:g,font:'Chakra Petch',size:70,color:enf?'#F2B51D':'#FFFFFF',stroke:7,strokeColor:'#000000',y:.26,anim:{in:'zoomIn',inD:.12,out:'none',outD:.1,combo:'none'}}));tt+=dd;});});
+    // título por cima da ação, no topo (sem abertura parada)
+    if(d.titulo)S.texts.push(newText({start:t0,dur:Math.min(3.2,(blocos[0]||{fim:3}).fim-t0),text:d.titulo,size:54,stroke:6,color:'#FFFFFF',bg:true,bgColor:'#151515',y:-.38,anim:{in:'slideD',inD:.3,out:'fade',outD:.3,combo:'none'}}));
+    if(d.final)S.texts.push(newText({start:fim-1.6,dur:1.6,text:d.final,size:56,stroke:6,y:-.38,anim:{in:'bounce',inD:.4,out:'none',outD:.3,combo:'none'}}));
     select(null);seek(t0);renderTL();renderTools();needDraw=true;updateTime();
     return {n:falas.length,v:!!vm};
   }finally{bibBusy=false;}
