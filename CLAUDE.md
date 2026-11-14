@@ -48,3 +48,12 @@ Roteiro: uma fala por linha, `(emoção) texto`; linhas com `#` são anotação.
 guarda na Biblioteca na pasta do vídeo em andamento (ou cria uma com o título), e manda `{tipo:"montar"}` no BroadcastChannel `tamaki-editor`:
 o Editor (`montarRoteiro`) põe as falas em sequência, o gameplay da pasta por baixo (volume baixo, crop do XRecorder), título no começo e "Até a próxima!" no fim.
 A Central abre abas a pedido: `parent.postMessage({central:"abrir", aba:"editor", fica:true})` (`fica` carrega sem trocar de aba).
+
+### Tom das falas (o Claude escolhe por linha)
+Dentro dos parênteses, depois da emoção, separado por vírgula: `(brava, forte, rápida, pausa) Chamei ele na chincha!`
+- intensidade: `suave` · `normal` · `forte` · `exagerada` (exaggeration .3 / .5 / .85 / 1.2)
+- ritmo: `lenta` · `calma` · `rápida` (cfg_weight .3 / .35 / .7)
+- jeito: `firme` (sempre igual, temperature .6) · `solta` (mais variada, 1.0)
+- silêncio depois: `pausa` (.9 s) · `pausa longa` (1.6 s) · `sem pausa` (.1 s); padrão .35 s
+- números exatos (com ponto): `exag=1.1`, `cfg=.4`, `temp=.9`, `pausa=1.2`
+Sem tom, vale o que está ajustado no Estúdio de voz. Ao escrever roteiros a partir de um vídeo, use o tom para dar ritmo: falas de impacto `forte`, piadas com `pausa` antes da resposta, cochichos `suave, lenta`.

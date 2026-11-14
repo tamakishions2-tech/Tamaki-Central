@@ -15,8 +15,32 @@
     d.querySelectorAll("br").forEach(b => b.replaceWith("\n"));
     d.querySelectorAll("p,div,li,h1,h2,h3,h4").forEach(e => e.append("\n"));
     return d.textContent.split("\n").map(s => s.replace(/\s+/g, " ").trim()).filter(s => s && !s.startsWith("#"))
-      .map(s => { const m = s.match(/^\(([^)]{2,24})\)\s*(.*)$/); return m ? {emo: m[1].trim(), texto: m[2].trim(), linha: s} : {emo: "", texto: s, linha: s}; })
+      .map(s => { const m = s.match(/^\(([^)]{2,80})\)\s*(.*)$/); return m ? Object.assign(tomDe(m[1]), {texto: m[2].trim(), linha: s}) : {emo: "", tom: {}, texto: s, linha: s}; })
       .filter(l => l.texto);
+  }
+  /* Tom de cada fala, dentro dos parênteses, separado por vírgula: (brava, forte, rápida, pausa)
+     intensidade: suave · normal · forte · exagerada        → exaggeration
+     ritmo:       lenta · rápida                             → cfg_weight
+     jeito:       firme (sempre igual) · solta (mais variada) → temperature
+     pausa / pausa longa: silêncio depois da fala
+     Ou números exatos: (brava, exag=1.1, cfg=.4, temp=.9, pausa=1.2) */
+  const TONS = {
+    suave: {exaggeration: .3}, leve: {exaggeration: .3}, normal: {exaggeration: .5}, forte: {exaggeration: .85}, intensa: {exaggeration: .85}, exagerada: {exaggeration: 1.2}, "muito forte": {exaggeration: 1.2},
+    lenta: {cfg_weight: .3}, devagar: {cfg_weight: .3}, calma: {cfg_weight: .35}, "rapida": {cfg_weight: .7}, acelerada: {cfg_weight: .7},
+    firme: {temperature: .6}, estavel: {temperature: .6}, solta: {temperature: 1}, variada: {temperature: 1},
+    pausa: {pausa: .9}, "pausa longa": {pausa: 1.6}, "sem pausa": {pausa: .1}
+  };
+  const CHAVES = {exag: "exaggeration", emocao: "exaggeration", intensidade: "exaggeration", cfg: "cfg_weight", ritmo: "cfg_weight", temp: "temperature", variacao: "temperature", pausa: "pausa"};
+  const LIM = {exaggeration: [.25, 1.5], cfg_weight: [0, 1], temperature: [.4, 1.2], pausa: [0, 4]};
+  function tomDe(dentro) {
+    const tom = {}; let emo = "";
+    for (const p0 of dentro.split(/[,;|]/)) { const p = norm(p0); if (!p) continue;
+      const kv = p.match(/^([a-z]+)\s*[=:]\s*([\d.,]+)$/);
+      if (kv && CHAVES[kv[1]]) { tom[CHAVES[kv[1]]] = parseFloat(kv[2].replace(",", ".")); continue; }
+      if (TONS[p]) { Object.assign(tom, TONS[p]); continue; }
+      if (!emo) emo = p0.trim(); }
+    for (const k in tom) { const [a, b] = LIM[k]; if (!isFinite(tom[k])) delete tom[k]; else tom[k] = Math.min(b, Math.max(a, tom[k])); }
+    return {emo, tom};
   }
 
   /* ---------- Estúdio de voz (mesmo código de ligação e mesmo Kaggle das outras abas) ---------- */
@@ -95,13 +119,13 @@
       const pasta = pastaDoVideo(nota.titulo, nota.id), ids = [];
       for (const [i, l] of linhas.entries()) {
         aviso(`🎙 Fala ${i + 1} de ${linhas.length}: ${l.texto.slice(0, 40)}${l.texto.length > 40 ? "…" : ""}`);
-        const r = await est("/falar", {resp: true, body: {texto: l.texto, emocao: emoId(l.emo), exaggeration: conf.exaggeration ?? .5, cfg_weight: conf.cfg_weight ?? .5, temperature: conf.temperature ?? .8}});
+        const t = l.tom || {}, r = await est("/falar", {resp: true, body: {texto: l.texto, emocao: emoId(l.emo), exaggeration: t.exaggeration ?? conf.exaggeration ?? .5, cfg_weight: t.cfg_weight ?? conf.cfg_weight ?? .5, temperature: t.temperature ?? conf.temperature ?? .8}});
         const nome = `${nota.titulo || "Roteiro"} · ${String(i + 1).padStart(2, "0")}${l.emo ? " · " + l.emo.toLowerCase() : ""}`;
         ids.push(await guardar(await r.blob(), {origem: "voz", nome, nomeManual: 1, texto: l.linha, pasta: pasta.id, roteiro: nota.id, ordem: i}));
       }
       // gameplay: o vídeo mais novo da pasta (de preferência do Emulador)
       const todos = await bib("readonly", s => s.getAll()), vids = todos.filter(it => it.pasta === pasta.id && it.tipo === "video" && it.blob).sort((a, b) => (b.origem === "emulador") - (a.origem === "emulador") || b.criado - a.criado);
-      const r = await editor({titulo: nota.titulo || "", final: "Até a próxima!", falas: ids, video: vids[0] ? vids[0].id : null}, aviso);
+      const r = await editor({titulo: nota.titulo || "", final: "Até a próxima!", falas: ids, pausas: linhas.map(l => (l.tom || {}).pausa ?? null), video: vids[0] ? vids[0].id : null}, aviso);
       const extra = semEmo.size ? ` · sem emoção treinada: ${[...semEmo].join(", ")}` : "";
       if (r.erro) return aviso(`As ${ids.length} falas estão na pasta “${pasta.nome}”, mas ${r.erro}.${extra}`);
       try { if (window.parent !== window) window.parent.postMessage({central: "abrir", aba: "editor"}, location.origin); } catch (e) {}
@@ -114,5 +138,5 @@
   const assinatura = n => { const s = (n.titulo || "") + "|" + linhasDe(n.html).map(l => l.linha).join("\n"); let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return h; };
   const jaFeito = n => lerJ("tamaki-producao-feito", {})[n.id] === assinatura(n);
 
-  window.TamakiProducao = {produzir, linhasDe, jaFeito, ocupado: () => rodando};
+  window.TamakiProducao = {produzir, linhasDe, tomDe, jaFeito, ocupado: () => rodando};
 })();

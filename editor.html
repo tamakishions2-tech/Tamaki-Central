@@ -2586,12 +2586,12 @@ async function montarRoteiro(d){
   bibBusy=true;
   try{
     const arq=r=>new File([r.blob],(r.nome||'gravacao')+'.'+((r.mime||'').split('/')[1]||'bin'),{type:r.mime});
-    const falas=[];for(const id of d.falas||[]){const r=await TamakiBib.ler(id).catch(()=>null);if(!r||!r.blob)continue;const f=arq(r),m=await loadMedia(f);falas.push({m,f});}
+    const falas=[];for(const id of d.falas||[]){const r=await TamakiBib.ler(id).catch(()=>null);if(!r||!r.blob)continue;const f=arq(r),m=await loadMedia(f);falas.push({m,f,i:(d.falas||[]).indexOf(id)});}
     if(!falas.length)return {erro:'as falas não chegaram na Biblioteca'};
     let vm=null;if(d.video){const r=await TamakiBib.ler(d.video).catch(()=>null);if(r&&r.blob)vm=await loadMedia(arq(r)).catch(()=>null);}
     commit();if(S.ratio!=='9:16'){try{applyRatio('9:16');}catch(_){}}
     const t0=videoEnd(),gap=.35;let t=t0+(d.titulo?1.4:.3);
-    for(const x of falas){S.audios.push(newAudio(x.m,{start:t}));makePeaks(x.m,x.f);t+=(isFinite(x.m.dur)?x.m.dur:2)+gap;}
+    falas.forEach((x,i)=>{S.audios.push(newAudio(x.m,{start:t}));makePeaks(x.m,x.f);const p=(d.pausas||[])[x.i??i];t+=(isFinite(x.m.dur)?x.m.dur:2)+(p!=null&&isFinite(p)?+p:gap);});
     const fim=t+(d.final?2.4:.6);
     if(vm&&vm.type==='video'&&isFinite(vm.dur)&&vm.dur>.2){
       const [w,h]=srcSize(vm),xr=w===1152&&h===720,crop=xr?{l:.215,t:.1,r:.045,b:.1,rot:0,ratio:'free'}:{l:0,t:0,r:0,b:0,rot:0,ratio:'free'};
