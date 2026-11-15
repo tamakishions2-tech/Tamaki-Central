@@ -11,7 +11,7 @@ CONTRASTE = globals().get("CONTRASTE", 1.04)
 COR_TREINO = globals().get("COR_TREINO", 1.18)
 # IA de texto que entende o seu pedido em português e escreve as etiquetas (roda no Kaggle, grátis)
 MODELO_TEXTO = globals().get("MODELO_TEXTO", "")   # vazio = escolhe sozinho (7B com 2 GPUs, 3B com 1)
-VERSAO = 3
+VERSAO = 4
 import os, sys, glob, json, time, subprocess, threading, re, io, base64, uuid, random, queue, shutil, gc
 
 def rodar(cmd, cwd=None, cada_linha=None):
@@ -323,23 +323,58 @@ def fundo_liso(img):
     borda = [px[x, y] for x in range(64) for y in (0, 1, 62, 63)] + [px[x, y] for y in range(64) for x in (0, 1, 62, 63)]
     faixa = Image.new("RGB", (len(borda), 1)); faixa.putdata(borda)
     return sum(ImageStat.Stat(faixa).stddev) / 3 < 12
-def preparar_treino(pasta):
-    # 1) realça a cor das imagens de treino  2) avisa no texto quando o fundo é liso,
-    # para o LoRA não achar que o fundo cinza faz parte da Tamaki
-    for arq in glob.glob(pasta + "/*"):
+# ---------- legendas automáticas (WD Tagger) ----------
+# O segredo de um LoRA que obedece: a legenda descreve tudo o que MUDA (roupa, pose, fundo, enquadramento)
+# e deixa de fora o que é SEMPRE dela (cabelo, olhos, pele, orelhas). Assim a palavra-gatilho guarda só o rosto
+# e o jeito dela, e a roupa e o cenário continuam obedecendo ao pedido.
+TAGGER = {"s": None, "tags": None}
+IDENTIDADE = {"dark skin", "dark-skinned female", "brown skin", "tan", "blue hair", "purple hair", "dark blue hair", "black hair", "aqua hair",
+    "curly hair", "wavy hair", "long hair", "very long hair", "medium hair", "big hair", "orange hair", "multicolored hair", "streaked hair",
+    "two-tone hair", "colored inner hair", "hair over one eye", "aqua eyes", "green eyes", "blue eyes", "teal eyes", "pointy ears", "elf",
+    "mole", "mole under eye", "mole under mouth", "fang", "fangs", "skin fang", "eyeliner", "makeup", "lips"}
+def legendar(img):
+    if TAGGER["s"] is None:
+        instalar("onnxruntime")
+        import onnxruntime as ort, csv
+        rep = "SmilingWolf/wd-vit-tagger-v3"
+        m = hf_hub_download(rep, "model.onnx"); c = hf_hub_download(rep, "selected_tags.csv")
+        TAGGER["s"] = ort.InferenceSession(m, providers=["CPUExecutionProvider"])
+        TAGGER["tags"] = [(r["name"].replace("_", " "), int(r["category"])) for r in csv.DictReader(open(c))]
+    import numpy as np
+    sz = TAGGER["s"].get_inputs()[0].shape[1]
+    im = img.convert("RGBA"); fundo = Image.new("RGBA", im.size, (255, 255, 255, 255)); fundo.alpha_composite(im); im = fundo.convert("RGB")
+    lado = max(im.size); q = Image.new("RGB", (lado, lado), (255, 255, 255)); q.paste(im, ((lado - im.width) // 2, (lado - im.height) // 2))
+    x = np.asarray(q.resize((sz, sz), Image.BICUBIC), dtype=np.float32)[:, :, ::-1][None]
+    pr = TAGGER["s"].run(None, {TAGGER["s"].get_inputs()[0].name: x})[0][0]
+    out = [(t, float(v)) for (t, cat), v in zip(TAGGER["tags"], pr) if cat == 0 and v >= 0.35]
+    out.sort(key=lambda z: -z[1])
+    return [t for t, _ in out]
+
+def preparar_treino(pasta, gatilho="tmkshion"):
+    # realça a cor e escreve a legenda de cada imagem com o WD Tagger (sem os traços fixos dela)
+    feitas = 0
+    for arq in sorted(glob.glob(pasta + "/*")):
         if arq.endswith(".txt"): continue
         try:
             img = Image.open(arq).convert("RGB")
             if COR_TREINO != 1: img = ImageEnhance.Color(img).enhance(COR_TREINO)
-            liso = fundo_liso(img)
             base = os.path.splitext(arq)[0]; img.save(base + ".png")
             if not arq.endswith(".png"): os.remove(arq)
             txt = base + ".txt"
-            leg = open(txt).read().strip() if os.path.exists(txt) else "solo"
-            if liso and "background" not in leg: leg += ", simple background"
-            open(txt, "w").write(leg)
+            antiga = open(txt).read().strip() if os.path.exists(txt) else ""
+            conta = next((t for t in ["1girl", "1boy", "no humans"] if t in antiga), "1boy" if gatilho != "tmkshion" and "1girl" not in antiga else "1girl")
+            try:
+                tags = [t for t in legendar(img) if t not in IDENTIDADE and t not in ("1girl", "1boy", "solo", "no humans")] if gatilho == "tmkshion" else \
+                       [t for t in legendar(img) if t not in ("1girl", "1boy", "solo", "no humans")]
+            except Exception as e:
+                print("Sem legenda automática:", e); tags = [t.strip() for t in antiga.split(",") if t.strip() and t.strip() not in (gatilho, conta, "solo")]
+            leg = ", ".join([conta, gatilho, "solo"] + tags[:40])
+            open(txt, "w").write(leg); feitas += 1
+            if feitas <= 3: print("Legenda:", os.path.basename(base), "→", leg)
         except Exception as e:
             print("Não preparei", os.path.basename(arq), e)
+    return feitas
+
 def treinar(epocas, usar_originais, gatilho="tmkshion"):
     gatilho = re.sub(r"[^a-z0-9]", "", gatilho.lower()) or "tmkshion"
     T = TREINO
@@ -354,13 +389,17 @@ def treinar(epocas, usar_originais, gatilho="tmkshion"):
         arq = [f for f in list_repo_files(base_repo) if f.endswith(".safetensors") and "/" not in f][0]
         BASE = hf_hub_download(base_repo, arq, local_dir=W + "/base")
         VAE = hf_hub_download("madebyollin/sdxl-vae-fp16-fix", "sdxl_vae.safetensors", local_dir=W + "/base")
-        DADOS = W + "/treino_dados"; PASTA = DADOS + f"/10_{gatilho}"
+        DADOS = W + "/treino_dados"; PASTA = DADOS + f"/1_{gatilho}"
         shutil.rmtree(DADOS, ignore_errors=True); os.makedirs(PASTA)
         if usar_originais and ORIGINAIS and gatilho == "tmkshion":
             for f in glob.glob(ORIGINAIS + "/*"): shutil.copy(f, PASTA)
         for f in glob.glob(EXTRA + "/*"): shutil.copy(f, PASTA)
-        preparar_treino(PASTA)
+        T["msg"] = "Escrevendo a legenda de cada imagem (o que muda: roupa, pose, fundo)…"
+        preparar_treino(PASTA, gatilho)
         n = len([f for f in os.listdir(PASTA) if not f.endswith(".txt")])
+        # repetições pelo tamanho do conjunto: ~150 passos por volta (antes eram 10 repetições fixas, e passava do ponto)
+        rep_n = max(2, min(10, round(150 / max(n, 1))))
+        NOVA = DADOS + f"/{rep_n}_{gatilho}"; os.rename(PASTA, NOVA); PASTA = NOVA
         if n < 5: raise RuntimeError(f"só {n} imagens; precisa de pelo menos 5")
         nome = gatilho + "_" + time.strftime("%m%d_%H%M")
         T.update(estado="treinando", msg=f"Treinando a versão {nome} com {n} imagens…")
@@ -380,9 +419,9 @@ def treinar(epocas, usar_originais, gatilho="tmkshion"):
                     f"--train_data_dir={DADOS}", "--caption_extension=.txt", "--resolution=1024,1024",
                     "--enable_bucket", "--min_bucket_reso=512", "--max_bucket_reso=1536",
                     f"--output_dir={LORA_DIR}", f"--output_name={nome}", "--save_model_as=safetensors",
-                    "--network_module=networks.lora", "--network_dim=32", "--network_alpha=16", "--network_train_unet_only",
-                    "--learning_rate=1e-4", "--optimizer_type=AdamW8bit", "--lr_scheduler=cosine", "--lr_warmup_steps=50",
-                    "--train_batch_size=1", f"--max_train_epochs={epocas}", "--save_every_n_epochs=2",
+                    "--network_module=networks.lora", "--network_dim=16", "--network_alpha=8", "--network_train_unet_only",
+                    "--learning_rate=8e-5", "--optimizer_type=AdamW8bit", "--lr_scheduler=cosine", "--lr_warmup_steps=50",
+                    "--train_batch_size=1", f"--max_train_epochs={epocas}", "--save_every_n_epochs=1",
                     "--mixed_precision=fp16", "--save_precision=fp16", "--gradient_checkpointing", "--sdpa",
                     "--cache_latents", "--cache_text_encoder_outputs", "--seed=42",
                     # mais contraste e cor no que o LoRA aprende, e treino mais estável
