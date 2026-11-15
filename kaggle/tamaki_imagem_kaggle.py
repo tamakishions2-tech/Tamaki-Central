@@ -11,7 +11,7 @@ CONTRASTE = globals().get("CONTRASTE", 1.04)
 COR_TREINO = globals().get("COR_TREINO", 1.18)
 # IA de texto que entende o seu pedido em português e escreve as etiquetas (roda no Kaggle, grátis)
 MODELO_TEXTO = globals().get("MODELO_TEXTO", "")   # vazio = escolhe sozinho (7B com 2 GPUs, 3B com 1)
-VERSAO = 2
+VERSAO = 3
 import os, sys, glob, json, time, subprocess, threading, re, io, base64, uuid, random, queue, shutil, gc
 
 def rodar(cmd, cwd=None, cada_linha=None):
@@ -131,6 +131,7 @@ Rules:
 - "lugar": choose the id of one of the PLACES when it fits, otherwise "".
 - "formato": "story" for stories/vertical full body, "paisagem" for wide scenery, "quadrado" for square, otherwise "".
 - "evitar": extra negative tags only if he asked to avoid something (e.g. "crosses"), otherwise "".
+- If another character appears with Tamaki, start the tags with the count tags counting Tamaki too (1girl, 1boy / 2girls / 2girls, 1boy…) and use that character's tags from KNOWN CHARACTERS when given (keep their trigger word first). Use real Danbooru character tags like "bulbasaur", "pikachu", "character name (series)".
 - "resposta": one short sentence in Brazilian Portuguese telling him what you will draw.
 Answer ONLY with JSON: {"tags": "...", "lugar": "...", "formato": "...", "evitar": "...", "resposta": "..."}"""
 EXEMPLOS = [
@@ -141,12 +142,58 @@ EXEMPLOS = [
     ("ela jogando videogame toda concentrada, de fone, story", "",
      {"tags": "sitting, playing video games, holding controller, concentrating, serious, headphones, oversized shirt, upper body, from side, screen light, night, dark room", "lugar": "mesa", "formato": "story", "evitar": "", "resposta": "Ela concentrada no game, de fone, no formato story."}),
 ]
-def entender(texto, anterior="", lugares=None, gosto="", exemplos=None):
+# ---------- conferência no Danbooru: o modelo aprendeu com as etiquetas de lá ----------
+DB = {}
+def danbooru(tag):
+    """(nome certo, nº de imagens) ou (None, 0). Usa apelidos e o autocompletar do Danbooru. Guarda o resultado."""
+    t = tag.strip().lower().replace(" ", "_")
+    if not t: return (None, 0)
+    if t in DB: return DB[t]
+    r = (None, 0)
+    try:
+        H = {"User-Agent": "TamakiCentral/1.0 (gerador pessoal)"}
+        j = requests.get("https://danbooru.donmai.us/tags.json", params={"search[name]": t, "search[hide_empty]": "true"}, headers=H, timeout=8).json()
+        if j: r = (j[0]["name"], int(j[0]["post_count"]))
+        else:
+            a = requests.get("https://danbooru.donmai.us/tag_aliases.json", params={"search[antecedent_name]": t, "search[status]": "active"}, headers=H, timeout=8).json()
+            if a:
+                return danbooru(a[0]["consequent_name"].replace("_", " ")) if a[0]["consequent_name"] != t else r
+            c = requests.get("https://danbooru.donmai.us/autocomplete.json", params={"search[query]": t, "search[type]": "tag_query", "limit": 1}, headers=H, timeout=8).json()
+            if c and c[0].get("value"):
+                v = c[0]["value"]; n = int(c[0].get("post_count") or 0)
+                r = (v, n)
+    except Exception as e:
+        print("Danbooru não respondeu:", e); return (tag, -1)   # -1 = não deu para conferir
+    DB[t] = r
+    return r
+
+COMUNS = set("1girl 1boy 2girls 2boys 3girls solo indoors outdoors night day smile".split())
+def conferir(tags, protegidas=()):
+    """Troca etiquetas por nomes do Danbooru e avisa as que o modelo provavelmente não conhece."""
+    saida, avisos = [], []
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(6) as ex:   # confere várias de uma vez (fica guardado para a próxima)
+        list(ex.map(danbooru, [t for t in tags if t.lower() not in COMUNS and t not in protegidas]))
+    for tg in tags:
+        if tg.lower() in COMUNS or tg in protegidas or tg.lower() in protegidas:
+            saida.append(tg); continue
+        nome, n = danbooru(tg)
+        if n < 0: saida.append(tg); continue
+        if not nome:
+            avisos.append(f"“{tg}” não existe no Danbooru: tirei (ensine em 🧠 Saber)"); continue
+        nome = nome.replace("_", " ")
+        if nome.lower() != tg.lower(): avisos.append(f"“{tg}” → “{nome}”")
+        if n < 30: avisos.append(f"“{nome}” tem só {n} imagens: o modelo mal conhece")
+        saida.append(nome)
+    return saida, avisos
+
+def entender(texto, anterior="", lugares=None, gosto="", exemplos=None, conhecidos=None, conferir_db=True):
     if TX["m"] is None:
         carregar_texto()
         if TX["m"] is None: raise RuntimeError("a IA de texto não carregou: " + TX["erro"])
     lug = "\n".join(f"- {l.get('id')}: {l.get('n')} ({l.get('t')})" for l in (lugares or [])) or "(none)"
-    sis = INSTRUCAO + f"\nPLACES:\n{lug}" + (f"\nTAMA'S TASTE (always respect): {gosto}" if gosto else "")
+    con = "\n".join(f"- {c.get('nome')} ({c.get('universo', '')}): {', '.join(x for x in [c.get('gatilho', ''), c.get('tags', '')] if x)}" for c in (conhecidos or [])[:12])
+    sis = INSTRUCAO + f"\nPLACES:\n{lug}" + (f"\nKNOWN CHARACTERS (use exactly these tags when they appear):\n{con}" if con else "") + (f"\nTAMA'S TASTE (always respect): {gosto}" if gosto else "")
     msgs = [{"role": "system", "content": sis}]
     for pt, ant, js in EXEMPLOS + [(e.get("pedido", ""), e.get("anterior", ""), {"tags": e.get("tags", ""), "lugar": e.get("lugar", ""), "formato": "", "evitar": "", "resposta": "Do jeito que você gostou."}) for e in (exemplos or [])[-6:] if e.get("pedido") and e.get("tags")]:
         msgs += [{"role": "user", "content": (f"PREVIOUS TAGS: {ant}\n" if ant else "") + f"REQUEST: {pt}"}, {"role": "assistant", "content": json.dumps(js, ensure_ascii=False)}]
@@ -164,8 +211,60 @@ def entender(texto, anterior="", lugares=None, gosto="", exemplos=None):
     vistos, limpas = set(), []
     for x in tags:
         if x.lower() not in vistos: vistos.add(x.lower()); limpas.append(x)
-    return {"tags": ", ".join(limpas[:30]), "lugar": str(d.get("lugar") or ""), "formato": str(d.get("formato") or ""),
+    avisos = []
+    if conferir_db:
+        prot = set()
+        for c in conhecidos or []:
+            for x in [c.get("gatilho", "")] + str(c.get("tags", "")).split(","):
+                if x.strip(): prot.add(x.strip()); prot.add(x.strip().lower())
+        limpas, avisos = conferir(limpas[:30], prot)
+    return {"avisos": avisos[:8], "tags": ", ".join(limpas[:30]), "lugar": str(d.get("lugar") or ""), "formato": str(d.get("formato") or ""),
             "evitar": str(d.get("evitar") or ""), "resposta": str(d.get("resposta") or "")}
+
+# ---------- aprender: um link ou um texto vira fichas para o "Saber" da Tamaki ----------
+def texto_do_link(url):
+    H = {"User-Agent": "Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36"}
+    r = requests.get(url, headers=H, timeout=20); r.raise_for_status()
+    h = r.text
+    h = re.sub(r"(?is)<(script|style|noscript|svg|nav|footer|aside)[^>]*>.*?</\1>", " ", h)
+    h = re.sub(r"(?is)<br\s*/?>|</p>|</li>|</h\d>|</tr>", "\n", h)
+    h = re.sub(r"(?s)<[^>]+>", " ", h)
+    import html as H2
+    h = H2.unescape(h)
+    h = "\n".join(" ".join(l.split()) for l in h.split("\n"))
+    h = re.sub(r"\n{2,}", "\n", h).strip()
+    if len(h) < 200: raise RuntimeError("a página veio quase vazia (pode ser protegida). Copie o texto e cole aqui.")
+    return h
+APRENDER = """You read a text (often a fan wiki page, in Portuguese or English) and extract knowledge cards for an AI character named Tamaki, so she can talk about it and draw it.
+Return ONLY JSON: {"universo": "name of the franchise/universe or topic", "resumo": "3 to 5 sentences in Brazilian Portuguese about the universe/topic",
+ "fichas": [{"nome": "character/place/thing name", "tipo": "personagem|lugar|criatura|coisa", "apelidos": ["other names"], "resumo": "2 to 3 sentences in Brazilian Portuguese: who/what it is",
+ "tags": "Danbooru tags in English for HOW IT LOOKS (count tag like 1boy/1girl/no humans, hair, eyes, clothes, accessories, colors). Empty if the text does not say"}]}
+Up to 10 cards, the most important ones. Never invent appearance that is not in the text."""
+def aprender(url="", texto=""):
+    fonte = texto.strip()
+    if url: fonte = texto_do_link(url) + ("\n\n" + fonte if fonte else "")
+    if not fonte: raise RuntimeError("mande um link ou cole um texto")
+    if TX["m"] is None:
+        carregar_texto()
+        if TX["m"] is None: raise RuntimeError("a IA de texto não carregou: " + TX["erro"])
+    tok, m = TX["tok"], TX["m"]
+    msgs = [{"role": "system", "content": APRENDER}, {"role": "user", "content": fonte[:9000]}]
+    with TRAVA_TX:
+        txt = tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
+        ids = tok(txt, return_tensors="pt").input_ids.to(DEV_TX)
+        out = m.generate(input_ids=ids, max_new_tokens=1400, do_sample=False, pad_token_id=tok.eos_token_id)
+    t = tok.decode(out[0][ids.shape[1]:], skip_special_tokens=True)
+    a, b = t.find("{"), t.rfind("}")
+    d = json.loads(t[a:b + 1])
+    for f in d.get("fichas", []):
+        # o Danbooru conhece este personagem? se conhece, o modelo também desenha
+        nome, n = danbooru(f.get("nome", ""))
+        if (not nome or n <= 0) and d.get("universo"):
+            nome, n = danbooru(f"{f.get('nome', '')} ({d['universo']})")
+        f["danbooru"] = {"tag": (nome or "").replace("_", " "), "imagens": n} if nome and n > 0 else {"tag": "", "imagens": max(n, 0)}
+        if f["danbooru"]["imagens"] >= 30:
+            f["tags"] = ", ".join(x for x in [f["danbooru"]["tag"], f.get("tags", "")] if x)
+    return d
 
 # ---------- fila de imagens ----------
 TAREFAS, FILA = {}, queue.Queue()
@@ -177,7 +276,9 @@ def trabalhador():
             try:
                 if pipe is None: raise RuntimeError("o modelo está desligado por causa do treino")
                 lora = p.get("lora") or ""
-                if lora in LORAS: pipe.enable_lora(); pipe.set_adapters([LORAS[lora]], [float(p.get("forca", .9))])
+                usar = ([(LORAS[lora], float(p.get("forca", .9)))] if lora in LORAS else []) + \
+                       [(LORAS[x.get("lora")], float(x.get("forca", .8))) for x in (p.get("extras") or []) if x.get("lora") in LORAS and x.get("lora") != lora]
+                if usar: pipe.enable_lora(); pipe.set_adapters([u[0] for u in usar], [u[1] for u in usar])
                 elif LORAS: pipe.disable_lora()
                 n = max(1, min(4, int(p.get("quantidade", 1)))); t["total"] = n
                 passos = max(10, min(60, int(p.get("passos", 28))))
@@ -234,12 +335,13 @@ def preparar_treino(pasta):
             base = os.path.splitext(arq)[0]; img.save(base + ".png")
             if not arq.endswith(".png"): os.remove(arq)
             txt = base + ".txt"
-            leg = open(txt).read().strip() if os.path.exists(txt) else "1girl, tmkshion, solo"
+            leg = open(txt).read().strip() if os.path.exists(txt) else "solo"
             if liso and "background" not in leg: leg += ", simple background"
             open(txt, "w").write(leg)
         except Exception as e:
             print("Não preparei", os.path.basename(arq), e)
-def treinar(epocas, usar_originais):
+def treinar(epocas, usar_originais, gatilho="tmkshion"):
+    gatilho = re.sub(r"[^a-z0-9]", "", gatilho.lower()) or "tmkshion"
     T = TREINO
     T.update(estado="preparando", passo=0, total=0, perda=None, resta=None, nome="", log=[], msg="Instalando as ferramentas de treino (só demora na primeira vez)…")
     try:
@@ -252,15 +354,15 @@ def treinar(epocas, usar_originais):
         arq = [f for f in list_repo_files(base_repo) if f.endswith(".safetensors") and "/" not in f][0]
         BASE = hf_hub_download(base_repo, arq, local_dir=W + "/base")
         VAE = hf_hub_download("madebyollin/sdxl-vae-fp16-fix", "sdxl_vae.safetensors", local_dir=W + "/base")
-        DADOS = W + "/treino_dados"; PASTA = DADOS + "/10_tmkshion"
+        DADOS = W + "/treino_dados"; PASTA = DADOS + f"/10_{gatilho}"
         shutil.rmtree(DADOS, ignore_errors=True); os.makedirs(PASTA)
-        if usar_originais and ORIGINAIS:
+        if usar_originais and ORIGINAIS and gatilho == "tmkshion":
             for f in glob.glob(ORIGINAIS + "/*"): shutil.copy(f, PASTA)
         for f in glob.glob(EXTRA + "/*"): shutil.copy(f, PASTA)
         preparar_treino(PASTA)
         n = len([f for f in os.listdir(PASTA) if not f.endswith(".txt")])
         if n < 5: raise RuntimeError(f"só {n} imagens; precisa de pelo menos 5")
-        nome = "tmkshion_" + time.strftime("%m%d_%H%M")
+        nome = gatilho + "_" + time.strftime("%m%d_%H%M")
         T.update(estado="treinando", msg=f"Treinando a versão {nome} com {n} imagens…")
         with TRAVA:
             descarregar()
@@ -332,8 +434,14 @@ class Porta(BaseHTTPRequestHandler):
             FILA.put((tid, p)); return self.js({"id": tid})
         if self.path == "/pedido":
             if not str(p.get("texto", "")).strip(): return self.js({"erro": "escreva o que quer na imagem"}, 400)
-            try: return self.js(entender(p["texto"], p.get("anterior", ""), p.get("lugares"), p.get("gosto", ""), p.get("exemplos")))
+            try: return self.js(entender(p["texto"], p.get("anterior", ""), p.get("lugares"), p.get("gosto", ""), p.get("exemplos"), p.get("conhecidos"), p.get("conferir", True)))
             except Exception as e: return self.js({"erro": str(e)[:300]}, 500)
+        if self.path == "/aprender":
+            try: return self.js(aprender(str(p.get("url", "")).strip(), str(p.get("texto", ""))))
+            except Exception as e: return self.js({"erro": str(e)[:300]}, 500)
+        if self.path == "/danbooru":
+            nome, n = danbooru(str(p.get("tag", "")))
+            return self.js({"tag": (nome or "").replace("_", " "), "imagens": n})
         if self.path == "/treino/imagens":
             if self.treinando(): return self.js({"erro": "já tem um treino rodando"}, 409)
             if p.get("limpar"): shutil.rmtree(EXTRA, ignore_errors=True)
@@ -346,7 +454,7 @@ class Porta(BaseHTTPRequestHandler):
         if self.path == "/treinar":
             if self.treinando(): return self.js({"erro": "já tem um treino rodando"}, 409)
             ep = max(2, min(12, int(p.get("epocas", 6))))
-            threading.Thread(target=treinar, args=(ep, bool(p.get("originais", True))), daemon=True).start()
+            threading.Thread(target=treinar, args=(ep, bool(p.get("originais", True)), str(p.get("gatilho") or "tmkshion")), daemon=True).start()
             return self.js({"ok": True})
         self.js({"erro": "não achei"}, 404)
 
