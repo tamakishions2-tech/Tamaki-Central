@@ -31,7 +31,7 @@ html,body{margin:0;height:100%;background:#120f24}
 &lt;html lang="pt-BR" data-tema="noite">
 &lt;head>
 &lt;meta charset="utf-8">
-&lt;meta name="tvz-versao" content="5.1">
+&lt;meta name="tvz-versao" content="5.2">
 &lt;meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 &lt;title>Estúdio de voz · Tamaki&lt;/title>
 &lt;link rel="preconnect" href="https://fonts.googleapis.com">
@@ -341,6 +341,7 @@ Tô até agora sem acreditar, sério mesmo. Gente, que dia!&lt;/textarea>
     &lt;div class="bloco passo">&lt;span class="num">2&lt;/span>&lt;div>
       &lt;h3>Emoções prontas nesta voz&lt;/h3>
       &lt;div id="emProntas">&lt;p class="dica">Nenhuma ainda.&lt;/p>&lt;/div>
+      &lt;div class="btns" style="margin-top:10px">&lt;button class="btn perigo" id="emApagarTodas" disabled>🗑 Apagar todas as emoções desta voz&lt;/button>&lt;/div>
     &lt;/div>&lt;/div>
     &lt;div class="bloco">&lt;h3>Como usar&lt;/h3>
       &lt;p>Na aba Falas, escreva a emoção entre parênteses: &lt;code>(brava) Que absurdo!&lt;/code>&lt;/p>
@@ -876,6 +877,7 @@ function desenharEmocoes(st, pronto) {
       ${analiseTxt(x)}&lt;audio controls preload="none">&lt;/audio>
       &lt;div class="btns">&lt;button class="btn" data-a="ouvir">▶ Ouvir&lt;/button>${x.alts ? `&lt;button class="btn" data-a="outra">🔀 Outra versão (${x.alts})&lt;/button>` : ""}&lt;button class="btn" data-a="refazer">↻ Refazer só esta&lt;/button>&lt;button class="btn perigo" data-a="apagar" aria-label="Apagar ${esc(x.nome)}">🗑&lt;/button>&lt;/div>&lt;/div>`).join("")
     : '&lt;p class="dica">Nenhuma ainda. Marque as emoções acima e toque em Treinar.&lt;/p>';
+  $("#emApagarTodas").disabled = !prontas.length || e.rodando;
   // emoção para todas as falas (aba Falas)
   const sel = $("#falaEmo"), v = sel.value;
   sel.innerHTML = '&lt;option value="">Normal&lt;/option>' + prontas.map(x => `&lt;option value="${esc(x.id)}">${esc(x.emoji + " " + x.nome)}&lt;/option>`).join("");
@@ -934,6 +936,18 @@ $("#pacInstalar").onclick = () => acao($("#pacInstalar"), async () => {
   if (!confirm(`Instalar as ${pac.emocoes.length} emoções em “${v.nome}”? As emoções com o mesmo nome são trocadas pelas do pacote.`)) return;
   await api("/emocoes/treinar", {body: {ids: [], sua: pac.emocoes, ajustes: {}, versoes: +$("#emVersoes").value || 4}});
   $("#pacMsg").textContent = `Instalando ${pac.nome} v${pac.versao}. Cada emoção entra na voz assim que fica pronta (veja em “Emoções prontas”).`;
+  EM.sig = ""; await atualizar();
+});
+$("#emApagarTodas").onclick = () => acao($("#emApagarTodas"), async () => {
+  const prontas = listaEmocoes().filter(x => x.pronta), v = vozAtiva();
+  if (!prontas.length) throw new Error("Não tem emoção pronta para apagar");
+  if (!confirm(`Apagar as ${prontas.length} emoções de “${v ? v.nome : "voz em uso"}”? A voz continua igual, só perde as emoções. Isso não dá para desfazer (a não ser carregando um cartão salvo antes).`)) return;
+  let ok = 0, ruins = [];
+  for (const x of prontas) {
+    toast(`Apagando ${x.emoji} ${x.nome}… (${ok + ruins.length + 1} de ${prontas.length})`);
+    try { await api("/emocoes/apagar", {body: {id: x.id}}); ok++; } catch (er) { ruins.push(x.nome); }
+  }
+  toast(ruins.length ? `Apaguei ${ok}. Não consegui: ${ruins.join(", ")}` : `Pronto: ${ok} emoções apagadas`);
   EM.sig = ""; await atualizar();
 });
 $("#emParar").onclick = () => acao($("#emParar"), () => api("/emocoes/parar", {body: {}}));
