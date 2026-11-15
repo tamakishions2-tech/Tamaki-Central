@@ -34,7 +34,8 @@ um arquivo `.json` (pode ser grande) que ela aplica num commit só, mostrando an
  "arquivos":[{"caminho":"motion.html","texto":"arquivo completo"},{"caminho":"img/x.png","base64":"..."}],
  "apagar":["arquivo-velho.html"]}
 ```
-- Caminhos relativos a este repositório. Nunca mande nada para `universo`. O `Tamaki_Personagem` (aba Tamaki: rede social da Tamaki + Estúdio de imagem) só quando o Tama pedir; ele liberou em 2026-11-15 e o Claude agora faz commit direto lá (versão 10: lugares com etiquetas, prompt em etiquetas Danbooru, contador de ~75 pedaços do CLIP, LoRA .75, negativo contra folha de personagem). O código do notebook "Gerador de Imagem" do Kaggle ainda não está em nenhum repositório.
+- Caminhos relativos a este repositório. Nunca mande nada para `universo`. O `Tamaki_Personagem` (aba Tamaki: rede social da Tamaki + 📸 Gerar foto) o Claude pode mudar direto (o Tama liberou acesso a todo o GitHub em 2026-11-15). Antes de mudar, peça o código do tablet se puder estar mais novo que o do GitHub (aconteceu: o tablet estava na v11 e o GitHub na v9).
+- Gerador de imagem: `kaggle/tamaki_imagem_kaggle.py` (versão 2), célula em `kaggle/celula-imagem.py` (CODIGO `tamaki-img-…` só na célula, nunca no repositório). Animagine XL 4.0 + LoRA `tmkshion` (treino kohya no Animagine 4.0 Zero), Compel (prompt longo não é cortado). v2: `/pedido` = IA de texto Qwen2.5 (7B 4-bit na 2ª GPU, 3B com 1 GPU) que transforma o pedido em português em etiquetas Danbooru {tags, lugar, formato, evitar, resposta}, editando as etiquetas anteriores quando é mudança; `caprichar` = hires fix (1,5x, img2img .35). Aba Tamaki v12: "Peça do seu jeito", lugares com etiquetas (S.lugares), gosto (EST.gosto) e ⭐ favoritas como exemplos, LoRA .75.
 - Sempre o arquivo completo em `texto` (não é patch). `apagar` é opcional.
 - Ele cola o pacote em ⋮ › 🐙 GitHub › Pacote do Claude, ou em Reunião › Colar resposta do Claude (a Central reconhece sozinha).
 
