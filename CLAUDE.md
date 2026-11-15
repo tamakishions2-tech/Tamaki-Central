@@ -34,7 +34,7 @@ um arquivo `.json` (pode ser grande) que ela aplica num commit só, mostrando an
  "arquivos":[{"caminho":"motion.html","texto":"arquivo completo"},{"caminho":"img/x.png","base64":"..."}],
  "apagar":["arquivo-velho.html"]}
 ```
-- Caminhos relativos a este repositório. Nunca mande nada para `universo` ou `Tamaki_Personagem`.
+- Caminhos relativos a este repositório. Nunca mande nada para `universo`. O `Tamaki_Personagem` (aba Tamaki: rede social da Tamaki + Estúdio de imagem) só quando o Tama pedir; ele liberou em 2026-11-15 e o Claude agora faz commit direto lá (versão 10: lugares com etiquetas, prompt em etiquetas Danbooru, contador de ~75 pedaços do CLIP, LoRA .75, negativo contra folha de personagem). O código do notebook "Gerador de Imagem" do Kaggle ainda não está em nenhum repositório.
 - Sempre o arquivo completo em `texto` (não é patch). `apagar` é opcional.
 - Ele cola o pacote em ⋮ › 🐙 GitHub › Pacote do Claude, ou em Reunião › Colar resposta do Claude (a Central reconhece sozinha).
 
