@@ -342,9 +342,34 @@ function frame(k, src){
     prontos[k] = new Promise(ok => f.addEventListener("load", ok, {once: true}));
     f.addEventListener("load", () => ganchoAudio(f.contentWindow)); // deixa o som da aba pronto para ser gravado
     f.addEventListener("load", () => { leituraEm(f.contentWindow); setTimeout(() => leituraEm(f.contentWindow), 1500); }); // letra de leitura também dentro da aba
+    f.addEventListener("load", () => vigiarArquivo(f.contentWindow, k)); // antes de abrir a galeria, libera memória
     f.src = src; $("#area").appendChild(f); frames[k] = f;
   }
   return prontos[k];
+}
+// No tablet com pouca memória, o Android fecha o navegador enquanto a galeria está aberta e a página volta recarregada,
+// sem a imagem. Antes de abrir a galeria (qualquer "escolher arquivo" dentro de uma aba), fechamos as outras abas abertas.
+function aliviar(k){
+  const ocupado = window.TamakiProducao && TamakiProducao.ocupado && TamakiProducao.ocupado();
+  let n = 0;
+  for (const x of Object.keys(frames)) if (x != k && x != atual && !(ocupado && (x == "palco" || x == "estudio" || x == "editor"))) { esqueceFrame(x); n++; }
+  try { sessionStorage.setItem("central-ultima", k); } catch (e) {}
+  return n;
+}
+function vigiarArquivo(w, k){
+  try {
+    if (!w || !w.document || w.__vigiaArq) return; w.__vigiaArq = 1;
+    w.document.addEventListener("click", e => {
+      const t = e.target, inp = t && t.closest && (t.closest('input[type="file"]') || (t.closest("label") && t.closest("label").querySelector('input[type="file"]')));
+      if (inp) aliviar(k);
+    }, true);
+    // abas dentro de abas (ex.: o painel do Estúdio de voz)
+    w.document.addEventListener("load", e => { if (e.target && e.target.tagName == "IFRAME") vigiarArquivo(e.target.contentWindow, k); }, true);
+    w.document.querySelectorAll("iframe").forEach(i => vigiarArquivo(i.contentWindow, k));
+    // inputs abertos por código (botão que chama input.click())
+    const orig = w.HTMLInputElement && w.HTMLInputElement.prototype.click;
+    if (orig) w.HTMLInputElement.prototype.click = function(){ if (this.type == "file") aliviar(k); return orig.apply(this, arguments); };
+  } catch (e) {}
 }
 function fecharMenu(){ $("#menu").classList.add("hide"); $("#mais").setAttribute("aria-expanded", "false"); }
 async function ir(k){
