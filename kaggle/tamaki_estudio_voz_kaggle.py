@@ -904,25 +904,30 @@ def liberar_design():
 # Como funciona: a voz (com o treino dela) fala uma frase cheia daquela emoção, em várias versões.
 # O Whisper confere se dá para entender e a mais expressiva vira o "exemplo" da emoção.
 # Depois, toda fala com (brava), (triste)… usa esse exemplo, e a voz copia o jeito de falar dele.
+# v7: valores a partir do estudo (Chatterbox: emoção forte = cfg baixo ~.3 + exaggeration alto; exaggeration alto acelera,
+# cfg baixo segura o ritmo). "alvo" = como a emoção deve soar comparada à voz normal dela:
+# ritmo (1 = igual; .8 = 20% mais devagar), tom (semitons acima/abaixo) e volume (dB). "e2v" = o que o ouvinte de emoções deve ouvir.
 EMO_CAT = [
-    {"id": "feliz", "nome": "Feliz", "emoji": "😄", "exag": 0.8, "cfg": 0.4, "temp": 0.8, "energia": 1,
+    {"id": "feliz", "nome": "Feliz", "emoji": "😄", "exag": 0.75, "cfg": 0.35, "temp": 0.85, "energia": 1, "e2v": ["happy"], "alvo": (1.05, 3, 1),
      "texto": "Ai, gente, eu tô tão feliz! Vocês não fazem ideia! Deu tudo certo, tudo mesmo! Eu quase chorei de alegria quando vi o resultado. Que dia maravilhoso!"},
-    {"id": "animada", "nome": "Animada", "emoji": "🤩", "exag": 1.0, "cfg": 0.3, "temp": 0.85, "energia": 1,
+    {"id": "animada", "nome": "Animada", "emoji": "🤩", "exag": 0.95, "cfg": 0.3, "temp": 0.9, "energia": 1, "e2v": ["happy", "surprised"], "alvo": (1.15, 4, 2),
      "texto": "Bora, bora, bora! Hoje vai ser incrível! Eu preparei uma surpresa enorme pra vocês e não tô aguentando esperar! Vem comigo que vai ser épico!"},
-    {"id": "brava", "nome": "Brava", "emoji": "😠", "exag": 1.0, "cfg": 0.3, "temp": 0.8, "energia": 1,
+    {"id": "brava", "nome": "Brava", "emoji": "😠", "exag": 0.95, "cfg": 0.35, "temp": 0.8, "energia": 1, "e2v": ["angry"], "alvo": (1.05, 2, 3),
      "texto": "Não, não e não! Eu já falei mil vezes! Quem foi que mexeu nas minhas coisas? Isso é um absurdo! Eu tô muito irritada, de verdade!"},
-    {"id": "triste", "nome": "Triste", "emoji": "😢", "exag": 0.6, "cfg": 0.5, "temp": 0.7, "energia": -1,
+    {"id": "triste", "nome": "Triste", "emoji": "😢", "exag": 0.5, "cfg": 0.25, "temp": 0.7, "energia": -1, "e2v": ["sad"], "alvo": (0.8, -1, -3),
      "texto": "Eu... eu não sei o que dizer. Achei que ia ser diferente, sabe? Eu tentei tanto. Às vezes dá vontade de sumir um pouquinho e ficar quietinha no meu canto."},
-    {"id": "assustada", "nome": "Assustada", "emoji": "😱", "exag": 1.1, "cfg": 0.3, "temp": 0.85, "energia": 1,
+    {"id": "assustada", "nome": "Assustada", "emoji": "😱", "exag": 1.05, "cfg": 0.3, "temp": 0.9, "energia": 1, "e2v": ["fearful", "surprised"], "alvo": (1.15, 5, 1),
      "texto": "Que barulho foi esse?! Gente, tem alguma coisa ali no escuro! Não, não, não, eu não vou lá de jeito nenhum! Alguém acende a luz, por favor!"},
-    {"id": "sarcastica", "nome": "Sarcástica", "emoji": "😏", "exag": 0.7, "cfg": 0.4, "temp": 0.8, "energia": 0,
+    {"id": "sarcastica", "nome": "Sarcástica", "emoji": "😏", "exag": 0.6, "cfg": 0.3, "temp": 0.85, "energia": 0, "e2v": ["neutral", "disgusted", "happy"], "alvo": (0.9, 0, 0),
      "texto": "Ah, claro. Que ideia brilhante. Ninguém nunca pensou nisso antes, né? Parabéns, de verdade. Você é um gênio incompreendido."},
-    {"id": "cochicho", "nome": "Cochichando", "emoji": "🤫", "exag": 0.35, "cfg": 0.5, "temp": 0.7, "energia": -1,
+    {"id": "cochicho", "nome": "Cochichando", "emoji": "🤫", "exag": 0.3, "cfg": 0.25, "temp": 0.7, "energia": -1, "e2v": ["neutral", "fearful"], "alvo": (0.8, -1, -6),
      "texto": "Psiu, fala baixinho... ninguém pode saber disso, tá? É segredo. Chega mais perto que eu vou te contar bem devagarinho."},
-    {"id": "rindo", "nome": "Rindo", "emoji": "😂", "exag": 1.2, "cfg": 0.3, "temp": 0.9, "energia": 1,
+    {"id": "rindo", "nome": "Rindo", "emoji": "😂", "exag": 1.15, "cfg": 0.3, "temp": 0.95, "energia": 1, "e2v": ["happy"], "alvo": (1.0, 4, 2),
      "texto": "Hahaha, não acredito! Para, para, que eu não aguento! Você viu a cara dele? Eu tô chorando de rir aqui, sério mesmo!"},
-    {"id": "calma", "nome": "Calma", "emoji": "😌", "exag": 0.4, "cfg": 0.5, "temp": 0.7, "energia": -1,
+    {"id": "calma", "nome": "Calma", "emoji": "😌", "exag": 0.35, "cfg": 0.25, "temp": 0.7, "energia": -1, "e2v": ["neutral"], "alvo": (0.8, -1, -2),
      "texto": "Respira fundo. Tá tudo bem. A gente vai com calma, um passo de cada vez. Não precisa ter pressa nenhuma, tá? Eu tô aqui com você."},
+    {"id": "surpresa", "nome": "Surpresa", "emoji": "😮", "exag": 0.9, "cfg": 0.3, "temp": 0.9, "energia": 1, "e2v": ["surprised", "happy"], "alvo": (1.0, 5, 2),
+     "texto": "Oi?! Como assim?! Gente, eu não tava esperando por isso! Sério mesmo? Você tá me zoando! Para tudo que eu preciso ver isso de perto!"},
 ]
 CAT = {e["id"]: e for e in EMO_CAT}
 APELIDOS = {"alegre": "feliz", "contente": "feliz", "felicidade": "feliz", "empolgada": "animada", "animado": "animada", "empolgado": "animada",
@@ -970,6 +975,105 @@ def medir(arq):
         var = 0.0
     return rms, var, len(w) / sr
 
+# ---------- ouvinte de emoções (emotion2vec+, 9 emoções, funciona em qualquer língua) ----------
+E2V = {"m": None, "erro": ""}
+LOCK_E2V = threading.Lock()
+def ouvir_emocao(arq):
+    """{"angry": .7, "happy": .1, ...} ou None se o ouvinte não carregar (aí vale só o ritmo e o Whisper)."""
+    with LOCK_E2V:
+        if E2V["m"] is None and not E2V["erro"]:
+            try:
+                try:
+                    import funasr  # noqa
+                except ImportError:
+                    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "funasr", "modelscope"], check=True, capture_output=True)
+                from funasr import AutoModel
+                dev = f"cuda:{G2}" if torch.cuda.is_available() else "cpu"
+                try:
+                    E2V["m"] = AutoModel(model="emotion2vec/emotion2vec_plus_base", hub="hf", device=dev, disable_update=True)
+                except Exception:
+                    E2V["m"] = AutoModel(model="iic/emotion2vec_plus_base", device=dev, disable_update=True)
+                log("Ouvinte de emoções (emotion2vec+) carregado")
+            except Exception as e:
+                E2V["erro"] = f"{type(e).__name__}: {e}"[:200]
+                log("Ouvinte de emoções não carregou (sigo só com ritmo e Whisper): " + E2V["erro"])
+        if E2V["m"] is None:
+            return None
+        w, sr = librosa.load(arq, sr=16000, mono=True)
+        tmp = arq[:-4] + "_16k.wav"; sf.write(tmp, w, 16000)
+        r = E2V["m"].generate(tmp, granularity="utterance", extract_embedding=False)[0]
+    return {str(l).split("/")[-1].strip().lower(): float(x) for l, x in zip(r["labels"], r["scores"])}
+
+def aquecer_ouvinte():
+    """Carrega o ouvinte de emoções em segundo plano, assim o botão 🔎 responde rápido."""
+    for _ in range(240):
+        if W["estado"] == "pronto":
+            break
+        time.sleep(5)
+    try:
+        vid = CONF["ativa"]
+        if vid != "padrao" and os.path.exists(arq_ref(vid)):
+            ouvir_emocao(arq_ref(vid))
+    except Exception as e:
+        log(f"aquecer ouvinte de emoções: {e}")
+threading.Thread(target=aquecer_ouvinte, daemon=True).start()
+
+ROTULO_PT = {"angry": "brava", "happy": "feliz", "sad": "triste", "fearful": "assustada", "surprised": "surpresa",
+             "neutral": "neutra", "disgusted": "nojo", "other": "outra", "unknown": "?"}
+
+def prosodia(arq, texto):
+    """ritmo em sílabas por segundo de fala (sem contar os silêncios), tom mediano (Hz) e volume (dB)."""
+    w, sr = librosa.load(arq, sr=16000, mono=True)
+    partes = librosa.effects.split(w, top_db=35)
+    fala = max(0.5, sum(b - a for a, b in partes) / sr)
+    silabas = max(1, len(re.findall(r"[aeiouáéíóúâêôãõà]+", sem_acento(texto) + " ")))
+    try:
+        f0 = librosa.yin(w, fmin=75, fmax=650, sr=sr); f0 = f0[(f0 > 80) & (f0 < 640)]
+        tom = float(np.median(f0)) if len(f0) > 10 else 0.0
+    except Exception:
+        tom = 0.0
+    db = float(20 * np.log10(np.sqrt(np.mean(w ** 2)) + 1e-9))
+    return {"ritmo": silabas / fala, "tom": tom, "db": db}
+
+BASE_PROS = {}
+def base_da_voz(vid):
+    """Como a voz fala normalmente (a referência dela): é a régua das emoções."""
+    if vid not in BASE_PROS:
+        v = ler_vozes().get(vid, {})
+        BASE_PROS[vid] = prosodia(arq_ref(vid), v.get("texto_ref") or "a" * 60) if os.path.exists(arq_ref(vid)) else None
+        if BASE_PROS[vid] and not v.get("texto_ref"):
+            BASE_PROS[vid]["ritmo"] = None
+    return BASE_PROS[vid]
+
+def julgar(arq, texto, eid, vid):
+    """Notas de 0 a 1: emoção (o ouvinte reconhece?), jeito (ritmo/tom/volume perto do alvo) e o que ele ouviu."""
+    e = CAT.get(eid) or {}
+    p = prosodia(arq, texto)
+    base = base_da_voz(vid)
+    rel = {"ritmo": None, "tom": None, "db": None}
+    jeito = 0.5
+    if base and e.get("alvo"):
+        r_alvo, st_alvo, db_alvo = e["alvo"]
+        d = 0.0
+        if base.get("ritmo"):
+            rel["ritmo"] = round(p["ritmo"] / base["ritmo"], 2); d += 3 * abs(np.log(rel["ritmo"] / r_alvo))
+        if base["tom"] and p["tom"]:
+            rel["tom"] = round(12 * np.log2(p["tom"] / base["tom"]), 1); d += abs(rel["tom"] - st_alvo) / 4
+        rel["db"] = round(p["db"] - base["db"], 1); d += abs(rel["db"] - db_alvo) / 6
+        jeito = float(np.exp(-d))
+    probs = None
+    try:
+        probs = ouvir_emocao(arq)
+    except Exception as ex:
+        log(f"ouvinte de emoções falhou nesta versão: {ex}")
+    emocao, ouvido = None, None
+    if probs:
+        top = max(probs, key=probs.get)
+        ouvido = {"rotulo": ROTULO_PT.get(top, top), "conf": round(probs[top], 2)}
+        if e.get("e2v"):
+            emocao = float(sum(probs.get(k, 0) * (1 if i == 0 else 0.6) for i, k in enumerate(e["e2v"])))
+    return {"emocao": emocao, "jeito": round(jeito, 2), "ouvido": ouvido, **rel}
+
 def fazer_emocao(it):
     vid, eid, n = it["voz"], it["id"], it["versoes"]
     if CONF["ativa"] != vid:
@@ -984,7 +1088,9 @@ def fazer_emocao(it):
         EMO["msg"] = f"{it['emoji']} {it['nome']}: conferindo a versão {k + 1}…"
         nota = parecido(transcrever(arq), it["texto"])
         rms, var, dur = medir(arq)
-        cands.append({"arq": arq, "nota": nota, "rms": rms, "var": var, "dur": dur})
+        EMO["msg"] = f"{it['emoji']} {it['nome']}: ouvindo a emoção da versão {k + 1}…"
+        j = julgar(arq, it["texto"], eid, vid)
+        cands.append({"arq": arq, "nota": nota, "rms": rms, "var": var, "dur": dur, **j})
         EMO["passo"] += 1
     minimo = 0.5 if eid == "rindo" else 0.7
     boas = [c for c in cands if c["nota"] >= minimo] or sorted(cands, key=lambda c: -c["nota"])[:1]
@@ -994,7 +1100,10 @@ def fazer_emocao(it):
     agitacao = z("rms") + z("var")
     energia = CAT.get(eid, {}).get("energia", 0)
     for c, a in zip(boas, agitacao):
-        c["pontos"] = c["nota"] + 0.15 * energia * float(a)
+        if c["emocao"] is not None:   # v7: o ouvinte de emoções decide mais; o Whisper garante que dá pra entender
+            c["pontos"] = 0.45 * c["emocao"] + 0.35 * c["jeito"] + 0.2 * c["nota"]
+        else:
+            c["pontos"] = c["nota"] + 0.15 * energia * float(a) + 0.3 * c["jeito"]
     boas.sort(key=lambda c: -c["pontos"])
     outras = boas[1:] + [c for c in cands if c not in boas]
     for velha in glob.glob(arq_emo(vid, eid, "*")):
@@ -1004,8 +1113,11 @@ def fazer_emocao(it):
         shutil.copy(c["arq"], arq_emo(vid, eid, i))
     EMO["msg"] = f"{it['emoji']} {it['nome']}: guardando na voz…"
     motor("/conds", {"ref": arq_emo(vid, eid), "saida": arq_emo_conds(vid, eid), "exaggeration": it["exag"], "manter": True}, timeout=180)
-    salvar_emocao(vid, eid, it, nota=boas[0]["nota"], alts=len(outras), origem="gerada")
-    EMO["feitas"].append({"id": eid, "nome": it["nome"], "ok": True, "nota": boas[0]["nota"]})
+    m = boas[0]
+    salvar_emocao(vid, eid, it, nota=m["nota"], alts=len(outras), origem="gerada",
+                  analise={"ouvido": m["ouvido"], "emocao": None if m["emocao"] is None else round(m["emocao"], 2), "jeito": m["jeito"],
+                           "ritmo": m["ritmo"], "tom": m["tom"], "db": m["db"]})
+    EMO["feitas"].append({"id": eid, "nome": it["nome"], "ok": True, "nota": m["nota"], "ouvido": m["ouvido"]})
     log(f"Emoção pronta: {it['emoji']} {it['nome']} em “{nome_voz(vid)}” (entendi {round(boas[0]['nota'] * 100)}%)")
 
 def salvar_emocao(vid, eid, it, **extra):
@@ -1088,14 +1200,15 @@ def emocoes_publicas(vid):
         saida.append({"id": e["id"], "nome": (tem or e)["nome"], "emoji": (tem or e)["emoji"], "texto": (tem or e).get("texto", ""),
                       "exag": (tem or e)["exag"], "cfg": (tem or e)["cfg"], "temp": (tem or e)["temp"], "sua": bool(e.get("sua")),
                       "pronta": bool(tem), "nota": (tem or {}).get("nota"), "alts": (tem or {}).get("alts", 0),
-                      "origem": (tem or {}).get("origem", ""), "atualizado": (tem or {}).get("atualizado", 0)})
+                      "origem": (tem or {}).get("origem", ""), "atualizado": (tem or {}).get("atualizado", 0),
+                      "analise": (tem or {}).get("analise"), "alvo": CAT.get(e["id"], {}).get("alvo")})
     return saida
 
 @app.get("/status")
 def status():
     info = W["info"] or {}
     dv = voz_do_dataset()
-    return {"ok": True, "versao": 6, "coraa": CO, "fim_em": int(FIM - time.time()), "nuvem": NUVEM["estado"], "conf": CONF, "cache": CACHE["estado"],
+    return {"ok": True, "versao": 7, "ouvinte": "erro: " + E2V["erro"] if E2V["erro"] else ("pronto" if E2V["m"] else "desligado"), "coraa": CO, "fim_em": int(FIM - time.time()), "nuvem": NUVEM["estado"], "conf": CONF, "cache": CACHE["estado"],
             "motor": {"estado": W["estado"], "msg": W["msg"], "pack": info.get("pack", ""), "aviso": info.get("aviso", "")},
             "ativa": CONF["ativa"], "vozes": lista_vozes(), "vozes_rev": VREV[0], "tarefa": TAREFA["msg"],
             "design": {"rodando": VD["rodando"], "n": len(VD["versoes"]), "msg": VD["msg"], "texto": VD["texto"]},
@@ -1407,7 +1520,7 @@ def emocoes_treinar(corpo: dict = Body(...)):
         return falha("espere as frases de treino ou o treino da voz terminarem", 409)
     if VD["rodando"]:
         return falha("espere o criador de vozes terminar", 409)
-    n = max(1, min(5, int(corpo.get("versoes", 3))))
+    n = max(1, min(6, int(corpo.get("versoes", 4))))
     emos, ajustes, novos = emocoes_da(vid), corpo.get("ajustes") or {}, []
     for s in corpo.get("sua") or []:
         nome = " ".join(str(s.get("nome", "")).split())[:24]
@@ -1415,7 +1528,9 @@ def emocoes_treinar(corpo: dict = Body(...)):
         if nome and len(texto) > 20:
             eid = slug_emo(nome)
             novos.append({"id": eid, "nome": nome, "emoji": str(s.get("emoji") or "🎭")[:4], "texto": texto,
-                          "exag": float(s.get("exag", 0.8)), "cfg": 0.4, "temp": 0.8})
+                          "exag": max(0.25, min(2.0, float(s.get("exag", 0.8)))),
+                          "cfg": max(0.0, min(1.0, float(s.get("cfg", CAT.get(eid, {}).get("cfg", 0.35))))),
+                          "temp": max(0.3, min(1.5, float(s.get("temp", CAT.get(eid, {}).get("temp", 0.8)))))})
     for eid in corpo.get("ids") or []:
         base = CAT.get(eid) or emos.get(eid)
         if base:
@@ -1425,8 +1540,9 @@ def emocoes_treinar(corpo: dict = Body(...)):
     na_fila = {x["id"] for x in EMO["fila"]} | ({EMO["atual"]} if EMO["atual"] else set())
     for it in novos:
         aj = ajustes.get(it["id"]) or {}
-        if "exag" in aj:
-            it["exag"] = max(0.25, min(2.0, float(aj["exag"])))
+        for k, (lo, hi) in {"exag": (0.25, 2.0), "cfg": (0.0, 1.0), "temp": (0.3, 1.5)}.items():
+            if k in aj:
+                it[k] = max(lo, min(hi, float(aj[k])))
         if it["id"] in na_fila:
             continue
         it.update(voz=vid, versoes=n)
@@ -1436,6 +1552,25 @@ def emocoes_treinar(corpo: dict = Body(...)):
         threading.Thread(target=job_emocoes, daemon=True).start()
     log(f"Emoções na fila: {', '.join(x['nome'] for x in EMO['fila'])}")
     return {"ok": True, "fila": [x["id"] for x in EMO["fila"]]}
+
+@app.post("/emocoes/analisar")
+def emocoes_analisar(corpo: dict = Body(default={})):
+    """Ouve as emoções que a voz já tem (sem gravar de novo) e diz o que a IA reconhece em cada uma."""
+    precisa_motor(); ocupado_emocoes()
+    vid = CONF["ativa"]
+    emos, saida = emocoes_da(vid), []
+    BASE_PROS.pop(vid, None)
+    for eid, e in emos.items():
+        if corpo.get("ids") and eid not in corpo["ids"]:
+            continue
+        if not os.path.exists(arq_emo(vid, eid)):
+            continue
+        j = julgar(arq_emo(vid, eid), e.get("texto", ""), eid, vid)
+        an = {"ouvido": j["ouvido"], "emocao": None if j["emocao"] is None else round(j["emocao"], 2), "jeito": j["jeito"],
+              "ritmo": j["ritmo"], "tom": j["tom"], "db": j["db"]}
+        salvar_emocao(vid, eid, e, analise=an)
+        saida.append({"id": eid, "nome": e.get("nome"), **an})
+    return {"ok": True, "lista": saida, "ouvinte": "pronto" if E2V["m"] else ("erro: " + E2V["erro"])}
 
 @app.post("/emocoes/parar")
 def emocoes_parar():

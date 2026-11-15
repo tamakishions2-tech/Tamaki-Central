@@ -31,7 +31,7 @@ html,body{margin:0;height:100%;background:#120f24}
 &lt;html lang="pt-BR" data-tema="noite">
 &lt;head>
 &lt;meta charset="utf-8">
-&lt;meta name="tvz-versao" content="5.0">
+&lt;meta name="tvz-versao" content="5.1">
 &lt;meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 &lt;title>Estúdio de voz · Tamaki&lt;/title>
 &lt;link rel="preconnect" href="https://fonts.googleapis.com">
@@ -315,8 +315,8 @@ Tô até agora sem acreditar, sério mesmo. Gente, que dia!&lt;/textarea>
     &lt;div class="aviso ruim" id="emSemVoz" hidden>Escolha ou crie uma voz sua na aba Vozes para treinar emoções.&lt;/div>
     &lt;div class="bloco">
       &lt;h3 style="margin:0 0 4px">📦 Pacote de emoções da Tamaki&lt;/h3>
-      &lt;p class="dica" style="margin:0 0 8px">10 emoções com frases no jeito dela (feliz, animada, brava, triste, assustada, sarcástica, cochicho, rindo, calma e surpresa). Entra na voz em uso como um extra: a voz não muda, só ganha as emoções. Leva uns 10–15 min.&lt;/p>
-      &lt;div class="btns">&lt;button class="btn pri" id="pacInstalar">📦 Instalar na voz em uso&lt;/button>&lt;/div>
+      &lt;p class="dica" style="margin:0 0 8px">10 emoções com frases no jeito dela (feliz, animada, brava, triste, assustada, sarcástica, cochicho, rindo, calma e surpresa). Entra na voz em uso como um extra: a voz não muda, só ganha as emoções. &lt;b>Versão 2:&lt;/b> cada emoção tem o ritmo certo (triste e calma mais devagar e mais graves, brava e animada com mais força) e uma IA que reconhece emoções escuta todas as versões e fica com a que soa mais como a emoção. Leva uns 15–25 min.&lt;/p>
+      &lt;div class="btns">&lt;button class="btn pri" id="pacInstalar">📦 Instalar na voz em uso&lt;/button>&lt;button class="btn" id="pacAnalisar">🔎 O que a IA ouve nas minhas emoções&lt;/button>&lt;/div>
       &lt;p class="dica" id="pacMsg" style="margin:8px 0 0">&lt;/p>
     &lt;/div>
     &lt;div class="bloco passo">&lt;span class="num">1&lt;/span>&lt;div>
@@ -333,7 +333,7 @@ Tô até agora sem acreditar, sério mesmo. Gente, que dia!&lt;/textarea>
         &lt;div class="btns">&lt;button class="btn" id="emAdd">Pôr na lista&lt;/button>&lt;/div>
       &lt;/details>
       &lt;label class="rot" for="emVersoes">Versões de cada emoção &lt;span class="dica">(ele escolhe a melhor; as outras ficam guardadas)&lt;/span>&lt;/label>
-      &lt;select id="emVersoes">&lt;option value="2">2 (mais rápido)&lt;/option>&lt;option value="3" selected>3 (recomendado)&lt;/option>&lt;option value="4">4 (mais opções)&lt;/option>&lt;/select>
+      &lt;select id="emVersoes">&lt;option value="2">2 (mais rápido)&lt;/option>&lt;option value="3">3&lt;/option>&lt;option value="4" selected>4 (recomendado)&lt;/option>&lt;option value="6">6 (mais opções, mais demorado)&lt;/option>&lt;/select>
       &lt;div class="btns">&lt;button class="btn pri largo" id="emTreinar">🎭 Treinar as marcadas&lt;/button>&lt;button class="btn" id="emParar">Parar&lt;/button>&lt;/div>
       &lt;div class="barra">&lt;b id="emBarra">&lt;/b>&lt;/div>
       &lt;p class="msg" id="emMsg">&lt;/p>
@@ -859,7 +859,7 @@ function desenharEmocoes(st, pronto) {
   $("#emBarra").style.width = e.passos ? Math.min(100, 100 * e.passo / e.passos) + "%" : (e.rodando ? "3%" : "0");
   const ruins = e.feitas.filter(f => !f.ok);
   msg($("#emMsg"), e.rodando || e.msg ? (e.msg || "Começando…") + (ruins.length ? " · não deu certo: " + ruins.map(f => f.nome).join(", ") : "") : (ocupado ? "Espere as frases de treino, o treino ou o criador de vozes terminarem." : ""), ruins.length &amp;&amp; !e.rodando);
-  const sig = JSON.stringify([st.ativa, e.rodando, e.atual, e.fila, lista.map(x => [x.id, x.pronta, x.atualizado, x.nome, x.alts, x.exag])]);
+  const sig = JSON.stringify([st.ativa, e.rodando, e.atual, e.fila, lista.map(x => [x.id, x.pronta, x.atualizado, x.nome, x.alts, x.exag, JSON.stringify(x.analise || null)])]);
   if (sig === EM.sig) return; EM.sig = sig;
   // 1. lista para marcar
   $("#emLista").innerHTML = lista.map(x => {
@@ -873,7 +873,7 @@ function desenharEmocoes(st, pronto) {
   const prontas = lista.filter(x => x.pronta);
   $("#emProntas").innerHTML = prontas.length ? prontas.map(x => `&lt;div class="fala" data-id="${esc(x.id)}">&lt;div class="topo">&lt;span class="emj" style="font-size:1.4em" aria-hidden="true">${esc(x.emoji)}&lt;/span>&lt;b style="flex:1">${esc(x.nome)}&lt;/b>
       &lt;span class="etq">${x.origem === "gravada" ? "gravação sua" : x.nota != null ? "entendi " + Math.round(x.nota * 100) + "%" : "escolhida por você"}&lt;/span>&lt;/div>
-      &lt;audio controls preload="none">&lt;/audio>
+      ${analiseTxt(x)}&lt;audio controls preload="none">&lt;/audio>
       &lt;div class="btns">&lt;button class="btn" data-a="ouvir">▶ Ouvir&lt;/button>${x.alts ? `&lt;button class="btn" data-a="outra">🔀 Outra versão (${x.alts})&lt;/button>` : ""}&lt;button class="btn" data-a="refazer">↻ Refazer só esta&lt;/button>&lt;button class="btn perigo" data-a="apagar" aria-label="Apagar ${esc(x.nome)}">🗑&lt;/button>&lt;/div>&lt;/div>`).join("")
     : '&lt;p class="dica">Nenhuma ainda. Marque as emoções acima e toque em Treinar.&lt;/p>';
   // emoção para todas as falas (aba Falas)
@@ -905,6 +905,26 @@ async function treinarEmocoes(ids) {
   await api("/emocoes/treinar", {body: corpo}); toast("Começou. Cada emoção entra na voz assim que fica pronta."); EM.sig = ""; await atualizar();
 }
 $("#emTreinar").onclick = () => acao($("#emTreinar"), async () => { const ids = listaEmocoes().map(x => x.id).filter(i => EM.marcadas.has(i)); if (!ids.length) throw new Error("Marque pelo menos uma emoção"); await treinarEmocoes(ids); });
+const EMO_IA = {brava: "😠", feliz: "😄", triste: "😢", assustada: "😱", surpresa: "😮", neutra: "😐", nojo: "🤢", outra: "❔", "?": "❔"};
+function analiseTxt(x) {
+  const a = x.analise; if (!a) return "";
+  const p = [];
+  if (a.ouvido) p.push(`a IA ouviu ${EMO_IA[a.ouvido.rotulo] || ""} &lt;b>${esc(a.ouvido.rotulo)}&lt;/b> ${Math.round(a.ouvido.conf * 100)}%`);
+  if (a.emocao != null) p.push(`soa como ${esc(x.nome.toLowerCase())}: &lt;b>${Math.round(a.emocao * 100)}%&lt;/b>`);
+  const alvo = x.alvo || [];
+  if (a.ritmo != null) p.push(`ritmo ×${a.ritmo}` + (alvo[0] ? ` (ideal ×${alvo[0]})` : ""));
+  if (a.tom != null) p.push(`tom ${a.tom > 0 ? "+" : ""}${a.tom}` + (alvo[1] != null ? ` (ideal ${alvo[1] > 0 ? "+" : ""}${alvo[1]})` : ""));
+  const fraca = a.emocao != null &amp;&amp; a.emocao &lt; 0.35;
+  return `&lt;p class="dica" style="margin:4px 0 6px">${p.join(" · ")}${fraca ? ' · &lt;b style="color:#d9534f">fraca: toque em ↻ Refazer&lt;/b>' : ""}&lt;/p>`;
+}
+$("#pacAnalisar").onclick = () => acao($("#pacAnalisar"), async () => {
+  $("#pacMsg").textContent = "Ouvindo as emoções da voz… (na primeira vez a IA de emoções é baixada, leva 1–2 min)";
+  const r = await api("/emocoes/analisar", {body: {}});
+  const fracas = r.lista.filter(a => a.emocao != null &amp;&amp; a.emocao &lt; 0.35).map(a => a.nome);
+  $("#pacMsg").textContent = r.ouvinte !== "pronto" ? "A IA de emoções não carregou no Kaggle (" + r.ouvinte + "). Ritmo e tom foram medidos." :
+    `Pronto: ${r.lista.length} emoções ouvidas. ` + (fracas.length ? `Mais fracas: ${fracas.join(", ")}. Dá para refazer só essas.` : "Todas soam como deveriam.");
+  EM.sig = ""; await atualizar();
+});
 $("#pacInstalar").onclick = () => acao($("#pacInstalar"), async () => {
   let pac = null;
   for (const u of ["voz/pacote-emocoes-tamaki.json", "https://raw.githubusercontent.com/tamakishions2-tech/Tamaki-Central/main/voz/pacote-emocoes-tamaki.json"]) {
@@ -912,7 +932,7 @@ $("#pacInstalar").onclick = () => acao($("#pacInstalar"), async () => {
   if (!pac || !pac.emocoes) throw new Error("Não consegui baixar o pacote. Confira a internet e tente de novo.");
   const v = vozAtiva(); if (!v || v.id === "padrao") throw new Error("Escolha a voz da Tamaki em Vozes primeiro");
   if (!confirm(`Instalar as ${pac.emocoes.length} emoções em “${v.nome}”? As emoções com o mesmo nome são trocadas pelas do pacote.`)) return;
-  await api("/emocoes/treinar", {body: {ids: [], sua: pac.emocoes, ajustes: {}, versoes: +$("#emVersoes").value || 3}});
+  await api("/emocoes/treinar", {body: {ids: [], sua: pac.emocoes, ajustes: {}, versoes: +$("#emVersoes").value || 4}});
   $("#pacMsg").textContent = `Instalando ${pac.nome} v${pac.versao}. Cada emoção entra na voz assim que fica pronta (veja em “Emoções prontas”).`;
   EM.sig = ""; await atualizar();
 });
