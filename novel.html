@@ -74,7 +74,8 @@ input[type=text],input[type=password],input[type=number],select{padding:.6em;bor
 .eBarra button{padding:.35em .8em;font-size:.88rem;white-space:nowrap;flex:none}
 .eBarra.mold{background:#232838}
 .eBarra.mold button{background:none;border-style:dashed;color:var(--giz2)}
-#roteiro{flex:1;min-height:0;width:100%;resize:none;border:0;background:#161a26;color:var(--giz);font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;padding:1rem;tab-size:4;white-space:pre;overflow:auto}
+#roteiro{flex:1;min-height:0;width:100%;resize:none;border:0;background:#161a26;color:var(--giz);font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;padding:1rem;tab-size:4;white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto}
+#eNome{max-width:42vw;overflow:hidden;text-overflow:ellipsis;font-family:var(--t)}
 #edErro{display:none;background:#3a1f22;color:#ffd9d6;padding:.6rem 1rem;border-top:1px solid var(--erro)}
 #ajuda{display:none;max-height:52%;overflow:auto;padding:1rem 1.2rem;background:var(--ferro2);border-top:1px solid var(--aco);font-size:.92rem;line-height:1.5}
 #ajuda h3{margin:.9em 0 .3em;font-size:1rem;color:var(--ouro)}
@@ -167,15 +168,18 @@ dialog h2{margin:0 0 .6rem;font-size:1.25rem}
 
 <section id="editor" class="tela">
   <div class="eBarra">
-    <button id="eTestar" class="pri">▶ Testar</button>
+    <button id="eNome" title="Trocar o nome do roteiro">📄 Roteiro</button>
+    <button id="eNovo">＋ Novo roteiro</button>
+    <button id="eSalvar" class="pri">💾 Salvar</button>
+    <button id="eTestar">▶ Testar</button>
     <button id="eDaqui">▶ Daqui</button>
     <button id="eMais">Recuo +</button>
     <button id="eMenos">Recuo −</button>
     <button id="eArea">📐 Marcar área</button>
-    <button id="eProntos">📥 Prontos</button>
+    <button id="eProntos">📥 Abrir</button>
     <button id="eAjuda">Comandos</button>
-    <button id="eBaixar">⬇ .txt</button>
-    <button id="eAbrir">⬆ .txt</button>
+    <button id="eBaixar">⬇ Baixar</button>
+    <button id="eAbrir">⬆ Abrir .txt</button>
     <button id="eVoltar">Menu</button>
     <input id="eArquivo" type="file" accept=".txt,text/plain" hidden>
   </div>
@@ -288,7 +292,7 @@ var capitulo = 1</pre>
   <p class="nota" id="arInfo">Nenhuma área marcada ainda.</p>
   <div class="lin" style="margin-top:.7rem"><button id="arPor" class="pri" disabled>Pôr no roteiro</button><button id="arFechar">Fechar</button></div>
 </dialog>
-<dialog id="dProntos"><h2>📥 Roteiros prontos</h2><p class="nota">Roteiros guardados no GitHub da Central. Abrir troca o roteiro atual (ele fica guardado para voltar).</p><div id="prLista" style="margin:.6rem 0"></div><button id="prVoltar" style="width:100%;margin-bottom:.45rem" hidden>↩ Voltar ao roteiro de antes</button><button id="prFechar" style="width:100%">Fechar</button></dialog>
+<dialog id="dProntos"><h2>📥 Abrir roteiro</h2><p class="nota">Abrir troca o roteiro atual (ele fica guardado para voltar).</p><h3 style="margin:.8rem 0 .3rem;font-size:1rem">✍️ Seus roteiros na Escrita</h3><div id="prEscrita"></div><h3 style="margin:.8rem 0 .3rem;font-size:1rem">Prontos no GitHub</h3><div id="prLista" style="margin:.2rem 0 .6rem"></div><button id="prVoltar" style="width:100%;margin-bottom:.45rem" hidden>↩ Voltar ao roteiro de antes</button><button id="prFechar" style="width:100%">Fechar</button></dialog>
 <dialog id="dBib"><h2>📚 Da Biblioteca</h2><p class="nota">Toque numa imagem ou num áudio para trazer para as Artes.</p><div id="bibLista"></div><button id="bibFechar" style="width:100%">Fechar</button></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="fatal"></div>
@@ -948,7 +952,7 @@ function mostraErroEditor(e){
   if(!e)return;const box=$('#edErro');box.textContent=(e.linha?'Linha '+e.linha+': ':'')+e.message;box.style.display='block';
   if(e.linha){const ls=ta.value.split('\n');let p=0;for(let i=0;i<e.linha-1;i++)p+=ls[i].length+1;ta.focus();ta.setSelectionRange(p,p+(ls[e.linha-1]||'').length)}
 }
-function abreEditor(){ta.value=roteiroAtual();tela('editor')}
+function abreEditor(){ta.value=roteiroAtual();mostraNome();tela('editor')}
 let tSalva;
 ta.addEventListener('input',e=>{
   if(e.inputType==='insertLineBreak'){
@@ -956,7 +960,7 @@ ta.addEventListener('input',e=>{
     let ind=lin.match(/^ */)[0];if(lin.trim().endsWith(':'))ind+='    ';
     if(ind)ta.setRangeText(ind,pos,pos,'end');
   }
-  clearTimeout(tSalva);tSalva=setTimeout(()=>LS.set('nv_roteiro',ta.value),600);
+  clearTimeout(tSalva);tSalva=setTimeout(()=>LS.set('nv_roteiro',ta.value),600);marcaNaoSalvo();
 });
 ta.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();recuo(e.shiftKey?-1:1)}});
 function recuo(dir){
@@ -964,7 +968,7 @@ function recuo(dir){
   let fimL=v.indexOf('\n',e);if(fimL<0)fimL=v.length;
   const linhas=v.slice(ini,fimL).split('\n').map(l=>dir>0?'    '+l:l.replace(/^ {1,4}/,''));
   const novo=linhas.join('\n');ta.setRangeText(novo,ini,fimL,'preserve');
-  ta.setSelectionRange(ini,ini+novo.length);ta.focus();LS.set('nv_roteiro',ta.value);
+  ta.setSelectionRange(ini,ini+novo.length);ta.focus();LS.set('nv_roteiro',ta.value);marcaNaoSalvo();
 }
 const MOLDES={
   fala:['sato "Escreva a fala aqui."'],narra:['"Escreva a narração aqui."'],cena:['cena nome_do_fundo com fade'],
@@ -980,7 +984,7 @@ function insereLinhas(ls){
   if(!atual.trim()){if(!ind){const ant=v.slice(0,Math.max(0,ini-1)),la=ant.slice(ant.lastIndexOf('\n')+1);ind=la.match(/^ */)[0];if(la.trim().endsWith(':'))ind+='    '}
     const novo=ls.map(l=>ind+l).join('\n');ta.setRangeText(novo,ini,fimL,'end')}
   else{if(atual.trim().endsWith(':'))ind+='    ';const novo='\n'+ls.map(l=>ind+l).join('\n');ta.setRangeText(novo,fimL,fimL,'end')}
-  ta.focus();LS.set('nv_roteiro',ta.value);
+  ta.focus();LS.set('nv_roteiro',ta.value);marcaNaoSalvo();
 }
 $('#moldes').onclick=e=>{const b=e.target.closest('[data-m]');if(b)insereLinhas(MOLDES[b.dataset.m])};
 $('#eMais').onclick=()=>recuo(1);
@@ -992,22 +996,63 @@ $('#eDaqui').onclick=()=>{LS.set('nv_roteiro',ta.value);if(!compila())return;
   G.st=novoEstado(lab);iniciaTela();run();toast('Começando do label '+lab+'.',1600)};
 $('#eAjuda').onclick=()=>{const a=$('#ajuda');a.style.display=a.style.display==='block'?'none':'block'};
 $('#eVoltar').onclick=()=>{LS.set('nv_roteiro',ta.value);abreMenu()};
-$('#eBaixar').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ta.value],{type:'text/plain'}));a.download='roteiro.txt';document.body.appendChild(a);a.click();a.remove()};
+$('#eBaixar').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ta.value],{type:'text/plain'}));
+  a.download=(LS.get('nv_nome','')||'roteiro').replace(/[\\/:*?"<>|]+/g,'-').trim()+'.txt';document.body.appendChild(a);a.click();a.remove()};
+
+/* ---------- vários roteiros: novo, salvar na aba Escrita (pasta "Visual novel"), abrir de lá ---------- */
+// A Escrita guarda tudo em localStorage "kurogane:data" (mesmo site): notas em D.notas {id,titulo,html,pasta,...} e pastas em D.pastas.
+const ESC_KEY='kurogane:data',ESC_PASTA='novel';
+const escLer=()=>{try{return JSON.parse(localStorage.getItem(ESC_KEY))||{}}catch(e){return{}}};
+const paraHtml=t=>t.split('\n').map(l=>'<p>'+(esc(l).replace(/^ +/,m=>'&nbsp;'.repeat(m.length))||'<br>')+'</p>').join('');
+function deHtml(h){const d=document.createElement('div');d.innerHTML=h.replace(/<br\s*\/?>\s*<\/p>/gi,'</p>').replace(/<br\s*\/?>/gi,'\n');const ls=[];
+  const blocos=d.querySelectorAll('p,div,li,h1,h2,h3,pre');if(!blocos.length)return d.textContent.replace(/ /g,' ');
+  blocos.forEach(b=>{if(b.querySelector('p,div,li'))return;ls.push(b.textContent.replace(/ /g,' '))});return ls.join('\n')}
+function mostraNome(){const n=LS.get('nv_nome','');$('#eNome').textContent='📄 '+(n||'Sem nome')+(LS.get('nv_sujo',false)?' •':'')}
+function marcaNaoSalvo(){if(!LS.get('nv_sujo',false)){LS.set('nv_sujo',true);mostraNome()}}
+function salvarNaEscrita(){
+  let nome=LS.get('nv_nome','');
+  if(!nome){nome=(prompt('Nome deste roteiro:','')||'').trim();if(!nome)return false;LS.set('nv_nome',nome)}
+  const D=escLer();D.pastas=D.pastas||[];D.notas=D.notas||[];
+  if(!D.pastas.some(p=>p.id===ESC_PASTA))D.pastas.push({id:ESC_PASTA,nome:'Visual novel',cor:'#7a6ad8'});
+  const id=LS.get('nv_nota',null),agora=Date.now();let n=id&&D.notas.find(x=>x.id===id);
+  if(!n){n={id:'nv'+agora.toString(36),criado:agora,fav:false,papel:'',order:D.notas.length,pasta:ESC_PASTA};D.notas.push(n);LS.set('nv_nota',n.id)}
+  Object.assign(n,{titulo:nome,html:paraHtml(ta.value),editado:agora});
+  try{localStorage.setItem(ESC_KEY,JSON.stringify(D))}catch(e){toast('Sem espaço no aparelho para salvar na Escrita.');return false}
+  LS.set('nv_roteiro',ta.value);LS.set('nv_sujo',false);mostraNome();
+  toast('Salvo na aba Escrita, pasta “Visual novel”.',2600);return true;
+}
+$('#eSalvar').onclick=()=>salvarNaEscrita();
+$('#eNome').onclick=()=>{const n=(prompt('Nome deste roteiro:',LS.get('nv_nome',''))||'').trim();if(!n)return;LS.set('nv_nome',n);marcaNaoSalvo();mostraNome()};
+$('#eNovo').onclick=()=>{
+  if(ta.value.trim()&&LS.get('nv_sujo',true)){
+    if(confirm('Salvar o roteiro atual na Escrita antes de começar um novo?')){if(!salvarNaEscrita())return}
+    else if(!confirm('Começar um novo sem salvar? O atual ainda fica em 📥 Abrir › Voltar ao roteiro de antes.'))return}
+  const nome=(prompt('Nome do roteiro novo:','')||'').trim();if(!nome)return;
+  LS.set('nv_roteiro_antes',ta.value);ta.value='';LS.set('nv_roteiro','');LS.set('nv_nome',nome);LS.set('nv_nota',null);LS.set('nv_sujo',false);
+  $('#edErro').style.display='none';mostraNome();ta.focus();toast('Página em branco. Escreva do seu jeito; 💾 Salvar manda para a Escrita.',3200)};
+function listaEscrita(){
+  const D=escLer(),ns=(D.notas||[]).filter(n=>n.pasta===ESC_PASTA).sort((a,b)=>(b.editado||0)-(a.editado||0)),box=$('#prEscrita');
+  box.innerHTML=ns.length?ns.map(n=>'<div class="slot"><div><strong>'+esc(n.titulo||'Sem nome')+'</strong><span>'+new Date(n.editado||n.criado||0).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})+'</span></div><button data-id="'+esc(n.id)+'">Abrir</button></div>').join(''):'<p class="nota">Nenhum ainda. Use 💾 Salvar no roteiro.</p>';
+  box.onclick=e=>{const b=e.target.closest('[data-id]');if(!b)return;const n=(escLer().notas||[]).find(x=>x.id===b.dataset.id);if(!n)return;
+    if(LS.get('nv_sujo',false)&&ta.value.trim()&&!confirm('O roteiro aberto tem mudanças não salvas. Abrir outro mesmo assim? (Ele fica em Voltar ao roteiro de antes.)'))return;
+    LS.set('nv_roteiro_antes',ta.value);ta.value=deHtml(n.html||'');LS.set('nv_roteiro',ta.value);LS.set('nv_nome',n.titulo||'');LS.set('nv_nota',n.id);LS.set('nv_sujo',false);
+    $('#dProntos').close();mostraNome();compila();toast('Aberto: '+(n.titulo||'roteiro'))};
+}
 $('#eAbrir').onclick=()=>$('#eArquivo').click();
-$('#eArquivo').onchange=ev=>{const f=ev.target.files[0];if(!f)return;f.text().then(t=>{ta.value=t;LS.set('nv_roteiro',t);compila()});ev.target.value=''};
+$('#eArquivo').onchange=ev=>{const f=ev.target.files[0];if(!f)return;f.text().then(t=>{LS.set('nv_roteiro_antes',ta.value);ta.value=t;LS.set('nv_roteiro',t);LS.set('nv_nome',f.name.replace(/\.txt$/i,''));LS.set('nv_nota',null);LS.set('nv_sujo',true);mostraNome();compila()});ev.target.value=''};
 
 /* ---------- roteiros prontos (pasta novel/ do repositório) ---------- */
 $('#eProntos').onclick=async()=>{
-  const box=$('#prLista');box.innerHTML='<p class="nota">Carregando…</p>';$('#prVoltar').hidden=!LS.get('nv_roteiro_antes',null);$('#dProntos').showModal();
+  listaEscrita();const box=$('#prLista');box.innerHTML='<p class="nota">Carregando…</p>';$('#prVoltar').hidden=!LS.get('nv_roteiro_antes',null);$('#dProntos').showModal();
   try{const lista=await (await fetch('novel/indice.json?v='+Date.now().toString(36),{cache:'no-store'})).json();
     box.innerHTML=lista.length?lista.map((r,i)=>'<div class="slot"><div><strong>'+esc(r.nome)+'</strong>'+(r.nota?'<span>'+esc(r.nota)+'</span>':'')+'</div><button data-i="'+i+'">Abrir</button></div>').join(''):'<p class="nota">Nenhum ainda.</p>';
     box.onclick=async e=>{const b=e.target.closest('[data-i]');if(!b)return;const r=lista[+b.dataset.i];
       if(!confirm('Abrir “'+r.nome+'”? O roteiro atual fica guardado em “Voltar ao roteiro de antes”.'))return;
       const t=await (await fetch('novel/'+r.arquivo+'?v='+Date.now().toString(36),{cache:'no-store'})).text();
-      LS.set('nv_roteiro_antes',ta.value);ta.value=t;LS.set('nv_roteiro',t);$('#dProntos').close();if(compila())toast('Roteiro aberto. Toque em ▶ Testar.',3000)}}
+      LS.set('nv_roteiro_antes',ta.value);ta.value=t;LS.set('nv_roteiro',t);LS.set('nv_nome',r.nome);LS.set('nv_nota',null);LS.set('nv_sujo',true);mostraNome();$('#dProntos').close();if(compila())toast('Roteiro aberto. Toque em ▶ Testar.',3000)}}
   catch(e){box.innerHTML='<p class="nota">Não consegui buscar os roteiros (sem internet?).</p>'}
 };
-$('#prVoltar').onclick=()=>{const v=LS.get('nv_roteiro_antes',null);if(v==null)return;const atual=ta.value;ta.value=v;LS.set('nv_roteiro',v);LS.set('nv_roteiro_antes',atual);$('#dProntos').close();compila();toast('Voltei ao roteiro de antes.')};
+$('#prVoltar').onclick=()=>{const v=LS.get('nv_roteiro_antes',null);if(v==null)return;const atual=ta.value;ta.value=v;LS.set('nv_roteiro',v);LS.set('nv_roteiro_antes',atual);LS.set('nv_nota',null);LS.set('nv_nome','');LS.set('nv_sujo',true);mostraNome();$('#dProntos').close();compila();toast('Voltei ao roteiro de antes.')};
 $('#prFechar').onclick=()=>$('#dProntos').close();
 
 /* ---------- marcar área com o dedo ---------- */
