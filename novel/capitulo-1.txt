@@ -1,0 +1,774 @@
+# ============================================================
+# KAORO · CAPÍTULO 1 · O LIVRO DA VILA
+# Roteiro de visual novel feito a partir da campanha jogada.
+# O caminho principal é o que aconteceu na mesa (canon).
+# As outras escolhas dão falas diferentes e voltam para o canon.
+#
+# ARTES (envie em 🖼 Artes com estes nomes; sem arte aparece um molde)
+# Fundos: casa_shion, estrada, taverna, escola, sala_aula, muro,
+#   patio, praca, cozinha, quarto, cercado, moinho, delegacia,
+#   casa_utagawa, celeiro, casa_reika, porao, biblioteca
+#   (preto e branco já existem)
+# Personagens (id + expressão, ex.: "kenichi rindo"):
+#   kenichi, momo, haru, kaede, tetsuo, gen, yuzu, yoru, kiyoshi,
+#   shun, goro, midori, reika, banji, tora, hiyori, kaname, zulado, brasa
+# O Kaoro não aparece na tela: quem joga é ele.
+# ============================================================
+
+titulo "Kaoro · O Livro da Vila"
+
+personagem kaoro "Kaoro" #6b7bd6
+personagem kenichi "Kenichi" #d9645a
+personagem momo "Momo" #e58fb5
+personagem haru "Haru" #7fa86a
+personagem kaede "Kaede" #d9a441
+personagem tetsuo "Tetsuo" #8a8f99
+personagem gen "Gen" #b08a5a
+personagem yuzu "Yuzu" #e0a36a
+personagem yoru "Yoru" #5d6f8f
+personagem kiyoshi "Prof. Kiyoshi" #6aa3a8
+personagem shun "Shun" #c9b23c
+personagem goro "Goro" #9b7b4f
+personagem midori "Midori" #b56d8f
+personagem reika "Reika" #c48fd0
+personagem banji "Banji" #8f6f5a
+personagem tora "Tora" #77808c
+personagem hiyori "Hiyori" #4fa3c4
+personagem kaname "Kaname" #a3a3c2
+
+item sininho "Sininho da vovó Chiyo"
+item lencinho "Lencinho bordado da Momo"
+
+var laco_kenichi = 0
+var laco_momo = 0
+var laco_shun = 0
+var sonho_contado = False
+var venceu_corrida = False
+var pistas = 0
+
+# ------------------------------------------------------------
+label inicio:
+    cena preto
+    "Seis ovos numa cesta."
+    "Uma estrada de terra."
+    "E o primeiro dia de aula do outono."
+    espera 0.6
+    cena estrada com preto
+    musica manha
+    "O sol ainda nem passou do moinho, e eu já estou atrasado."
+    "A mãe disse: seis ovos para a Yuzu, na Taverna. Inteiros."
+    som carroca
+    "Uma carroça para do meu lado, rangendo."
+    mostra goro direita
+    mostra shun esquerda
+    shun "Ei! Você é o filho das Tufonas, né? Sobe aí!"
+    shun "Essa carroça já correu mais que um cavalo da capital. Sério."
+    goro "Ela já perdeu uma roda numa poça. Também é sério."
+    menu:
+        "Subir na carroça":
+            "Subo com cuidado, a cesta no colo."
+        "Andar do lado, segurando a cesta":
+            "Ando do lado. O Shun desce e anda junto, falando sem parar."
+            shun "Se você não sobe, eu desço. Assim a gente conta igual."
+            "No fim, a cesta pesa demais e eu subo mesmo assim."
+    jump ovos
+
+label ovos:
+    shun "Lá na capital tem ponte de vidro. E peixe que voa. E..."
+    som buraco
+    treme
+    "A carroça cai num buraco."
+    "Ouço um craque que não é a carroça."
+    zoom 1.4 50 70
+    "Dois ovos. Quebrados."
+    zoom 1
+    mostra shun assustado esquerda
+    shun "Fui eu? Fui eu. Desculpa. Eu estava contando da ponte e..."
+    menu:
+        "Tudo bem, Shun. Sobraram quatro.":
+            $ laco_shun += 1
+            shun "...Sério? Meu pai teria gritado."
+            goro "Eu não teria gritado."
+            shun "Teria sim."
+        "Você não para de falar nem quando a carroça cai!":
+            $ laco_shun -= 1
+            shun "...Desculpa."
+            "Ele fica quieto até a vila. Fica estranho, ele quieto."
+    jump taverna_manha
+
+# ------------------------------------------------------------
+label taverna_manha:
+    cena taverna com fade
+    musica taverna
+    mostra yuzu centro
+    yuzu "Quatro? A Kaede disse seis."
+    menu:
+        "Contar a verdade: dois quebraram na carroça":
+            yuzu "Carroça do Goro? Então foram só dois. Sorte sua."
+        "Dizer que caiu sozinho":
+            yuzu "Hm. Ovo não cai sozinho, menino. Mas tudo bem."
+    yuzu "Agora vai acordar aquele lá no banco, que eu não aguento mais."
+    mostra yuzu esquerda
+    mostra kenichi dormindo direita
+    "No banco do canto, enrolado num casaco grande demais, está o Kenichi."
+    "Dormiu aqui. De novo."
+    mostra kenichi bravo direita
+    kenichi "Que foi? Nunca viu ninguém dormir em taverna?"
+    kenichi "Briguei com meu pai. Não pergunta."
+    kenichi "Aposto que chego na escola antes de você."
+    yuzu "Quem perder lava a minha louça?"
+    kenichi "Quem perder faz o que o outro mandar."
+    jump corrida
+
+label corrida:
+    cena estrada com fade
+    musica corrida
+    "O Kenichi sai correndo antes de terminar de falar."
+    "Ele é mais rápido que eu. Mas eu conheço a vila."
+    menu:
+        "Cortar pelo muro da Biblioteca":
+            $ venceu_corrida = True
+            "Pulo o muro, escorrego na hera, caio do outro lado..."
+            treme
+            "...e chego no portão primeiro."
+        "Correr pela rua principal":
+            "Corro pela rua. As costas do Kenichi ficam cada vez menores."
+            "Ele chega no portão com folga e ri da minha cara."
+    jump portao
+
+label portao:
+    cena escola com flash
+    mostra yoru direita
+    se venceu_corrida:
+        mostra kenichi bravo esquerda
+        kenichi "Isso não valeu! Você pulou o muro!"
+        yoru "Aposta é aposta, Kenichi. Você limpa o pátio comigo depois da aula."
+        kenichi "Comigo?!"
+        yoru "Eu também gosto de pátio limpo."
+    senao:
+        mostra kenichi rindo esquerda
+        kenichi "Perdeu! Agora você limpa o pátio."
+        yoru "Ouvi aposta? Então o perdedor limpa. Comigo. Depois da aula."
+        kenichi "Ah, eu ajudo. Não tem graça rir sozinho."
+    "O Yoru sorri de um jeito que eu não sei ler."
+    jump sorteio
+
+# ------------------------------------------------------------
+label sorteio:
+    cena sala_aula com fade
+    musica escola
+    mostra kiyoshi centro
+    kiyoshi "Este outono, a turma vai escrever o Livro da Vila."
+    kiyoshi "Cada dupla entrevista um morador e conta a história dele."
+    kiyoshi "O livro fica na biblioteca da escola. Para sempre."
+    "Para sempre é muito tempo."
+    kiyoshi "Primeira dupla sorteada: Kaoro... e Momo."
+    mostra kiyoshi esquerda
+    mostra momo direita
+    momo "Oi. Você tem letra feia?"
+    "Ela pergunta como quem pergunta se vai chover."
+    kiyoshi "Agora escolham quem entrevistar. Os papéis estão na mesa."
+    esconde kiyoshi
+    mostra hiyori esquerda
+    "A Hiyori já está na mesa antes de eu levantar."
+    hiyori "Os irmãos coelho da Biblioteca. São nossos."
+    "Vou atrás de outro papel e..."
+    treme
+    "...tropeço numa bota. A do Ibuki. Ele nem olha."
+    esconde hiyori
+    mostra kaname esquerda
+    "O Kaname pega o papel que caiu e me devolve sem dizer nada."
+    kaname "..."
+    esconde kaname
+    momo "E aí? Quem a gente pega?"
+    menu:
+        "O senhor Gen, da Taverna Meia-Lua":
+            momo "O Gen? Ele não fala com ninguém."
+            momo "...Perfeito. Ninguém vai ter a história dele."
+        "Alguém da Biblioteca":
+            momo "Já é da Hiyori. Ela pegou até os coelhos."
+            momo "Que tal o Gen, da Taverna? Ninguém tem coragem."
+            "Ela escreve o nome dele antes de eu responder."
+    $ laco_momo += 1
+    jump recreio
+
+label recreio:
+    cena muro com fade
+    musica recreio
+    "No recreio, levo o meu lanche para o muro."
+    "O Kenichi está lá em cima, sem lanche nenhum."
+    mostra kenichi centro
+    menu:
+        "Dividir o lanche":
+            $ laco_kenichi += 1
+            kenichi "...Não pedi."
+            "Mas come tudo."
+        "Comer do lado dele, em silêncio":
+            "Ele olha o meu pão três vezes. Na quarta, eu dou metade."
+    mostra kenichi triste centro
+    kenichi "Meu pai quer que eu comece o treino da guarda. Agora."
+    kenichi "Antes do sol. Todo dia. Sozinho com ele."
+    menu:
+        "Então eu treino junto":
+            $ laco_kenichi += 1
+            kenichi "Você? Você nem acorda cedo."
+            kaoro "Eu acordo pros ovos. Posso acordar pra você."
+        "Deve ser legal ser da guarda":
+            kenichi "Legal? Ele vai me fazer correr até cair."
+            kaoro "...Então eu corro junto. Pra você não cair sozinho."
+    kenichi "..."
+    menu:
+        "Contar que sonha em viajar pelo mundo":
+            $ sonho_contado = True
+            kaoro "Eu quero ficar forte. Quero ver o mundo inteiro um dia."
+            kenichi "O mundo inteiro? Você se perde indo pra casa."
+            "Mas ele não ri. Fica olhando a estrada lá longe."
+        "Guardar isso pra você":
+            "Tem uma coisa que eu não conto. Fica aqui dentro, quentinha."
+    kenichi "Você me deve um bolinho de milho por isso. Não, espera. Eu te devo."
+    jump patio
+
+label patio:
+    cena patio com fade
+    mostra yoru direita
+    mostra kenichi cansado esquerda
+    "Depois da aula, a gente varre o pátio com o Yoru."
+    "Folha, folha, folha. O outono não acaba nunca."
+    yoru "Vocês varrem bem quando não estão brigando."
+    "Terminamos quando o sol já está baixo."
+    "Eu ainda tenho que recolher as Tufonas. Vou chegar atrasado."
+    jump praca
+
+label praca:
+    cena praca com fade
+    musica tensao
+    mostra tetsuo centro
+    "Na descida para a praça, uma sombra enorme na nossa frente."
+    "O delegado Tetsuo. O pai do Kenichi."
+    tetsuo "A Kaede passou na delegacia procurando o filho."
+    tetsuo "E você, Kenichi. Por que ficou até agora?"
+    mostra tetsuo esquerda
+    mostra kenichi assustado direita
+    menu:
+        "Mentir: a briga foi culpa sua, o Kenichi só foi junto":
+            $ laco_kenichi += 2
+            kaoro "Fui eu. Eu meti ele numa briga. Ele ficou de castigo por minha causa."
+            tetsuo "..."
+            tetsuo "Ele não te entregou."
+            "O Tetsuo olha o filho de um jeito novo. Quase orgulho."
+        "Contar a verdade: a aposta da corrida":
+            kaoro "A gente apostou corrida. O castigo era limpar o pátio."
+            tetsuo "E você ficou junto. Sem ser o castigado."
+            "Ele olha para mim. Depois para o filho."
+    kenichi "Pai. Eu quero fazer o treino. E o Kaoro também."
+    tetsuo "Três condições."
+    tetsuo "Permissão do pai e da mãe, na minha frente."
+    tetsuo "Chegar antes do sol."
+    tetsuo "E ninguém desiste no meio."
+    tetsuo "Agora eu levo os dois pra casa."
+    jump casa_noite
+
+# ------------------------------------------------------------
+label casa_noite:
+    cena estrada com preto
+    musica fim_de_tarde
+    mostra kaede brava centro
+    "No meio da estrada, a minha mãe. Montada na Madame Pluma."
+    kaede "Você sabe que horas são?"
+    "Sei. É hora de levar bronca."
+    cena cozinha com fade
+    mostra haru esquerda
+    mostra kaede direita
+    kaoro "Eu quero treinar com o delegado. Antes do sol."
+    menu:
+        "Dizer que é pelo Kenichi":
+            kaoro "É pelo Kenichi. Ele não pode treinar sozinho."
+            haru "É pelo Kenichi... ou por você?"
+            "Eu não respondo."
+            haru "Tudo bem. Quando quiser contar o outro motivo, eu escuto."
+        "Dizer que também é por você":
+            kaoro "É pelo Kenichi. E por mim também. Eu quero ficar forte."
+            haru "Forte pra quê?"
+            kaoro "...Ainda não sei."
+            haru "Tudo bem. Quando souber, eu escuto."
+    kaede "Três regras minhas."
+    kaede "Os ovos da manhã continuam sendo seus."
+    kaede "Se a nota cair, acabou."
+    kaede "E se doer demais, você conta."
+    haru "Na primeira manhã, eu vou junto."
+    jump zulado_noite
+
+label zulado_noite:
+    cena cercado com fade
+    musica noite
+    mostra zulado centro
+    "O Zulado não comeu nada o dia inteiro."
+    "Ficou esperando por mim."
+    menu:
+        "Oferecer comida na mão":
+            "Ele come da minha mão."
+            som bicada
+            treme fraco
+            "E me dá uma bicada. Só pra eu saber que ele estava bravo."
+        "Deixar a comida no chão e esperar":
+            "Ele não come. Olha pra mim."
+            "Pego a comida e estendo a mão. Ele come. E me bica."
+    cena quarto com fade
+    "Faço um ninho de cobertas no meu quarto."
+    "De manhã, o Zulado está dormindo nos meus pés."
+    jump primeiro_treino
+
+label primeiro_treino:
+    cena estrada com preto
+    musica madrugada
+    mostra haru esquerda
+    "O meu pai me leva antes do sol."
+    "No caminho eu conto: prometi uma Tufona pro Kenichi. Irmã do Zulado."
+    haru "As Tufonas são da sua mãe, Kaoro."
+    haru "Você prometeu. O trabalho de cumprir é seu."
+    cena delegacia com fade
+    mostra tetsuo centro
+    haru "Ele tem a minha permissão. E a da Kaede."
+    tetsuo "Então corram. Até a roda do moinho, e de volta antes do sol."
+    cena moinho com fade
+    musica corrida
+    "Corro. O Kenichi e o Tōya somem na frente."
+    "As pernas doem. A respiração dói. Tudo dói."
+    menu:
+        "Parar e respirar":
+            "Eu quero parar. Mas lembro da terceira condição."
+            "Ninguém desiste no meio."
+        "Continuar, mesmo devagar":
+            "Devagar. Mas não paro."
+    mostra kenichi cansado centro
+    "Aí o Kenichi aparece. Voltando. Correndo do meu lado."
+    kenichi "Não para. Se você parar, eu paro."
+    $ laco_kenichi += 1
+    cena delegacia com fade
+    mostra tetsuo centro
+    "Chegamos depois do sol."
+    tetsuo "Atrasados."
+    tetsuo "...Mas não pararam. Amanhã, mesma hora."
+    jump tufonas
+
+# ------------------------------------------------------------
+label tufonas:
+    cena cercado com fade
+    musica tufonas
+    mostra kaede esquerda
+    kaede "Eu não dou Tufona, Kaoro."
+    kaede "Mas você pode criar uma. Se estiver bem criada na formatura, ela é dele."
+    "Depois da aula, trago o Kenichi."
+    "Quatro filhotes no cercado. Quem escolhe é ele. Ou elas."
+    esconde kaede
+    mostra kenichi centro
+    kenichi "Qual delas..?"
+    esconde kenichi
+    "Toque nos filhotes para conhecer cada um."
+    explorar:
+        "Ruiva" 6 45 20 35:
+            "Uma fêmea ruiva, de crista arrepiada."
+            "Ela bica a cerca. Bica o balde. Bica o Zulado."
+            $ pistas += 1
+        "Branco" 30 50 18 30:
+            "Um macho branco, calmo. Dorme até em pé."
+            $ pistas += 1
+        "Pintadinha" 54 52 18 28:
+            "Uma fêmea pintadinha, tímida. Se esconde atrás do bebedouro."
+            $ pistas += 1
+        "Escuro" 76 45 20 35:
+            "Um macho escuro e arredio. Fica no canto, olhando torto."
+            $ pistas += 1
+        "Chamar o Kenichi" 40 6 20 14 se pistas >= 2:
+            sai
+    $ pistas = 0
+    mostra kenichi rindo centro
+    "Mas não é o Kenichi quem escolhe."
+    "A ruiva atravessa o cercado inteiro e para no pé dele."
+    kaede "Filha da Madame Pluma com o Trovão. Escolheu você."
+    kenichi "...Brasa. O nome dela é Brasa."
+    mostra brasa direita
+    mostra zulado esquerda
+    "A Brasa e o Zulado se olham."
+    treme
+    "E brigam. Na hora."
+    kenichi "Tem cisco no meu olho. É o cisco."
+    $ laco_kenichi += 1
+    jump jantar_estrada
+
+label jantar_estrada:
+    cena cozinha com fade
+    musica casa
+    mostra haru esquerda
+    mostra kenichi direita
+    "O Kenichi janta com a gente. O pai dele tem plantão."
+    haru "Já contei que esse aqui fugiu de pijama com três anos?"
+    haru "Saiu pela estrada. Disse que queria ver onde ela acabava."
+    haru "O lampião passou duas vezes por ele, debaixo da árvore da curva."
+    haru "E não achou."
+    "Eu não lembro de nada disso."
+    cena quarto com preto
+    musica noite
+    mostra kenichi centro
+    kenichi "Ei. Tá acordado?"
+    kenichi "Eu também quero ver onde a estrada acaba."
+    se sonho_contado:
+        kenichi "Desde que você falou do mundo. Não sai da minha cabeça."
+    menu:
+        "Contar que às vezes acorda em outros lugares":
+            kaoro "Às vezes eu acordo em lugar que não lembro de ter ido."
+            kaoro "Achava que era sonho."
+            kenichi "...Se acontecer, eu vou atrás. Prometo."
+            $ laco_kenichi += 1
+        "Fingir que já está dormindo":
+            "Fecho os olhos com força."
+            kenichi "...Boa noite, Kaoro."
+    jump entrevista
+
+# ------------------------------------------------------------
+label entrevista:
+    cena taverna com fade
+    musica taverna
+    mostra gen centro
+    "A Taverna Meia-Lua na hora vazia."
+    "O senhor Gen seca um copo que já está seco."
+    mostra momo direita
+    gen "Querem a minha história? Então me deem uma."
+    gen "Aqui é troca, não presente."
+    momo "Kaoro..?"
+    menu:
+        "Contar a história da estrada e dos apagões":
+            kaoro "Quando eu tinha três anos, saí andando pra ver onde a estrada acabava."
+            kaoro "E às vezes eu ainda acordo em lugar que não lembro de ter ido."
+            "Sai tudo de uma vez. Nem era pra sair."
+            gen "Isso não é história. É segredo."
+            gen "Segredo eu guardo."
+            momo "Eu também guardo."
+            $ laco_momo += 2
+        "Inventar uma história qualquer":
+            kaoro "Uma vez eu vi uma Tufona do tamanho de uma carroça."
+            gen "Mentira tem gosto de pão velho, menino."
+            "Engulo seco. E conto a verdade: a estrada, os apagões."
+            gen "Agora sim. Isso eu guardo."
+            momo "Eu também."
+            $ laco_momo += 1
+    gen "Pergunta o que quiser da casa. De mim, não."
+    esconde momo
+    "Toque nas coisas da Taverna para perguntar."
+    explorar:
+        "Viga" 8 6 40 16:
+            zoom 1.5 25 14
+            gen "Os nomes dos casais. Quem se acerta aqui, risca na madeira."
+            "Lá no meio: Haru & Kaede. O coração torto é da minha mãe."
+            zoom 1
+            $ pistas += 1
+        "Mesa rachada" 10 60 26 26:
+            gen "Queda de braço. A sua mãe contra a Hayate."
+            gen "A mesa perdeu."
+            $ pistas += 1
+        "Balcão" 52 55 40 20:
+            gen "Essa marca de garra é da paz da vila."
+            gen "O delegado e a Raika fecharam o acordo aqui. Desde então: aqui ninguém briga."
+            $ pistas += 1
+        "Janela" 70 8 22 30:
+            gen "Antes era um galpão sem telhado. A chuva entrava toda."
+            gen "A primeira freguesa foi a Reika. Cantando na chuva."
+            $ pistas += 1
+        "Encerrar a entrevista" 38 86 24 12 se pistas >= 3:
+            sai
+    $ pistas = 0
+    mostra momo direita
+    momo "Sábado a gente passa a limpo. Na casa da minha avó."
+    jump midori
+
+label midori:
+    cena casa_utagawa com fade
+    musica tensao
+    mostra midori centro
+    "Levo a Momo até a casa dela."
+    "A mãe dela, a Midori, está na porta. De braços cruzados."
+    midori "A Momo faltou ao bordado da Kirin. De novo."
+    mostra midori esquerda
+    mostra momo triste direita
+    menu:
+        "Assumir a culpa":
+            kaoro "Foi ideia minha. Eu levei ela na Taverna."
+            midori "Na Taverna."
+            midori "Então você é a má influência."
+            midori "A Momo não sai mais com você depois da aula sem eu saber."
+            $ laco_momo += 1
+        "Ficar quieto":
+            "Não sai nada da minha boca."
+            midori "Então? Ninguém vai explicar?"
+            momo "...Fui eu que..."
+            kaoro "Fui eu. A ideia foi minha."
+            midori "Então você é a má influência."
+    "Na janela da casa ao lado, o Aoi está olhando."
+    jump celeiro
+
+label celeiro:
+    cena celeiro com preto
+    musica segredo
+    "Volto pra casa de fininho."
+    "Do celeiro sai a voz do meu pai."
+    "Toque onde dá para ouvir melhor."
+    explorar:
+        "Porta" 38 20 24 60:
+            "Se eu abrir a porta, eles param de falar."
+        "Fresta" 72 30 8 40:
+            sai
+    zoom 1.6 76 45
+    haru "Achei ele de madrugada. De olho fechado. A mão na maçaneta da porta da frente."
+    kaede "Haru, ele precisa saber."
+    haru "Ainda não."
+    kaede "Por quê?"
+    haru "...Eu não sei responder."
+    zoom 1
+    "Eu ando dormindo?"
+    jump noite_haru
+
+label noite_haru:
+    cena quarto com preto
+    musica noite
+    "Não consigo dormir. Vou até o quarto dos meus pais."
+    mostra haru centro
+    kaoro "Pai. Tem alguma coisa errada comigo?"
+    haru "Você anda dormindo. Desde pequeno."
+    haru "E toda vez que você for, eu vou atrás."
+    haru "Eu também era o diferente da minha família. Fui adotado."
+    haru "A vovó Chiyo me chamava de semente que o vento trouxe."
+    haru "E dizia: você é a minha."
+    "Ele canta baixinho. Passa a noite sentado no chão do meu quarto."
+    "Acordo na minha cama."
+    jump fugir
+
+# ------------------------------------------------------------
+label fugir:
+    cena quarto com preto
+    musica madrugada
+    "Meu pai dormiu sentado no chão."
+    "Eu cubro ele com a minha coberta."
+    "Não quero dar mais trabalho. Saio sozinho para o treino."
+    menu:
+        "Sair sem fazer barulho":
+            "Abro a porta devagar."
+        "Deixar um bilhete":
+            "Procuro um papel. Não acho. Saio assim mesmo."
+    cena estrada com fade
+    mostra zulado esquerda
+    "O Zulado desce do mourão e vem atrás de mim."
+    mostra banji direita
+    "No escuro, um vulto com um saco de farinha nas costas."
+    "O Banji. O veterano da escola."
+    banji "Você não me viu."
+    menu:
+        "Eu não te vi. E você também não me viu.":
+            banji "Fechado."
+        "O que você está fazendo?":
+            banji "Farinha do moinho. Não é da sua conta."
+            banji "Você não me viu. Eu não te vi. Fechado?"
+            kaoro "Fechado."
+    jump cha_tetsuo
+
+label cha_tetsuo:
+    cena delegacia com fade
+    musica casa
+    mostra tetsuo centro
+    "O Tetsuo me dá chá. Ponho o Zulado no banco e sento no chão."
+    tetsuo "Tora. Avisa os Shion que o filho deles está aqui."
+    tetsuo "Uma vez eu acordei de pé. De lança na mão. No quarto do meu filho."
+    tetsuo "Não lembrava de ter levantado."
+    tetsuo "Melhorou quando eu entendi que tinha um lugar onde ficar."
+    tetsuo "Se precisar, a varanda tem chá."
+    cena moinho com fade
+    mostra kenichi centro
+    tetsuo "Hoje vocês aprendem a cair."
+    "Ombro primeiro. Corpo redondo."
+    treme
+    "Eu acerto o rolamento de primeira."
+    kenichi "Isso não é justo."
+    "Ele cai de bico nove vezes. Na décima, consegue."
+    jump sino
+
+label sino:
+    cena praca com fade
+    musica tensao
+    mostra kaede triste centro
+    "Na saída da escola, a minha mãe está na praça."
+    "Os olhos vermelhos."
+    kaede "Eu vi a sua cama vazia, Kaoro."
+    kaede "Achei que você tinha andado dormindo de novo."
+    kaede "Sobe na Madame Pluma. Vamos conversar em casa."
+    cena cozinha com fade
+    mostra haru esquerda
+    mostra kaede direita
+    kaoro "Eu saí sozinho porque eu já sou um homem. Não quero dar trabalho."
+    haru "A gente dorme mal porque ama você. Não por culpa sua."
+    haru "Isso aqui era da vovó Chiyo."
+    zoom 1.5 50 50
+    "Um sininho de bronze."
+    zoom 1
+    kaede "É pra pendurar na porta do seu quarto."
+    kaede "Pra gente saber quando você volta."
+    pega sininho
+    menu:
+        "Pendurar o sino na porta":
+            "Eu penduro. Ele faz um tlim pequeno."
+            "Mas no fundo eu não quero ser vigiado."
+            "À noite, tiro ele da porta."
+        "Recusar o sino":
+            kaoro "Eu não sou um bicho pra usar sino!"
+            haru "Não é coisa ruim que fizeram com você, Kaoro."
+            haru "É uma coisa sua que ainda não aprendeu a andar junto com você."
+    cena cercado com fade
+    musica noite
+    mostra zulado centro
+    "No cercado, o Zulado senta na minha sombra."
+    "Os outros filhotes desviam dela. Ele não."
+    som sino
+    "Ele toca o sino com o bico."
+    "Guardo o sino na caixinha de tesouros, debaixo da cama."
+    jump verdade_momo
+
+# ------------------------------------------------------------
+label verdade_momo:
+    cena casa_utagawa com fade
+    musica tensao
+    mostra midori esquerda
+    mostra kaede direita
+    "No dia seguinte, eu e a minha mãe vamos falar com a Midori."
+    kaoro "Desculpa. A ideia da Taverna foi minha."
+    mostra momo brava centro
+    momo "Não foi! Foi minha!"
+    momo "Ele levou bronca no meu lugar."
+    midori "..."
+    midori "Taverna sozinhos, não. O bordado continua."
+    midori "O trabalho de sábado pode. Na casa da avó Reika."
+    midori "E você, Kaoro: proteja a minha filha com a verdade."
+    momo "Ninguém nunca tinha levado bronca no meu lugar."
+    $ laco_momo += 1
+    jump sabado
+
+label sabado:
+    cena casa_reika com fade
+    musica casa
+    mostra reika centro
+    reika "O que você trocou com o Gen, menino?"
+    menu:
+        "Mentir: a história da Tufona que o chocou":
+            kaoro "A história do Zulado. Ele me chocou."
+            momo "É. Foi isso."
+            "A Reika olha pra mim. Depois pra Momo. Deixa passar."
+        "Dizer que é segredo":
+            kaoro "É segredo. Eu prometi."
+            reika "Promessa boa é aquela que a gente guarda até da avó."
+    reika "Vocês querem saber por que eu estava na chuva naquela noite?"
+    reika "Eu tinha brigado com o Nagisa."
+    reika "Ele perdeu nas apostas as joias que eu ganhei cantando na capital."
+    reika "Cantei pra não chorar."
+    reika "A Midori sabe disso. Por isso ela não canta."
+    mostra reika esquerda
+    mostra kiyoshi direita
+    "Escrevemos onze folhas. Três são sobre o vestido da Reika."
+    kiyoshi "Vocês têm o cenário. Falta a pessoa."
+    kiyoshi "Falta o próprio Gen."
+    "A Reika vai levar a gente de novo na segunda, depois da aula."
+    "E eu preciso levar outra história. De verdade."
+    jump livro_delegacia
+
+label livro_delegacia:
+    cena cercado com fade
+    musica tufonas
+    mostra kenichi centro
+    "No cercado, conto tudo da Taverna pro Kenichi."
+    kenichi "Meu pai e a Raika no balcão? Sério?"
+    kenichi "E o Gen falou dele sim. Andou até a estrada acabar."
+    kenichi "Meu pai pergunta isso pra todo forasteiro: fugindo ou procurando."
+    kenichi "Tem um livro na delegacia. Todo mundo que chega na vila está lá."
+    kenichi "Mas se a gente mexer, meu pai mata a gente."
+    menu:
+        "Ir agora, antes de escurecer":
+            "Saio correndo. O Kenichi vem atrás, reclamando."
+        "Esperar até amanhã":
+            "Eu digo que espero até amanhã."
+            "Duro dois minutos. Saio correndo. O Kenichi vem atrás, reclamando."
+    "Eu prometi não sair no escuro."
+    "O sol já está indo embora."
+    cena delegacia com preto
+    musica segredo
+    mostra tora dormindo centro
+    "O Tetsuo não está. O guarda Tora dorme na mesa."
+    "O livro está na prateleira mais alta."
+    "Plano: rosquinhas para o Tora, e o Kenichi sobe na cadeira."
+    esconde tora
+    mostra gen centro
+    "Mas quem entra pela porta é o Gen."
+    gen "Procurando alguma coisa, meninos?"
+    gen "Eu não estou nesse livro. Cheguei antes do delegado."
+    menu:
+        "Chamar o Gen de mentiroso":
+            kaoro "Mentiroso! Você pegou a minha história e não deu nada seu!"
+        "Pedir desculpas":
+            kaoro "Desculpa. É que você pegou a minha história e não deu nada seu."
+    "O Gen ri. Pela primeira vez."
+    gen "Antes da vila, eu vendia segredos."
+    gen "Um deles virou fogo."
+    "Deixo um bilhete pro Tora: o Kenichi dorme na minha casa."
+    "O Gen leva a gente até a porta e acoberta com a minha mãe."
+    "Castigo: a louça do domingo."
+    jump o_que_quer
+
+# ------------------------------------------------------------
+label o_que_quer:
+    cena porao com preto
+    musica fim
+    mostra gen centro
+    "Na segunda, no porão da Taverna."
+    gen "Me conta o que você quer, menino. Só isso."
+    "A Momo e a Reika saem da sala."
+    "O Gen me dá um papel de pão. Eu escrevo:"
+    "Ver o mundo. Entender o que eu tenho."
+    "Deixar os meus pais orgulhosos. Ter amigos pra vida."
+    "Deixar uma marca."
+    kaoro "É segredo."
+    "O Gen dobra o papel e guarda no bolso do peito."
+    gen "Quem sai pra não voltar nunca chega em lugar nenhum."
+    gen "Leve um lugar pra onde voltar."
+    esconde gen
+    mostra momo centro
+    momo "Toma. Pra você."
+    pega lencinho
+    "Um lencinho bordado. A letra dela é mais bonita que a minha."
+    reika "Vou cantar a música daquela primeira noite."
+    musica cancao_reika
+    espera 1.5
+    jump fim_outono
+
+label fim_outono:
+    cena biblioteca com fade
+    "No fim do outono, o Livro da Vila é costurado."
+    "Fica na biblioteca da escola. Para sempre."
+    "A nossa frase é a que o professor lê em voz alta:"
+    kiyoshi "O dono da Taverna foi um vendedor de segredos que andou até a estrada acabar."
+    kiyoshi "Hoje ele só guarda."
+    cena preto com preto
+    para musica
+    "O que ficou:"
+    se laco_kenichi >= 4:
+        "Kenichi · irmão de vigília e de Tufona. Ele também quer ver onde a estrada acaba."
+    senao:
+        "Kenichi · um parceiro de treino que ainda está decidindo o que você é."
+    se laco_momo >= 3:
+        "Momo · um segredo guardado, uma bronca no lugar dela, um lencinho."
+    senao:
+        "Momo · uma dupla que escreve bonito e não te conhece direito."
+    se laco_shun >= 1:
+        "Shun · ele ainda conta da ponte de vidro. Agora pra você."
+    "Haru · toda vez que você for, ele vai atrás."
+    "Kaede · o susto, o sino, a louça do domingo."
+    "Zulado · ainda bica. Mas fica."
+    "Gen · um papel dobrado no bolso do peito."
+    espera 1
+    "Fim do Capítulo 1."
+    "Capítulo 2 · A primeira neve."
+    fim

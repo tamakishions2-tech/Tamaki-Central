@@ -172,6 +172,7 @@ dialog h2{margin:0 0 .6rem;font-size:1.25rem}
     <button id="eMais">Recuo +</button>
     <button id="eMenos">Recuo −</button>
     <button id="eArea">📐 Marcar área</button>
+    <button id="eProntos">📥 Prontos</button>
     <button id="eAjuda">Comandos</button>
     <button id="eBaixar">⬇ .txt</button>
     <button id="eAbrir">⬆ .txt</button>
@@ -287,6 +288,7 @@ var capitulo = 1</pre>
   <p class="nota" id="arInfo">Nenhuma área marcada ainda.</p>
   <div class="lin" style="margin-top:.7rem"><button id="arPor" class="pri" disabled>Pôr no roteiro</button><button id="arFechar">Fechar</button></div>
 </dialog>
+<dialog id="dProntos"><h2>📥 Roteiros prontos</h2><p class="nota">Roteiros guardados no GitHub da Central. Abrir troca o roteiro atual (ele fica guardado para voltar).</p><div id="prLista" style="margin:.6rem 0"></div><button id="prVoltar" style="width:100%;margin-bottom:.45rem" hidden>↩ Voltar ao roteiro de antes</button><button id="prFechar" style="width:100%">Fechar</button></dialog>
 <dialog id="dBib"><h2>📚 Da Biblioteca</h2><p class="nota">Toque numa imagem ou num áudio para trazer para as Artes.</p><div id="bibLista"></div><button id="bibFechar" style="width:100%">Fechar</button></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="fatal"></div>
@@ -678,6 +680,8 @@ function cobre(img,a){
 }
 function fundo(nome,a){
   if(!nome){cx.globalAlpha=a;cx.fillStyle='#11141d';cx.fillRect(0,0,W,H);cx.globalAlpha=1;return}
+  const liso={preto:'#000',branco:'#fff'}[norm(nome)];
+  if(liso&&!achaImg(nome)){cx.globalAlpha=a;cx.fillStyle=liso;cx.fillRect(0,0,W,H);cx.globalAlpha=1;return}
   const img=achaImg('fundo '+nome,nome);
   if(pronta(img))return cobre(img,a);
   cx.globalAlpha=a;cx.fillStyle='#262c3d';cx.fillRect(0,0,W,H);
@@ -991,6 +995,20 @@ $('#eVoltar').onclick=()=>{LS.set('nv_roteiro',ta.value);abreMenu()};
 $('#eBaixar').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ta.value],{type:'text/plain'}));a.download='roteiro.txt';document.body.appendChild(a);a.click();a.remove()};
 $('#eAbrir').onclick=()=>$('#eArquivo').click();
 $('#eArquivo').onchange=ev=>{const f=ev.target.files[0];if(!f)return;f.text().then(t=>{ta.value=t;LS.set('nv_roteiro',t);compila()});ev.target.value=''};
+
+/* ---------- roteiros prontos (pasta novel/ do repositório) ---------- */
+$('#eProntos').onclick=async()=>{
+  const box=$('#prLista');box.innerHTML='<p class="nota">Carregando…</p>';$('#prVoltar').hidden=!LS.get('nv_roteiro_antes',null);$('#dProntos').showModal();
+  try{const lista=await (await fetch('novel/indice.json?v='+Date.now().toString(36),{cache:'no-store'})).json();
+    box.innerHTML=lista.length?lista.map((r,i)=>'<div class="slot"><div><strong>'+esc(r.nome)+'</strong>'+(r.nota?'<span>'+esc(r.nota)+'</span>':'')+'</div><button data-i="'+i+'">Abrir</button></div>').join(''):'<p class="nota">Nenhum ainda.</p>';
+    box.onclick=async e=>{const b=e.target.closest('[data-i]');if(!b)return;const r=lista[+b.dataset.i];
+      if(!confirm('Abrir “'+r.nome+'”? O roteiro atual fica guardado em “Voltar ao roteiro de antes”.'))return;
+      const t=await (await fetch('novel/'+r.arquivo+'?v='+Date.now().toString(36),{cache:'no-store'})).text();
+      LS.set('nv_roteiro_antes',ta.value);ta.value=t;LS.set('nv_roteiro',t);$('#dProntos').close();if(compila())toast('Roteiro aberto. Toque em ▶ Testar.',3000)}}
+  catch(e){box.innerHTML='<p class="nota">Não consegui buscar os roteiros (sem internet?).</p>'}
+};
+$('#prVoltar').onclick=()=>{const v=LS.get('nv_roteiro_antes',null);if(v==null)return;const atual=ta.value;ta.value=v;LS.set('nv_roteiro',v);LS.set('nv_roteiro_antes',atual);$('#dProntos').close();compila();toast('Voltei ao roteiro de antes.')};
+$('#prFechar').onclick=()=>$('#dProntos').close();
 
 /* ---------- marcar área com o dedo ---------- */
 const acv=$('#areaCv'),acx=acv.getContext('2d');let marcaA=null,arrasto=null;
