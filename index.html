@@ -510,6 +510,15 @@ let avisoT = 0;
 function aviso(txt, desfazer){ $("#toastT").textContent = txt; $("#toastB").classList.toggle("hide", !desfazer); $("#toastB").onclick = () => { $("#toast").classList.add("hide"); desfazer(); };
   $("#toast").classList.remove("hide"); clearTimeout(avisoT); avisoT = setTimeout(() => $("#toast").classList.add("hide"), desfazer ? 7000 : 3000); }
 
+/* ---------- versão nova da Central: a página pode ficar aberta por horas no tablet; quando o GitHub muda, avisa ---------- */
+(() => { let base = null; const h = t => { let x = 0; for (let i = 0; i < t.length; i++) x = (x * 31 + t.charCodeAt(i)) | 0; return x; };
+  const confere = async () => { try { const r = await fetch("index.html?v=" + Date.now().toString(36), {cache: "no-store"}); if (!r.ok) return; const k = h(await r.text());
+    if (base == null) { base = k; return; } if (k == base || document.getElementById("versaoNova")) return;
+    const b = document.createElement("button"); b.id = "versaoNova"; b.textContent = "✨ A Central tem novidades · toque para atualizar";
+    b.style.cssText = "position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:999;border:0;border-radius:14px;padding:12px 18px;background:#f2b51d;color:#151515;font-weight:700;box-shadow:0 6px 20px #0008;max-width:92vw";
+    b.onclick = () => location.reload(); document.body.appendChild(b); } catch (e) {} };
+  confere(); document.addEventListener("visibilitychange", () => { if (!document.hidden) confere(); }); setInterval(confere, 5 * 60 * 1000); })();
+
 /* ---------- leitura: letra e espaços pensados para dislexia, também dentro das abas ---------- */
 const FONTES = {lexend: {css: "Lexend:wght@400;600;700", f: '"Lexend",system-ui,sans-serif'}, atkinson: {css: "Atkinson+Hyperlegible:wght@400;700", f: '"Atkinson Hyperlegible",system-ui,sans-serif'}, sistema: {css: "", f: 'system-ui,-apple-system,"Segoe UI",sans-serif'}};
 const ESP = {normal: [".01em", ".02em"], amplo: [".03em", ".1em"], extra: [".06em", ".18em"]};
