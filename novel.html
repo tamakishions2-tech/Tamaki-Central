@@ -1,0 +1,1133 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Novel · Tamaki Central</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ferro:#1c2130; --ferro2:#2a3142; --aco:#4a5468; --giz:#ecebe4; --giz2:#a9adb8;
+  --ouro:#e3b448; --corvo:#7a6ad8; --erro:#e0625a;
+  --t:"Chakra Petch",system-ui,sans-serif; --b:"Atkinson Hyperlegible",system-ui,sans-serif;
+  color-scheme:dark; box-sizing:border-box;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%;margin:0}
+body{position:relative;background:var(--ferro);color:var(--giz);font-family:var(--b);overflow:hidden;-webkit-tap-highlight-color:transparent}
+.tela{position:absolute;inset:0;display:none}
+.tela.on{display:flex}
+button,select,input{font:inherit;color:inherit}
+button{background:var(--ferro2);border:1px solid var(--aco);border-radius:8px;padding:.6em 1.1em;cursor:pointer;min-height:40px}
+button:active{transform:translateY(1px)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--ouro);outline-offset:2px}
+button:disabled{opacity:.45;cursor:default}
+button.pri{background:var(--ouro);color:#1c1a12;border-color:var(--ouro);font-weight:700}
+button.on{background:var(--ouro);color:#1c1a12;border-color:var(--ouro)}
+h1,h2,h3{font-family:var(--t)}
+.nota{color:var(--giz2);font-size:.9rem;max-width:46ch;margin:0}
+input[type=text],input[type=password],input[type=number],select{padding:.6em;border-radius:8px;border:1px solid var(--aco);background:var(--ferro2)}
+
+/* trava e menu */
+#trava,#menu{flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:1.5rem;text-align:center;overflow:auto;
+  background:radial-gradient(120% 90% at 20% 10%,#2b3350 0%,var(--ferro) 60%)}
+.marca{font-family:var(--t);font-weight:700;font-size:clamp(2.4rem,10vw,5.5rem);line-height:.95;margin:0;max-width:16ch}
+.fita{display:inline-block;background:var(--ouro);color:#1c1a12;font-family:var(--t);font-weight:700;padding:.2em 1em;
+  clip-path:polygon(4% 0,100% 0,96% 100%,0 100%);transform:rotate(-3deg)}
+.col{display:flex;flex-direction:column;gap:.55rem;width:min(84vw,320px)}
+.lin{display:flex;gap:.5rem;flex-wrap:wrap}
+.lin>button{flex:1}
+
+/* jogo */
+#jogo{flex-direction:column;background:#000}
+#palco{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;user-select:none;-webkit-user-select:none}
+#cv{display:block;max-width:100%;max-height:100%;width:auto;height:auto;touch-action:manipulation}
+#hud{position:absolute;top:.5rem;left:.5rem;display:flex;gap:.35rem;flex-wrap:wrap;pointer-events:none;max-width:46%}
+.chip{background:rgba(18,22,34,.85);border:1px solid var(--aco);border-radius:999px;padding:.15em .7em;font-size:.82rem}
+.chip b{font-family:var(--t);color:var(--ouro);margin-right:.35em}
+#barra{position:absolute;top:.5rem;right:.5rem;display:flex;gap:.3rem;flex-wrap:wrap;justify-content:flex-end;max-width:62%}
+#barra button{min-height:36px;min-width:36px;padding:.25em .55em;font-size:.95rem;background:rgba(18,22,34,.82)}
+#barra button.on{background:var(--ouro);color:#1c1a12}
+#barra .rec{color:#fff;background:#b3261e;border-color:#b3261e;font-family:var(--t)}
+#palco.limpo #barra>*:not(#bOlho),#palco.limpo #hud{display:none}
+.aviso{position:absolute;left:3%;right:3%;top:3.4rem;background:#3a1f22;border:1px solid var(--erro);color:#ffd9d6;padding:.8em 1em;border-radius:6px;display:none;z-index:5}
+.aviso button{margin-top:.6em}
+
+/* gestão */
+#gestao{flex-direction:column;overflow:auto}
+.gTopo{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.2rem;border-bottom:1px solid var(--aco);position:sticky;top:0;background:var(--ferro);z-index:1}
+.gTopo h2{margin:0;font-size:1.5rem}
+#gRec{display:flex;gap:1.6rem;flex-wrap:wrap;padding:1.1rem 1.2rem}
+.rec b{display:block;font-family:var(--t);font-size:2rem;color:var(--ouro);line-height:1}
+.rec span{color:var(--giz2);font-size:.9rem}
+#gSalas{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.7rem;padding:0 1.2rem 1.4rem}
+.sala{border:1px solid var(--aco);border-radius:6px;padding:.9rem;display:flex;flex-direction:column;justify-content:space-between;gap:.8rem;background:var(--ferro2)}
+.sala.fechada{background:repeating-linear-gradient(135deg,#232939 0 14px,#262d3e 14px 28px)}
+.sala strong{display:block;font-family:var(--t);font-size:1.1rem}
+.sala span{color:var(--giz2);font-size:.9rem}
+
+/* editor */
+#editor,#artes{flex-direction:column}
+.eBarra{display:flex;gap:.35rem;padding:.5rem;border-bottom:1px solid var(--aco);background:var(--ferro2);overflow-x:auto;scrollbar-width:none;flex:none}
+.eBarra::-webkit-scrollbar{display:none}
+.eBarra button{padding:.35em .8em;font-size:.88rem;white-space:nowrap;flex:none}
+.eBarra.mold{background:#232838}
+.eBarra.mold button{background:none;border-style:dashed;color:var(--giz2)}
+#roteiro{flex:1;min-height:0;width:100%;resize:none;border:0;background:#161a26;color:var(--giz);font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;padding:1rem;tab-size:4;white-space:pre;overflow:auto}
+#edErro{display:none;background:#3a1f22;color:#ffd9d6;padding:.6rem 1rem;border-top:1px solid var(--erro)}
+#ajuda{display:none;max-height:52%;overflow:auto;padding:1rem 1.2rem;background:var(--ferro2);border-top:1px solid var(--aco);font-size:.92rem;line-height:1.5}
+#ajuda h3{margin:.9em 0 .3em;font-size:1rem;color:var(--ouro)}
+#ajuda h3:first-child{margin-top:0}
+#ajuda pre{background:#161a26;padding:.6em .8em;border-radius:6px;overflow-x:auto;margin:.3em 0}
+
+/* artes */
+#aLista{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem;padding:.8rem;align-content:start}
+.arte{border:1px solid var(--aco);border-radius:8px;background:var(--ferro2);overflow:hidden;display:flex;flex-direction:column}
+.arte .th{aspect-ratio:4/3;background:#11141d center/contain no-repeat;display:flex;align-items:center;justify-content:center;font-size:2rem}
+.arte input{border:0;border-top:1px solid var(--aco);border-radius:0;background:none;padding:.5em .6em;width:100%;font-size:.9rem}
+.arte .bts{display:flex}
+.arte .bts button{flex:1;border:0;border-top:1px solid var(--aco);border-radius:0;min-height:36px;padding:.2em;background:none;font-size:.85rem}
+.vazio{grid-column:1/-1;color:var(--giz2);text-align:center;padding:2rem 1rem;line-height:1.6}
+
+/* janelas */
+dialog{background:var(--ferro2);color:var(--giz);border:1px solid var(--aco);border-radius:10px;padding:1.1rem;width:min(94vw,480px);max-height:88vh;overflow:auto}
+dialog::backdrop{background:rgba(8,10,16,.7)}
+dialog h2{margin:0 0 .6rem;font-size:1.25rem}
+.slot{display:flex;align-items:center;justify-content:space-between;gap:.8rem;border:1px solid var(--aco);border-radius:6px;padding:.6rem .8rem;margin-bottom:.45rem}
+.slot span{font-size:.85rem;color:var(--giz2);display:block}
+#logLista p{margin:.2rem 0 .7rem;line-height:1.5}
+#logLista b{font-family:var(--t);display:block;font-size:.88rem}
+.campo{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem}
+.campo label{font-size:.9rem;color:var(--giz2)}
+.chk{display:flex;gap:.5rem;align-items:center;margin-bottom:.7rem}
+#areaWrap{position:relative;background:#000;margin:.5rem 0;touch-action:none;user-select:none}
+#areaCv{display:block;max-width:100%;max-height:52vh;width:auto;height:auto;margin:0 auto}
+#bibLista{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.5rem;margin:.5rem 0}
+#bibLista button{padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+#bibLista .th{aspect-ratio:1;width:100%;background:#11141d center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:1.8rem}
+#bibLista small{padding:.3em;font-size:.75rem;word-break:break-word}
+#toast{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);background:#11141d;border:1px solid var(--aco);border-radius:10px;padding:.6rem 1rem;z-index:60;display:none;max-width:92vw;text-align:center}
+#fatal{position:fixed;left:1rem;right:1rem;bottom:1rem;background:#3a1f22;border:1px solid var(--erro);color:#ffd9d6;padding:.8rem 1rem;border-radius:6px;display:none;z-index:99;white-space:pre-wrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<section id="trava" class="tela">
+  <h1 class="marca">NOVEL</h1>
+  <span class="fita">engine</span>
+  <p id="lockTxt" class="nota"></p>
+  <div class="col">
+    <input id="senha" type="password" autocomplete="current-password" aria-label="Senha">
+    <button id="lockBtn" class="pri">Entrar</button>
+  </div>
+  <p id="lockErro" class="nota" style="color:var(--erro)"></p>
+</section>
+
+<section id="menu" class="tela">
+  <h1 class="marca" id="mTitulo">Visual Novel</h1>
+  <span class="fita">novel</span>
+  <div class="col" style="margin-top:1.2rem">
+    <button id="mContinuar" class="pri">Continuar</button>
+    <button id="mNovo">Novo jogo</button>
+    <button id="mCarregar">Carregar</button>
+    <button id="mGravar">🎥 Gravar vídeo do começo</button>
+    <div class="lin"><button id="mEditor">✎ Roteiro</button><button id="mArtes">🖼 Artes</button></div>
+    <button id="mAjustes">⚙ Ajustes</button>
+  </div>
+  <p id="menuErro" class="nota" style="color:var(--erro)"></p>
+</section>
+
+<section id="jogo" class="tela">
+  <div id="palco">
+    <canvas id="cv" width="1280" height="720" aria-label="Cena da história. Toque para avançar."></canvas>
+    <div id="hud"></div>
+    <div id="barra">
+      <button id="bVoltar" title="Voltar uma fala" aria-label="Voltar uma fala">↶</button>
+      <button id="bLog" title="Histórico" aria-label="Histórico">📜</button>
+      <button id="bAuto" title="Automático" aria-label="Automático">▶</button>
+      <button id="bPular" title="Pular o que já leu" aria-label="Pular o que já leu">⏩</button>
+      <button id="bLupa" title="Mostrar o que dá para tocar" aria-label="Mostrar o que dá para tocar" hidden>🔍</button>
+      <button id="bGestao" title="Gestão" aria-label="Gestão" hidden>🏰</button>
+      <button id="bGravar" title="Gravar vídeo" aria-label="Gravar vídeo">⏺</button>
+      <button id="bOlho" title="Esconder os botões" aria-label="Esconder os botões">👁</button>
+      <button id="bSalvar" title="Salvar" aria-label="Salvar">💾</button>
+      <button id="bMenu" title="Menu" aria-label="Menu">☰</button>
+    </div>
+    <div id="erroJogo" class="aviso"><div id="erroJogoTxt"></div><button id="erroEditor">Abrir no roteiro</button></div>
+  </div>
+</section>
+
+<section id="gestao" class="tela">
+  <div class="gTopo"><h2>Gestão</h2><button id="gVoltar" class="pri">Voltar à história</button></div>
+  <div id="gRec"></div>
+  <div id="gSalas"></div>
+</section>
+
+<section id="editor" class="tela">
+  <div class="eBarra">
+    <button id="eTestar" class="pri">▶ Testar</button>
+    <button id="eDaqui">▶ Daqui</button>
+    <button id="eMais">Recuo +</button>
+    <button id="eMenos">Recuo −</button>
+    <button id="eArea">📐 Marcar área</button>
+    <button id="eAjuda">Comandos</button>
+    <button id="eBaixar">⬇ .txt</button>
+    <button id="eAbrir">⬆ .txt</button>
+    <button id="eVoltar">Menu</button>
+    <input id="eArquivo" type="file" accept=".txt,text/plain" hidden>
+  </div>
+  <div class="eBarra mold" id="moldes">
+    <button data-m="fala">＋ Fala</button>
+    <button data-m="narra">＋ Narração</button>
+    <button data-m="cena">＋ Cena</button>
+    <button data-m="mostra">＋ Personagem</button>
+    <button data-m="menu">＋ Escolhas</button>
+    <button data-m="explorar">＋ Explorar</button>
+    <button data-m="se">＋ Se</button>
+    <button data-m="label">＋ Label</button>
+    <button data-m="pula">＋ Pular</button>
+    <button data-m="efeito">＋ Efeito</button>
+  </div>
+  <textarea id="roteiro" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Roteiro"></textarea>
+  <div id="edErro"></div>
+  <div id="ajuda">
+    <h3>Artes (sem caminho de arquivo)</h3>
+    <p class="nota">Em 🖼 Artes, envie as imagens e os áudios do tablet. O nome da arte é o que você usa no roteiro: fundo <code>ninho</code> → <code>cena ninho</code>; personagem <code>sato feliz</code> → <code>mostra sato feliz</code>; música <code>tema</code> → <code>musica tema</code>.</p>
+    <h3>Definições (sem recuo)</h3>
+<pre>titulo "Corvos de Ferro"
+personagem sato "Sato" #d9645a
+item chave "Chave do ginásio"
+recurso grana 40 "Grana"
+sala oficina "Oficina" custo grana 30 renda grana 2
+var capitulo = 1</pre>
+    <h3>História</h3>
+<pre>label inicio:
+    cena ninho com fade
+    mostra sato feliz esquerda
+    sato "Fala. Você tem [grana] de grana."
+    "Narração sem nome."
+    voz fala_sato_01
+    sato "A próxima fala toca esse áudio."
+    esconde sato
+    musica tema
+    som porta
+    para musica
+    jump outro_label
+    chama outro_label
+    fim</pre>
+    <h3>Point-and-click</h3>
+<pre>    explorar:
+        "Porta" 70 30 15 50:
+            "Trancada."
+        "Gaveta" 10 60 20 15 se not tem chave:
+            pega chave
+            "Achei uma chave!"
+        "Sair" 0 85 15 15:
+            sai</pre>
+    <p class="nota">Os números são x, y, largura e altura em % da tela. Use 📐 Marcar área para desenhar com o dedo. Depois de cada área a cena volta para a investigação, até um <code>sai</code> ou um <code>jump</code>. Áreas já vistas ganham ✓.</p>
+    <h3>Câmera e efeitos</h3>
+<pre>    cena beco com preto      (fade, preto, flash, nada)
+    zoom 1.5 30 40           (aproxima no ponto x y)
+    zoom 1.5 30 40 3         (em 3 segundos)
+    zoom 1                   (volta)
+    treme                    (ou: treme forte)
+    flash                    (ou: flash vermelho)
+    espera 1.5</pre>
+    <h3>Escolhas e condições</h3>
+<pre>    menu:
+        "Ajudar o Sato":
+            $ respeito += 1
+        "Só com grana" se grana >= 50:
+            $ grana -= 50
+    se respeito >= 3 and tem chave:
+        sato "..."
+    senao se respeito >= 1:
+        sato "..."
+    senao:
+        sato "..."</pre>
+    <h3>Gestão</h3>
+<pre>    gestao</pre>
+    <p class="nota">Abre o painel de salas. Cada sala vira a variável <code>sala_oficina</code> com o nível dela. As salas rendem a cada 5 segundos, inclusive com o jogo fechado (até 2 horas).</p>
+    <p class="nota">Posições: esquerda, centro, direita. Recuo é sempre 4 espaços; o Enter já copia o recuo.</p>
+  </div>
+</section>
+
+<section id="artes" class="tela">
+  <div class="eBarra">
+    <button id="aEnviar" class="pri">＋ Do aparelho</button>
+    <button id="aBib">📚 Da Biblioteca</button>
+    <button id="aVoltar">Menu</button>
+    <input id="aArquivo" type="file" accept="image/*,audio/*" multiple hidden>
+  </div>
+  <p class="nota" style="padding:.6rem .8rem 0;max-width:none">O nome de cada arte é o que vai no roteiro. Fundos: o nome da cena (<b>ninho</b>). Personagens: id + expressão (<b>sato feliz</b>) ou só o id (<b>sato</b>). Arquivos chamados <b>sato_feliz.png</b> já entram como “sato feliz”.</p>
+  <div id="aLista"></div>
+</section>
+
+<dialog id="dSlots"><h2 id="sTit"></h2><div id="sLista"></div><button id="sFechar" style="width:100%">Fechar</button></dialog>
+<dialog id="dLog"><h2>Histórico</h2><div id="logLista"></div><button id="logFechar" style="width:100%">Fechar</button></dialog>
+<dialog id="dCfg">
+  <h2>Ajustes</h2>
+  <div class="campo"><label for="cFmt">Formato da tela</label><select id="cFmt"><option value="16:9">16:9 deitado (YouTube, tablet)</option><option value="9:16">9:16 em pé (Shorts, Reels)</option></select></div>
+  <div class="campo"><label for="cVel">Velocidade do texto</label><select id="cVel"><option value="40">Devagar</option><option value="22">Normal</option><option value="10">Rápida</option><option value="0">Na hora</option></select></div>
+  <div class="campo"><label for="cAuto">Pausa no automático (e na gravação), em segundos</label><input id="cAuto" type="number" min="0.3" max="8" step="0.1"></div>
+  <div class="campo"><label for="cMus">Volume da música</label><input id="cMus" type="range" min="0" max="1" step="0.05"></div>
+  <div class="campo"><label for="cSom">Volume de voz e sons</label><input id="cSom" type="range" min="0" max="1" step="0.05"></div>
+  <label class="chk"><input type="checkbox" id="cTrava"> Pedir senha ao abrir</label>
+  <div class="lin" style="margin-bottom:.6rem"><button id="cSenha">Trocar a senha</button><button id="cLidas">Esquecer o que já li</button></div>
+  <button id="cFechar" class="pri" style="width:100%">Pronto</button>
+</dialog>
+<dialog id="dArea">
+  <h2>📐 Marcar área</h2>
+  <p class="nota">Escolha o fundo e arraste o dedo sobre o que vai dar para tocar.</p>
+  <div class="campo" style="margin:.6rem 0 0"><select id="arFundo" aria-label="Fundo"></select></div>
+  <div id="areaWrap"><canvas id="areaCv"></canvas></div>
+  <div class="campo"><label for="arNome">Nome da área</label><input id="arNome" type="text" placeholder="Porta, Gaveta, Janela…"></div>
+  <p class="nota" id="arInfo">Nenhuma área marcada ainda.</p>
+  <div class="lin" style="margin-top:.7rem"><button id="arPor" class="pri" disabled>Pôr no roteiro</button><button id="arFechar">Fechar</button></div>
+</dialog>
+<dialog id="dBib"><h2>📚 Da Biblioteca</h2><p class="nota">Toque numa imagem ou num áudio para trazer para as Artes.</p><div id="bibLista"></div><button id="bibFechar" style="width:100%">Fechar</button></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="fatal"></div>
+
+<script type="text/plain" id="demo"># Roteiro de exemplo. Pode apagar tudo e escrever a sua história.
+# Envie as artes em 🖼 Artes com os mesmos nomes (ninho, sato, maya…)
+# e elas aparecem sozinhas. Sem arte, aparece um molde colorido.
+
+titulo "Corvos de Ferro"
+
+personagem sato "Sato" #d9645a
+personagem maya "Maya" #4f9cc4
+
+item chave "Chave do ginásio"
+recurso grana 40 "Grana"
+sala oficina "Oficina" custo grana 30 renda grana 2
+
+label inicio:
+    cena ninho com preto
+    mostra sato esquerda
+    sato "Bem-vindo ao Ninho. Ainda tá tudo fechado."
+    mostra maya direita
+    maya "Alguém perdeu a chave do ginásio. De novo."
+    zoom 1.3 25 45
+    sato "Não olha pra mim."
+    zoom 1
+    maya "Procura pela sala. Toca no que achar estranho."
+    jump procurar
+
+label procurar:
+    esconde sato
+    esconde maya
+    explorar:
+        "Armário" 8 30 22 45:
+            "Só uniforme fedido."
+        "Mochila" 62 62 18 20 se not tem chave:
+            pega chave
+            flash
+            "Achei a chave do ginásio!"
+        "Porta" 40 20 18 55:
+            se tem chave:
+                "A chave serve."
+                sai
+            senao:
+                treme
+                "Trancada."
+
+label depois:
+    cena ginasio com fade
+    mostra maya centro
+    maya "Agora sim. Temos [grana] de grana pra arrumar isso aqui."
+    menu:
+        "Montar a oficina":
+            gestao
+        "Deixar pra depois":
+            maya "Tá bom, mas a grana não vai crescer sozinha."
+    se sala_oficina >= 1:
+        maya "A oficina ficou bonita."
+    "Fim do exemplo."
+    fim
+</script>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=x=>Math.floor(+x||0).toLocaleString('pt-BR');
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+          set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+function fatal(msg){const e=$('#fatal');e.textContent=msg;e.style.display='block';setTimeout(()=>e.style.display='none',8000)}
+window.addEventListener('error',ev=>fatal('Erro: '+ev.message));
+let tToast;function toast(msg,ms){const t=$('#toast');t.textContent=msg;t.style.display='block';clearTimeout(tToast);tToast=setTimeout(()=>t.style.display='none',ms||2600)}
+function tela(id){document.querySelectorAll('.tela').forEach(t=>t.classList.toggle('on',t.id===id));G.tela=id}
+function hash(str){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+  return (4294967296*(2097151&h2)+(h1>>>0)).toString(36)}
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\.[a-z0-9]{2,5}$/,'').replace(/[_\-]+/g,' ').replace(/\s+/g,' ').trim();
+
+/* ---------- ajustes ---------- */
+const CFG=Object.assign({formato:'16:9',vel:22,auto:1.2,mus:.6,som:.9},LS.get('nv_cfg',{}));
+if(CFG.trava===undefined)CFG.trava=!!LS.get('ne_senha',null); // a senha da engine antiga continua valendo
+const salvaCfg=()=>LS.set('nv_cfg',CFG);
+
+class ErroScript extends Error{constructor(n,msg){super(msg);this.linha=n}}
+const POS={esquerda:22,left:22,centro:50,meio:50,center:50,direita:78,right:78};
+const G={prog:null,st:null,hash:'',tela:'',modo:null,fala:null,alvos:[],areas:[],auto:false,skip:false,lupa:false,hist:[],rec:null,gestaoManual:false};
+const V={trans:null,cam:null,shake:null,flash:null,entra:{},pulso:0};
+
+/* ---------- leitor do roteiro ---------- */
+const NUM='(-?\\d+(?:\\.\\d+)?)';
+function parse(src){
+  const lines=[];
+  src.replace(/\r/g,'').replace(/\t/g,'    ').split('\n').forEach((t,i)=>{
+    const tr=t.trim(); if(!tr||tr.startsWith('#'))return;
+    lines.push({ind:t.match(/^ */)[0].length,txt:tr,n:i+1});
+  });
+  const P={blocks:[],labels:{},chars:{},imgs:{},recursos:[],salas:[],vars:{},itens:{},titulo:''};
+  let pos=0;
+  const reArea=new RegExp('^"([^"]*)"\\s+'+NUM+'\\s+'+NUM+'\\s+'+NUM+'\\s+'+NUM+'(?:\\s+(?:se|if)\\s+(.+))?$');
+  const reZoom=new RegExp('^(?:zoom|camera|câmera)\\s+'+NUM+'(?:\\s+'+NUM+'\\s+'+NUM+')?(?:\\s+'+NUM+'s?)?$');
+
+  function linha(L){
+    const t=L.txt,n=L.n,D={t:'def',def:true,n};let m;
+    const tem=t.endsWith(':'),corpo=tem?t.slice(0,-1).trim():t;
+    // definições
+    if(m=t.match(/^(?:titulo|título)\s+"([^"]+)"$/)){P.titulo=m[1];return D}
+    if(m=t.match(/^personagem\s+(\w+)\s+"([^"]+)"(?:\s+(#[0-9a-fA-F]{3,8}))?$/)){P.chars[m[1]]={nome:m[2],cor:m[3]||null};return D}
+    if(m=t.match(/^imagem\s+(\w+(?:\s+\w+)?)\s+"([^"]+)"$/)){P.imgs[norm(m[1])]=m[2];return D}
+    if(m=t.match(/^item\s+(\w+)(?:\s+"([^"]+)")?$/)){P.itens[m[1]]=m[2]||m[1];return D}
+    if(m=t.match(/^recurso\s+(\w+)\s+(-?\d+(?:\.\d+)?)(?:\s+"([^"]+)")?$/)){P.recursos.push({id:m[1],nome:m[3]||m[1]});P.vars[m[1]]=+m[2];return D}
+    if(m=t.match(/^sala\s+(\w+)\s+"([^"]+)"\s+custo\s+(\w+)\s+(\d+(?:\.\d+)?)\s+renda\s+(\w+)\s+(\d+(?:\.\d+)?)$/)){
+      P.salas.push({id:m[1],nome:m[2],custoRec:m[3],custo:+m[4],rendaRec:m[5],renda:+m[6],n});P.vars['sala_'+m[1]]=0;return D}
+    if(m=t.match(/^(?:var|default)\s+(\w+)\s*=\s*(.+)$/)){
+      try{P.vars[m[1]]=Function('return ('+jsExpr(m[2])+')')()}catch(e){throw new ErroScript(n,'Valor inválido para "'+m[1]+'".')}
+      return D}
+    // blocos
+    if(m=corpo.match(/^label\s+(\w+)$/)){if(!tem)throw new ErroScript(n,'Faltou ":" no fim do label.');return{t:'label',name:m[1],n}}
+    if(corpo==='menu'){if(!tem)throw new ErroScript(n,'Faltou ":" depois de menu.');return{t:'menu',n}}
+    if(corpo==='explorar'){if(!tem)throw new ErroScript(n,'Faltou ":" depois de explorar.');return{t:'explorar',n}}
+    if(m=corpo.match(/^(?:senao se|senão se|elif)\s+(.+)$/)){if(!tem)throw new ErroScript(n,'Faltou ":" no fim.');return{t:'senaose',cond:m[1],n}}
+    if(/^(?:senao|senão|else)$/.test(corpo)){if(!tem)throw new ErroScript(n,'Faltou ":" depois de senao.');return{t:'senao',n}}
+    if(m=corpo.match(/^(?:se|if)\s+(.+)$/)){if(!tem)throw new ErroScript(n,'Faltou ":" no fim do se.');return{t:'se',cond:m[1],n}}
+    if(tem&&(m=corpo.match(reArea)))return{t:'area',txt:m[1],x:+m[2],y:+m[3],w:+m[4],h:+m[5],cond:m[6]||null,n};
+    if(tem&&(m=corpo.match(/^"([^"]*)"(?:\s+(?:se|if)\s+(.+))?$/)))return{t:'opcao',txt:m[1],cond:m[2]||null,n};
+    if(tem)throw new ErroScript(n,'Não reconheci este bloco: '+t);
+    // comandos
+    if(m=t.match(/^\$\s*(.+)$/))return{t:'code',code:m[1],n};
+    if(m=t.match(/^(?:jump|pula)\s+(\w+)$/))return{t:'jump',to:m[1],n};
+    if(m=t.match(/^(?:call|chama)\s+(\w+)$/))return{t:'call',to:m[1],n};
+    if(/^(?:return|fim)$/.test(t))return{t:'fim',n};
+    if(/^sai$/.test(t))return{t:'sai',n};
+    if(m=t.match(/^(?:cena|scene)\s+(.+?)(?:\s+(?:com|with)\s+(fade|dissolve|preto|flash|nada))?$/))return{t:'cena',img:m[1].trim(),tr:m[2]==='dissolve'?'fade':(m[2]||'fade'),n};
+    if(m=t.match(/^(?:mostra|show)\s+(.+)$/)){
+      const tk=m[1].split(/\s+/).filter(x=>x!=='at'&&x!=='em');const who=tk.shift();let p=null;
+      if(tk.length&&POS[tk[tk.length-1]]!=null)p=tk.pop();
+      return{t:'mostra',who,expr:tk.join(' ')||null,pos:p,n}}
+    if(m=t.match(/^(?:esconde|hide)\s+(\w+)$/))return{t:'esconde',who:m[1],n};
+    if(m=t.match(/^(?:musica|música|play music)\s+(?:"([^"]+)"|(.+))$/))return{t:'musica',src:m[1]||m[2].trim(),n};
+    if(m=t.match(/^(?:som|play sound)\s+(?:"([^"]+)"|(.+))$/))return{t:'som',src:m[1]||m[2].trim(),n};
+    if(m=t.match(/^(?:voz|voice)\s+(?:"([^"]+)"|(.+))$/))return{t:'voz',src:m[1]||m[2].trim(),n};
+    if(/^(?:para musica|para música|stop music)$/.test(t))return{t:'paramusica',n};
+    if(/^(?:gestao|gestão)$/.test(t))return{t:'gestao',n};
+    if(m=t.match(/^(?:pega|ganha)\s+(\w+)$/))return{t:'pega',it:m[1],n};
+    if(m=t.match(/^(?:larga|perde|usa)\s+(\w+)$/))return{t:'larga',it:m[1],n};
+    if(m=t.match(/^espera\s+(\d+(?:\.\d+)?)s?$/))return{t:'espera',s:+m[1],n};
+    if(m=t.match(/^treme(?:\s+(forte|fraco))?$/))return{t:'treme',f:m[1]==='forte'?26:m[1]==='fraco'?6:14,n};
+    if(m=t.match(/^flash(?:\s+(branco|vermelho|preto|ouro))?$/))return{t:'flash',c:{vermelho:'#d02828',preto:'#000',ouro:'#e3b448'}[m[1]]||'#fff',n};
+    if(m=t.match(reZoom))return{t:'zoom',z:Math.max(1,+m[1]),x:m[2]!=null?+m[2]:50,y:m[3]!=null?+m[3]:50,d:m[4]!=null?+m[4]:1.2,n};
+    // falas
+    if(m=t.match(/^(\w+)\s+"(.*)"$/))return{t:'fala',who:m[1],txt:m[2],n};
+    if(m=t.match(/^"(.*)"$/))return{t:'fala',who:null,txt:m[1],n};
+    throw new ErroScript(n,'Não entendi esta linha: '+t);
+  }
+
+  function bloco(ind,ctx){
+    const arr=[],id=P.blocks.length;P.blocks.push(arr);
+    while(pos<lines.length){
+      const L=lines[pos];
+      if(L.ind<ind)break;
+      if(L.ind>ind)throw new ErroScript(L.n,'Recuo a mais nesta linha. Confira os espaços do começo.');
+      pos++;
+      const node=linha(L);
+      if(ctx==='menu'&&node.t!=='opcao')throw new ErroScript(L.n,'Dentro de "menu:" só vão opções, assim: "Texto da opção":');
+      if(ctx==='explorar'&&node.t!=='area')throw new ErroScript(L.n,'Dentro de "explorar:" só vão áreas, assim: "Porta" 70 30 15 50:');
+      if(node.t==='opcao'&&ctx!=='menu')throw new ErroScript(L.n,'Esta opção está fora de um "menu:".');
+      if(node.t==='area'&&ctx!=='explorar')throw new ErroScript(L.n,'Esta área está fora de um "explorar:".');
+      if(node.t==='label'&&ctx!=='raiz')throw new ErroScript(L.n,'"label" fica sem recuo, fora de outros blocos.');
+      if(L.txt.endsWith(':')){
+        const nx=lines[pos];
+        if(!nx||nx.ind<=ind)throw new ErroScript(L.n,'Depois de ":" a linha seguinte precisa de recuo (4 espaços a mais).');
+        node.kids=bloco(nx.ind,node.t);
+      }
+      if(node.t==='senao'||node.t==='senaose'){
+        let p=arr[arr.length-1];
+        if(!p||p.t!=='se')throw new ErroScript(L.n,'"senao" precisa vir logo depois de um bloco "se".');
+        while(p.elsIf)p=p.elsIf;
+        if(p.els!=null)throw new ErroScript(L.n,'Já existe um "senao" final antes deste.');
+        if(node.t==='senao')p.els=node.kids;else p.elsIf={t:'se',cond:node.cond,kids:node.kids,n:L.n};
+        continue;
+      }
+      if(ctx==='raiz'){
+        if(node.t==='label'){
+          if(P.labels[node.name]!=null)throw new ErroScript(L.n,'Já existe um label "'+node.name+'".');
+          P.labels[node.name]=node.kids;P.ordem=(P.ordem||[]).concat(node.name);continue}
+        if(!node.def)throw new ErroScript(L.n,'Este comando precisa ficar dentro de um label.');
+      }
+      arr.push(node);
+    }
+    return id;
+  }
+  bloco(0,'raiz');
+  if(P.labels.inicio==null)throw new ErroScript(0,'Falta o "label inicio:". É por ele que o jogo começa.');
+  const rec=new Set(P.recursos.map(r=>r.id));
+  P.salas.forEach(s=>{[s.custoRec,s.rendaRec].forEach(r=>{if(!rec.has(r))throw new ErroScript(s.n,'O recurso "'+r+'" não foi definido. Use: recurso '+r+' 0 "Nome"')})});
+  P.blocks.forEach(b=>b.forEach(nd=>{
+    if((nd.t==='jump'||nd.t==='call')&&P.labels[nd.to]==null)throw new ErroScript(nd.n,'O label "'+nd.to+'" não existe.');
+    if(nd.t==='fala'&&nd.who&&!P.chars[nd.who])throw new ErroScript(nd.n,'Personagem "'+nd.who+'" não definido. Use: personagem '+nd.who+' "Nome"');
+    if((nd.t==='pega'||nd.t==='larga')&&!P.itens[nd.it])throw new ErroScript(nd.n,'Item "'+nd.it+'" não definido. Use: item '+nd.it+' "Nome"');
+  }));
+  // labels em sequência: quando um label termina sem jump, segue para o próximo (como no Ren'Py)
+  P.ordem.forEach((l,i)=>{const nx=P.ordem[i+1];if(nx)P.blocks[P.labels[l]].push({t:'jump',to:nx,auto:true,n:0})});
+  return P;
+}
+
+/* ---------- expressões ---------- */
+function jsExpr(e){return e.replace(/\btem\s+(\w+)/g,'__tem("$1")').replace(/\band\b/g,'&&').replace(/\bor\b/g,'||').replace(/\bnot\b/g,'!').replace(/\bTrue\b/g,'true').replace(/\bFalse\b/g,'false')}
+function avalia(expr,n){
+  try{return Function('v','__tem','with(v){return ('+jsExpr(expr)+')}')(G.st.vars,x=>G.st.itens.includes(x))}
+  catch(e){const nm=(e.message.match(/^(\w+) is not defined/)||[])[1];
+    throw new ErroScript(n,nm?'A variável "'+nm+'" não existe. Crie com: var '+nm+' = 0':'Não consegui calcular "'+expr+'".')}
+}
+function execCode(node){
+  const m=node.code.match(/^(\w+)\s*([+\-*\/]?=)(?!=)\s*(.+)$/);
+  if(!m){avalia(node.code,node.n);return}
+  const v=G.st.vars,k=m[1],op=m[2],val=avalia(m[3],node.n),cur=v[k]??0;
+  v[k]=op==='='?val:op==='+='?cur+val:op==='-='?cur-val:op==='*='?cur*val:cur/val;
+}
+function interp(txt){return txt.replace(/\[(\w+)\]/g,(a,k)=>{if(!(k in G.st.vars))return a;const x=G.st.vars[k];return typeof x==='number'?fmt(x):String(x)})}
+
+/* ---------- artes (IndexedDB "tamaki-novel") ---------- */
+const ADB={
+  abrir(){return new Promise((ok,no)=>{const r=indexedDB.open('tamaki-novel',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('artes'))r.result.createObjectStore('artes',{keyPath:'nome'})};r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})},
+  async tx(modo,fn){const db=await this.abrir();try{return await new Promise((ok,no)=>{const t=db.transaction('artes',modo),q=fn(t.objectStore('artes'));t.oncomplete=()=>ok(q&&q.result);t.onerror=()=>no(t.error)})}finally{db.close()}},
+  todos(){return this.tx('readonly',s=>s.getAll())},
+  por(it){return this.tx('readwrite',s=>s.put(it))},
+  tira(nome){return this.tx('readwrite',s=>s.delete(nome))}
+};
+const ART={};      // nome normalizado -> {tipo,url,img}
+const CACHE={};    // imagens vindas de caminho (comando imagem "…")
+async function carregaArtes(){
+  for(const k in ART){URL.revokeObjectURL(ART[k].url);delete ART[k]}
+  let lista=[];try{lista=await ADB.todos()}catch(e){}
+  for(const a of lista){const url=URL.createObjectURL(a.blob),o={tipo:a.tipo,url,nome:a.nome};
+    if(a.tipo==='imagem'){o.img=new Image();o.img.onload=()=>marca();o.img.src=url}
+    ART[norm(a.nome)]=o}
+  return lista;
+}
+function imgCaminho(src){if(!CACHE[src]){const i=new Image();i.onload=()=>marca();i.src=src;CACHE[src]=i}return CACHE[src]}
+function achaImg(...nomes){
+  // primeiro as artes enviadas pelo tablet, depois os caminhos do comando imagem
+  for(const n of nomes){if(!n)continue;const k=norm(n);if(ART[k]&&ART[k].img)return ART[k].img}
+  for(const n of nomes){if(!n)continue;const k=norm(n);if(G.prog&&G.prog.imgs[k])return imgCaminho(G.prog.imgs[k])}
+  return null;
+}
+function achaAudio(nome){const a=ART[norm(nome)];return a&&a.tipo==='audio'?a.url:nome}
+const pronta=i=>i&&i.complete&&i.naturalWidth>0;
+
+/* ---------- execução ---------- */
+const topo=()=>G.st.stack[G.st.stack.length-1];
+function nodeAtual(){const f=topo();if(!f)return null;const b=G.prog.blocks[f.b];return b?b[f.ip]:null}
+function novoEstado(label){
+  return{stack:[{b:G.prog.labels[label||'inicio'],ip:0}],vars:JSON.parse(JSON.stringify(G.prog.vars)),itens:[],vistos:[],log:[],
+    bg:null,chars:{},music:null,cam:{z:1,x:50,y:50},t:Date.now(),ultima:'',done:false};
+}
+function completaEstado(st){st.itens=st.itens||[];st.vistos=st.vistos||[];st.log=st.log||[];st.cam=st.cam||{z:1,x:50,y:50};st.chars=st.chars||{};return st}
+let tEspera=null;
+function run(){
+  let guarda=0;
+  try{
+    while(true){
+      if(++guarda>5000)throw new ErroScript(nodeAtual()?.n||0,'Parece um loop sem fim (jump voltando sempre pro mesmo lugar sem fala).');
+      const f=topo();
+      if(!f){fimJogo();return}
+      const blk=G.prog.blocks[f.b];
+      if(!blk)throw new ErroScript(0,'Este save não combina com o roteiro atual.');
+      if(f.ip>=blk.length){G.st.stack.pop();continue}
+      if(exec(blk[f.ip],f)==='espera'){salvar('auto');marca();return}
+    }
+  }catch(e){erroJogo(e)}
+}
+function escolheSe(nd){if(avalia(nd.cond,nd.n))return nd.kids;if(nd.elsIf)return escolheSe(nd.elsIf);return nd.els??null}
+function exec(nd,f){
+  const st=G.st,agora=performance.now();
+  switch(nd.t){
+    case 'fala':mostraFala(nd);return 'espera';
+    case 'menu':mostraMenu(nd);return 'espera';
+    case 'explorar':mostraExplorar(nd);return 'espera';
+    case 'gestao':G.gestaoManual=false;abreGestao();return 'espera';
+    case 'espera':G.modo='espera';clearTimeout(tEspera);tEspera=setTimeout(()=>{if(G.modo!=='espera')return;G.modo=null;topo().ip++;run()},G.skip?60:nd.s*1000);return 'espera';
+    case 'code':execCode(nd);f.ip++;atualizaHud();return;
+    case 'se':{f.ip++;const k=escolheSe(nd);if(k!=null)st.stack.push({b:k,ip:0});return}
+    case 'jump':if(nd.auto&&st.stack.some(x=>x.call)){const s=st.stack;while(s.length){if(s.pop().call)return}return}
+      st.stack=[{b:G.prog.labels[nd.to],ip:0}];return;
+    case 'call':f.ip++;st.stack.push({b:G.prog.labels[nd.to],ip:0,call:true});return;
+    case 'fim':{const s=st.stack;while(s.length){if(s.pop().call)return}return}
+    case 'sai':{const s=st.stack;if(!s.some(x=>x.area))throw new ErroScript(nd.n,'"sai" só funciona dentro de uma área do explorar.');
+      while(s.length){if(s.pop().area)break}if(topo())topo().ip++;return}
+    case 'cena':V.trans=nd.tr==='nada'||G.skip?null:{de:st.bg,tipo:nd.tr,t0:agora,dur:nd.tr==='preto'?900:nd.tr==='flash'?500:450};
+      st.bg=nd.img;st.chars={};st.cam={z:1,x:50,y:50};V.cam=null;if(nd.tr==='flash'&&!G.skip)V.flash={t0:agora,c:'#fff'};f.ip++;return;
+    case 'mostra':{const prev=st.chars[nd.who];if(!prev)V.entra[nd.who]=agora;st.chars[nd.who]={e:nd.expr??prev?.e??null,pos:nd.pos||prev?.pos||'centro'};f.ip++;return}
+    case 'esconde':delete st.chars[nd.who];f.ip++;return;
+    case 'musica':st.music=nd.src;tocaMusica(nd.src);f.ip++;return;
+    case 'paramusica':st.music=null;tocaMusica(null);f.ip++;return;
+    case 'som':if(!G.skip)tocaSom(nd.src);f.ip++;return;
+    case 'voz':G.vozPend=nd.src;f.ip++;return;
+    case 'pega':if(!st.itens.includes(nd.it))st.itens.push(nd.it);atualizaHud();f.ip++;return;
+    case 'larga':st.itens=st.itens.filter(x=>x!==nd.it);atualizaHud();f.ip++;return;
+    case 'treme':if(!G.skip)V.shake={t0:agora,dur:450,f:nd.f};f.ip++;return;
+    case 'flash':if(!G.skip)V.flash={t0:agora,c:nd.c};f.ip++;return;
+    case 'zoom':V.cam={de:camAgora(agora),t0:agora,dur:G.skip?0:nd.d*1000};st.cam={z:nd.z,x:nd.x,y:nd.y};f.ip++;return;
+    default:f.ip++;return;
+  }
+}
+function fimJogo(){G.st.done=true;G.modo='fim';salvar('auto');marca();if(G.rec)setTimeout(pararGravacao,1500)}
+function erroJogo(e){
+  if(!(e instanceof ErroScript)){console.error(e);e=new ErroScript(0,e.message)}
+  G.ultimoErro=e;G.auto=false;G.skip=false;botoes();
+  $('#erroJogoTxt').textContent=(e.linha?'Linha '+e.linha+': ':'')+e.message;
+  $('#erroJogo').style.display='block';
+}
+
+/* ---------- falas, escolhas, explorar ---------- */
+const LIDAS=new Set(LS.get('nv_lidas',[]));
+let tLidas;function guardaLidas(){clearTimeout(tLidas);tLidas=setTimeout(()=>LS.set('nv_lidas',[...LIDAS].slice(-6000)),800)}
+function mostraFala(nd){
+  const st=G.st,p=nd.who?G.prog.chars[nd.who]:null,txt=interp(nd.txt),chave=hash(nd.n+'|'+nd.txt);
+  G.hist.push(JSON.stringify(st));if(G.hist.length>60)G.hist.shift();
+  G.modo='fala';
+  G.fala={who:nd.who,nome:p?p.nome:'',cor:p?.cor||null,txt,t0:performance.now(),tc:0,chave,lida:LIDAS.has(chave)};
+  if(G.skip&&!G.fala.lida){G.skip=false;botoes()}
+  if(G.skip||!(CFG.vel>0)||matchMedia('(prefers-reduced-motion: reduce)').matches)G.fala.t0=-1e9;
+  st.ultima=(p?p.nome+': ':'')+txt;
+  st.log.push({n:G.fala.nome,c:G.fala.cor,t:txt});if(st.log.length>120)st.log.shift();
+  if(G.vozPend){if(!G.skip)tocaVoz(G.vozPend);G.vozPend=null}
+}
+function falaCompleta(now){const f=G.fala;return !!f&&(now-f.t0)/Math.max(1,CFG.vel)>=f.txt.length}
+function avancar(){
+  if(!G.st||G.st.done||$('#erroJogo').style.display==='block')return;
+  if(G.modo!=='fala')return;
+  const now=performance.now();
+  if(!falaCompleta(now)){G.fala.t0=-1e9;marca();return}
+  LIDAS.add(G.fala.chave);guardaLidas();
+  if(G.voz&&!G.skip){try{G.voz.pause()}catch(e){}}
+  G.modo=null;topo().ip++;run();
+}
+function mostraMenu(nd){
+  const ops=G.prog.blocks[nd.kids].filter(op=>!op.cond||avalia(op.cond,op.n)).map(op=>({txt:interp(op.txt),op}));
+  if(!ops.length)throw new ErroScript(nd.n,'Nenhuma opção deste menu está disponível agora.');
+  if(G.skip){G.skip=false;botoes()}
+  G.modo='menu';G.ops=ops;
+}
+function escolhe(o){G.modo=null;topo().ip++;G.st.stack.push({b:o.op.kids,ip:0});run()}
+function mostraExplorar(nd){
+  const st=G.st;
+  G.areas=G.prog.blocks[nd.kids].filter(a=>!a.cond||avalia(a.cond,a.n)).map(a=>({nome:interp(a.txt),x:a.x,y:a.y,w:a.w,h:a.h,a,chave:nd.kids+':'+a.n}));
+  if(G.skip){G.skip=false}
+  if(G.ultimoExplorar!==nd.kids){G.ultimoExplorar=nd.kids;V.pulso=performance.now()+1600}
+  G.modo='explorar';G.fala=null;botoes();
+}
+function tocaArea(ar){
+  if(!G.st.vistos.includes(ar.chave))G.st.vistos.push(ar.chave);
+  G.modo=null;botoes();G.st.stack.push({b:ar.a.kids,ip:0,area:true});run();
+}
+
+/* ---------- áudio (passa pelo WebAudio para entrar na gravação) ---------- */
+let actx=null,saida=null;
+function audioPronto(){
+  if(actx)return actx;
+  try{actx=new (window.AudioContext||window.webkitAudioContext)();saida=actx.createGain();saida.connect(actx.destination)}catch(e){actx=null}
+  return actx;
+}
+function liga(el){if(!actx||el._ligado)return;try{actx.createMediaElementSource(el).connect(saida);el._ligado=1}catch(e){}}
+const audio={m:null,src:null};
+function tocaMusica(src,forca){
+  if(!forca&&audio.src===src&&audio.m)return;
+  if(audio.m)audio.m.pause();audio.m=null;audio.src=src;if(!src)return;
+  try{const a=new Audio(achaAudio(src));a.loop=true;a.volume=CFG.mus;liga(a);a.play().catch(()=>{});audio.m=a}catch(e){}
+}
+function tocaSom(src){try{const a=new Audio(achaAudio(src));a.volume=CFG.som;liga(a);a.play().catch(()=>{})}catch(e){}}
+function tocaVoz(src){try{if(G.voz)G.voz.pause();const a=new Audio(achaAudio(src));a.volume=CFG.som;liga(a);a.play().catch(()=>{});G.voz=a}catch(e){}}
+document.addEventListener('pointerdown',()=>{if(!actx){audioPronto();if(audio.m)tocaMusica(audio.src,true)}else if(actx.state==='suspended')actx.resume()},{capture:true});
+
+/* ---------- desenho (canvas: é o que vai para o vídeo) ---------- */
+const cv=$('#cv'),cx=cv.getContext('2d');
+let W=1280,H=720;
+function ajustaCanvas(){[W,H]=CFG.formato==='9:16'?[720,1280]:[1280,720];cv.width=W;cv.height=H;marca()}
+const vert=()=>H>W;
+let sujo=true;const marca=()=>{sujo=true};
+const ease=p=>p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+function camAgora(now){
+  const alvo=G.st?G.st.cam:{z:1,x:50,y:50},c=V.cam;
+  if(!c||!c.dur||now>=c.t0+c.dur)return{...alvo};
+  const p=ease((now-c.t0)/c.dur);
+  return{z:c.de.z+(alvo.z-c.de.z)*p,x:c.de.x+(alvo.x-c.de.x)*p,y:c.de.y+(alvo.y-c.de.y)*p};
+}
+function cobre(img,a){
+  const s=Math.max(W/img.naturalWidth,H/img.naturalHeight),w=img.naturalWidth*s,h=img.naturalHeight*s;
+  cx.globalAlpha=a;cx.drawImage(img,(W-w)/2,(H-h)/2,w,h);cx.globalAlpha=1;
+}
+function fundo(nome,a){
+  if(!nome){cx.globalAlpha=a;cx.fillStyle='#11141d';cx.fillRect(0,0,W,H);cx.globalAlpha=1;return}
+  const img=achaImg('fundo '+nome,nome);
+  if(pronta(img))return cobre(img,a);
+  cx.globalAlpha=a;cx.fillStyle='#262c3d';cx.fillRect(0,0,W,H);
+  cx.strokeStyle='#2f3750';cx.lineWidth=22;cx.beginPath();for(let i=-H;i<W;i+=62){cx.moveTo(i,0);cx.lineTo(i+H,H)}cx.stroke();
+  cx.fillStyle='#a9adb8';cx.font='600 '+Math.round(Math.min(W,H)*.04)+'px "Chakra Petch",sans-serif';cx.textAlign='center';cx.textBaseline='middle';
+  cx.fillText(nome,W/2,H*.38);cx.globalAlpha=1;
+}
+function rr(x,y,w,h,r){cx.beginPath();if(cx.roundRect)cx.roundRect(x,y,w,h,r);else cx.rect(x,y,w,h)}
+function personagens(now){
+  const st=G.st,fala=G.modo==='fala'&&G.fala&&G.fala.who;
+  for(const [id,c] of Object.entries(st.chars)){
+    const t0=V.entra[id]||0,a=Math.min(1,(now-t0)/260),h=H*(vert()?.58:.86),x=(POS[c.pos]??50)/100*W;
+    const img=achaImg(c.e?id+' '+c.e:null,id);
+    cx.save();cx.globalAlpha=a;if(fala&&fala!==id)cx.filter='brightness(55%)';
+    if(pronta(img)){const w=h*img.naturalWidth/img.naturalHeight;cx.drawImage(img,x-w/2,H-h+(1-a)*18,w,h)}
+    else{const w=h*.38,p=G.prog.chars[id];rr(x-w/2,H-h,w,h,[w*.46,w*.46,8,8]);cx.fillStyle=p?.cor||'#7d8597';cx.fill();
+      cx.fillStyle='#fff';cx.textAlign='center';cx.textBaseline='middle';cx.font='700 '+Math.round(w*.16)+'px "Chakra Petch",sans-serif';
+      cx.fillText(p?.nome||id,x,H-h*.55);if(c.e){cx.font='500 '+Math.round(w*.12)+'px "Chakra Petch",sans-serif';cx.fillText(c.e,x,H-h*.55+w*.2)}}
+    cx.restore();
+  }
+}
+function quebra(txt,maxW){
+  const out=[];for(const par of txt.split('\\n')){let l='';for(const w of par.split(' ')){const t=l?l+' '+w:w;if(cx.measureText(t).width>maxW&&l){out.push(l);l=w}else l=t}out.push(l)}return out;
+}
+function caixaTexto(now){
+  const f=G.fala;if(!f)return;
+  const fs=Math.round(vert()?W*.045:H*.044),m=W*.03,pad=fs*.9,lh=fs*1.5;
+  cx.font='400 '+fs+'px "Atkinson Hyperlegible",sans-serif';
+  const larg=W-2*m-2*pad,linhas=quebra(f.txt,larg),bh=Math.max(lh*3,lh*linhas.length)+pad*2,bx=m,by=H-bh-H*.03;
+  rr(bx,by,W-2*m,bh,6);cx.fillStyle='rgba(18,22,34,.92)';cx.fill();cx.strokeStyle='#4a5468';cx.lineWidth=2;cx.stroke();
+  if(f.nome){
+    cx.font='700 '+Math.round(fs*.92)+'px "Chakra Petch",sans-serif';
+    const tw=cx.measureText(f.nome).width+fs*1.6,th=fs*1.45,tx=bx+pad*.6,ty=by-th*.6,k=th*.25;
+    cx.beginPath();cx.moveTo(tx+k,ty);cx.lineTo(tx+tw,ty);cx.lineTo(tx+tw-k,ty+th);cx.lineTo(tx,ty+th);cx.closePath();
+    cx.fillStyle=f.cor||'#e3b448';cx.fill();cx.fillStyle='#fff';cx.textAlign='center';cx.textBaseline='middle';
+    cx.shadowColor='rgba(0,0,0,.6)';cx.shadowBlur=3;cx.fillText(f.nome,tx+tw/2,ty+th/2+1);cx.shadowBlur=0;
+  }
+  let mostra=Math.floor((now-f.t0)/Math.max(1,CFG.vel));
+  cx.font='400 '+fs+'px "Atkinson Hyperlegible",sans-serif';cx.fillStyle='#ecebe4';cx.textAlign='left';cx.textBaseline='top';
+  linhas.forEach((l,i)=>{if(mostra<=0)return;const parte=l.slice(0,mostra);mostra-=l.length+1;cx.fillText(parte,bx+pad,by+pad+i*lh)});
+  if(falaCompleta(now)&&G.modo==='fala'&&Math.floor(now/450)%2===0){
+    cx.fillStyle='#e3b448';const sx=W-m-pad,sy=by+bh-pad*.9;cx.beginPath();cx.moveTo(sx-fs*.5,sy-fs*.35);cx.lineTo(sx,sy-fs*.35);cx.lineTo(sx-fs*.25,sy);cx.closePath();cx.fill();
+  }
+}
+function escolhasUI(){
+  cx.fillStyle='rgba(10,12,20,.55)';cx.fillRect(0,0,W,H);
+  const fs=Math.round(vert()?W*.045:H*.042),bw=Math.min(W*.86,960),bh=fs*2.3,gap=fs*.6,tot=G.ops.length*(bh+gap)-gap;
+  let y=(vert()?H*.42:H*.42)-tot/2;G.alvos=[];
+  cx.font='600 '+fs+'px "Atkinson Hyperlegible",sans-serif';cx.textBaseline='middle';cx.textAlign='left';
+  for(const o of G.ops){const x=(W-bw)/2;rr(x,y,bw,bh,6);cx.fillStyle='rgba(28,33,48,.97)';cx.fill();cx.strokeStyle='#4a5468';cx.lineWidth=2;cx.stroke();
+    cx.fillStyle='#7a6ad8';cx.fillRect(x,y,7,bh);cx.fillStyle='#ecebe4';
+    let t=o.txt;while(cx.measureText(t).width>bw-fs*2&&t.length>4)t=t.slice(0,-2);if(t!==o.txt)t+='…';
+    cx.fillText(t,x+fs,y+bh/2);G.alvos.push({x,y,w:bw,h:bh,o});y+=bh+gap}
+}
+function explorarUI(now){
+  const mostra=G.lupa||now<V.pulso,fs=Math.round(Math.min(W,H)*.032);
+  for(const ar of G.areas){
+    const x=ar.x/100*W,y=ar.y/100*H,w=ar.w/100*W,h=ar.h/100*H,visto=G.st.vistos.includes(ar.chave);
+    if(mostra){const k=G.lupa?1:.5+.5*Math.sin(now/140);
+      cx.save();cx.globalAlpha=.35+.65*k;cx.setLineDash([12,8]);cx.lineWidth=3;cx.strokeStyle='#e3b448';cx.fillStyle='rgba(227,180,72,.13)';
+      rr(x,y,w,h,8);cx.fill();cx.stroke();cx.restore();
+      cx.font='700 '+fs+'px "Chakra Petch",sans-serif';cx.textAlign='left';cx.textBaseline='bottom';
+      const tw=cx.measureText(ar.nome).width;cx.fillStyle='rgba(18,22,34,.85)';cx.fillRect(x,y-fs*1.4,tw+fs,fs*1.4);cx.fillStyle='#e3b448';cx.fillText(ar.nome,x+fs/2,y-fs*.2)}
+    if(visto){const r=fs*.62;cx.beginPath();cx.arc(x+w-r,y+r,r,0,7);cx.fillStyle='#e3b448';cx.fill();cx.fillStyle='#1c1a12';cx.font='700 '+Math.round(r*1.4)+'px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('✓',x+w-r,y+r+1)}
+  }
+  const dica='Toque em algo para investigar';cx.font='600 '+fs+'px "Atkinson Hyperlegible",sans-serif';
+  const tw=cx.measureText(dica).width+fs*1.6;rr((W-tw)/2,H-fs*3.2,tw,fs*2,fs);cx.fillStyle='rgba(18,22,34,.8)';cx.fill();
+  cx.fillStyle='#ecebe4';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(dica,W/2,H-fs*2.2);
+}
+function desenha(now){
+  const st=G.st;if(!st)return;
+  cx.setTransform(1,0,0,1,0,0);cx.filter='none';cx.fillStyle='#000';cx.fillRect(0,0,W,H);
+  cx.save();
+  if(V.shake&&now<V.shake.t0+V.shake.dur){const k=(1-(now-V.shake.t0)/V.shake.dur)*V.shake.f;cx.translate((Math.random()*2-1)*k,(Math.random()*2-1)*k)}
+  const c=camAgora(now),z=c.z,px=Math.min(Math.max(c.x/100*W,W/(2*z)),W-W/(2*z)),py=Math.min(Math.max(c.y/100*H,H/(2*z)),H-H/(2*z));
+  cx.translate(W/2,H/2);cx.scale(z,z);cx.translate(-px,-py);
+  const tr=V.trans,p=tr?Math.min(1,(now-tr.t0)/tr.dur):1;
+  if(tr&&p<1){if(tr.tipo==='preto'){fundo(p<.5?tr.de:st.bg,1)}else if(tr.tipo==='fade'){fundo(tr.de,1);fundo(st.bg,ease(p))}else fundo(st.bg,1)}
+  else{V.trans=null;fundo(st.bg,1)}
+  if(!(tr&&tr.tipo==='preto'&&p<.5))personagens(now);
+  cx.restore();
+  if(tr&&tr.tipo==='preto'&&p<1){cx.fillStyle='rgba(0,0,0,'+(1-Math.abs(p*2-1))+')';cx.fillRect(0,0,W,H)}
+  if(V.flash){const q=(now-V.flash.t0)/420;if(q<1){cx.globalAlpha=1-q;cx.fillStyle=V.flash.c;cx.fillRect(0,0,W,H);cx.globalAlpha=1}else V.flash=null}
+  if(G.modo==='explorar')explorarUI(now);
+  else{if(G.fala&&G.modo!=='espera'&&G.modo!=='fim')caixaTexto(now);if(G.modo==='menu')escolhasUI()}
+  if(G.modo==='fim'){cx.fillStyle='rgba(10,12,20,.78)';cx.fillRect(0,0,W,H);cx.fillStyle='#ecebe4';cx.textAlign='center';cx.textBaseline='middle';
+    cx.font='700 '+Math.round(Math.min(W,H)*.14)+'px "Chakra Petch",sans-serif';cx.fillText('Fim',W/2,H*.45);
+    cx.font='400 '+Math.round(Math.min(W,H)*.035)+'px "Atkinson Hyperlegible",sans-serif';cx.fillStyle='#a9adb8';cx.fillText('Toque para voltar ao menu',W/2,H*.58)}
+}
+let ultimo=0;
+function quadro(now){
+  requestAnimationFrame(quadro);
+  if(G.tela!=='jogo'||document.hidden)return;
+  // automático, pular e gravação
+  if(G.modo==='fala'&&falaCompleta(now)){
+    const f=G.fala;if(!f.tc)f.tc=now;
+    const voz=G.voz&&!G.voz.paused&&!G.voz.ended;
+    if(G.skip&&f.lida)avancar();
+    else if((G.auto||G.rec)&&!voz&&now-f.tc>CFG.auto*1000+f.txt.length*28)avancar();
+  }
+  const pisca=G.modo==='fala'&&Math.floor(now/450)%2;if(pisca!==G.pisca){G.pisca=pisca;sujo=true}
+  const anima=G.rec||V.trans||V.flash||(V.shake&&now<V.shake.t0+V.shake.dur)||(V.cam&&now<V.cam.t0+V.cam.dur)||(G.modo==='explorar'&&now<V.pulso)||
+    (G.modo==='fala'&&!falaCompleta(now))||Object.values(V.entra).some(t=>now-t<300);
+  if(!anima&&!sujo)return;
+  if(now-ultimo<(G.rec?30:16))return;ultimo=now;sujo=false;
+  desenha(now);
+}
+requestAnimationFrame(quadro);
+
+function ponto(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}}
+cv.addEventListener('click',e=>{
+  if(!G.st)return;const p=ponto(e);
+  if(G.modo==='fim')return abreMenu();
+  if(G.modo==='menu'){const a=G.alvos.find(a=>p.x>=a.x&&p.x<=a.x+a.w&&p.y>=a.y&&p.y<=a.y+a.h);if(a)escolhe(a.o);return}
+  if(G.modo==='explorar'){const px=p.x/W*100,py=p.y/H*100;
+    const ar=[...G.areas].reverse().find(a=>px>=a.x&&px<=a.x+a.w&&py>=a.y&&py<=a.y+a.h);
+    if(ar)tocaArea(ar);else{V.pulso=performance.now()+900;marca()}return}
+  if(G.skip){G.skip=false;botoes()}
+  avancar();
+});
+document.addEventListener('keydown',e=>{if(G.tela==='jogo'&&(e.key===' '||e.key==='Enter')&&!document.querySelector('dialog[open]')){e.preventDefault();avancar()}});
+
+/* ---------- botões do jogo ---------- */
+function botoes(){
+  $('#bAuto').classList.toggle('on',G.auto);$('#bPular').classList.toggle('on',G.skip);
+  $('#bLupa').hidden=G.modo!=='explorar';$('#bLupa').classList.toggle('on',G.lupa);
+  $('#bGestao').hidden=!(G.prog&&G.prog.salas.length);
+  const b=$('#bGravar');b.classList.toggle('rec',!!G.rec);
+}
+$('#bAuto').onclick=e=>{e.stopPropagation();G.auto=!G.auto;G.skip=false;botoes();toast(G.auto?'Automático ligado':'Automático desligado',1200)};
+$('#bPular').onclick=e=>{e.stopPropagation();G.skip=!G.skip;G.auto=false;botoes();if(G.skip&&G.fala&&!G.fala.lida){G.skip=false;botoes();toast('Esta fala ainda não foi lida.')}};
+$('#bLupa').onclick=e=>{e.stopPropagation();G.lupa=!G.lupa;botoes();marca()};
+$('#bVoltar').onclick=e=>{e.stopPropagation();voltarFala()};
+$('#bLog').onclick=e=>{e.stopPropagation();abreLog()};
+$('#bOlho').onclick=e=>{e.stopPropagation();$('#palco').classList.toggle('limpo')};
+$('#bSalvar').onclick=e=>{e.stopPropagation();abreSlots('salvar')};
+$('#bMenu').onclick=e=>{e.stopPropagation();salvar('auto');abreMenu()};
+$('#bGestao').onclick=e=>{e.stopPropagation();G.gestaoManual=true;abreGestao()};
+$('#bGravar').onclick=e=>{e.stopPropagation();G.rec?pararGravacao():gravar()};
+$('#erroEditor').onclick=e=>{e.stopPropagation();abreEditor();mostraErroEditor(G.ultimoErro)};
+
+function voltarFala(){
+  if(G.hist.length<2)return toast('Não dá para voltar mais.');
+  G.hist.pop();const prev=G.hist.pop();
+  clearTimeout(tEspera);G.st=completaEstado(JSON.parse(prev));G.modo=null;G.skip=false;G.auto=false;
+  V.trans=null;V.cam=null;V.entra={};$('#erroJogo').style.display='none';tocaMusica(G.st.music);botoes();atualizaHud();run();
+}
+function abreLog(){
+  const l=G.st?G.st.log:[];
+  $('#logLista').innerHTML=l.length?l.map(x=>'<p>'+(x.n?'<b style="color:'+esc(x.c||'#e3b448')+'">'+esc(x.n)+'</b>':'')+esc(x.t)+'</p>').join(''):'<p class="nota">Nada ainda.</p>';
+  $('#dLog').showModal();const d=$('#dLog');d.scrollTop=d.scrollHeight;
+}
+$('#logFechar').onclick=()=>$('#dLog').close();
+
+/* ---------- gravação de vídeo ---------- */
+let gravador=null,pedacos=[],tRec=null;
+function tipoVideo(){for(const t of['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4'])if(window.MediaRecorder&&MediaRecorder.isTypeSupported(t))return t;return ''}
+async function gravar(){
+  if(!window.MediaRecorder||!cv.captureStream)return toast('Este navegador não grava vídeo.');
+  audioPronto();try{await actx.resume()}catch(e){}
+  const trilhas=[...cv.captureStream(30).getVideoTracks()];
+  if(actx){const dst=actx.createMediaStreamDestination();saida.connect(dst);G.recDst=dst;trilhas.push(...dst.stream.getAudioTracks());if(audio.m&&!audio.m._ligado)tocaMusica(audio.src,true)}
+  const tipo=tipoVideo();pedacos=[];
+  try{gravador=new MediaRecorder(new MediaStream(trilhas),tipo?{mimeType:tipo,videoBitsPerSecond:6e6}:{})}catch(e){return toast('Não consegui começar a gravar: '+e.message)}
+  gravador.ondataavailable=ev=>{if(ev.data&&ev.data.size)pedacos.push(ev.data)};
+  gravador.onstop=terminouGravacao;
+  gravador.start(1000);G.rec={t0:Date.now()};G.auto=true;$('#palco').classList.add('limpo');botoes();marca();
+  clearInterval(tRec);tRec=setInterval(()=>{const s=Math.floor((Date.now()-G.rec.t0)/1000);$('#bGravar').textContent='■ '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')},500);
+  toast('Gravando. Toque em 👁 e depois em ■ para parar.',3200);
+}
+function pararGravacao(){if(!gravador||gravador.state==='inactive')return;gravador.stop()}
+async function terminouGravacao(){
+  clearInterval(tRec);$('#bGravar').textContent='⏺';
+  if(G.recDst){try{saida.disconnect(G.recDst)}catch(e){}G.recDst=null}
+  G.rec=null;G.auto=false;$('#palco').classList.remove('limpo');botoes();
+  const tipo=(gravador.mimeType||'video/webm').split(';')[0],blob=new Blob(pedacos,{type:tipo});gravador=null;pedacos=[];
+  if(!blob.size)return toast('A gravação saiu vazia.');
+  const nome=(G.prog.titulo||'Novel')+' · '+new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
+  try{await paraBiblioteca(blob,nome);toast('Vídeo guardado na Biblioteca ('+(blob.size/1048576).toFixed(1)+' MB).',4000)}
+  catch(e){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='novel.'+(tipo.includes('mp4')?'mp4':'webm');document.body.appendChild(a);a.click();a.remove();toast('Não deu para guardar na Biblioteca; baixei o vídeo.')}
+}
+function paraBiblioteca(blob,nome){return new Promise((ok,no)=>{const r=indexedDB.open('tamaki-biblioteca',1);
+  r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('itens'))r.result.createObjectStore('itens',{keyPath:'id'})};r.onerror=()=>no(r.error);
+  r.onsuccess=()=>{const db=r.result,id='b'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),t=db.transaction('itens','readwrite');
+    t.objectStore('itens').put({id,origem:'novel',tipo:'video',nome,texto:'',mime:(blob.type||'').split(';')[0],tamanho:blob.size,criado:Date.now(),blob});
+    t.oncomplete=()=>{db.close();try{const c=new BroadcastChannel('tamaki-biblioteca');c.postMessage({novo:id});c.close()}catch(e){}ok(id)};t.onerror=()=>no(t.error)}})}
+
+/* ---------- gestão ---------- */
+const custoSala=(s,niv)=>Math.ceil(s.custo*Math.pow(1.6,niv));
+const nomeRec=id=>G.prog.recursos.find(r=>r.id===id)?.nome||id;
+function abreGestao(){tela('gestao');renderGestao()}
+function renderGestao(){
+  const P=G.prog,v=G.st.vars;
+  $('#gRec').innerHTML=P.recursos.map(r=>'<div class="rec"><b>'+fmt(v[r.id])+'</b><span>'+esc(r.nome)+'</span></div>').join('');
+  const lista=$('#gSalas');lista.innerHTML='';
+  if(!P.salas.length){lista.innerHTML='<p class="nota">Nenhuma sala ainda. No roteiro, escreva: sala oficina "Oficina" custo grana 30 renda grana 2</p>';return}
+  P.salas.forEach(s=>{
+    const niv=v['sala_'+s.id]||0,c=custoSala(s,niv);
+    const d=document.createElement('div');d.className='sala'+(niv?'':' fechada');
+    d.innerHTML='<div><strong>'+esc(s.nome)+'</strong><span>'+(niv?'Nível '+niv+', rende '+fmt(s.renda*niv)+' '+esc(nomeRec(s.rendaRec))+' a cada 5 s':'Fechada')+'</span></div>';
+    const b=document.createElement('button');b.textContent=(niv?'Melhorar':'Construir')+' por '+fmt(c)+' '+nomeRec(s.custoRec);
+    b.disabled=(v[s.custoRec]||0)<c;
+    b.onclick=()=>{if((v[s.custoRec]||0)<c)return;v[s.custoRec]-=c;v['sala_'+s.id]=niv+1;renderGestao();atualizaHud();salvar('auto')};
+    d.appendChild(b);lista.appendChild(d);
+  });
+}
+function tick(){
+  const st=G.st,now=Date.now(),dt=Math.min((now-st.t)/1000,7200);st.t=now;
+  G.prog.salas.forEach(s=>{const niv=st.vars['sala_'+s.id]||0;if(niv)st.vars[s.rendaRec]=(st.vars[s.rendaRec]||0)+s.renda*niv*dt/5});
+}
+function atualizaHud(){
+  if(!G.st)return;
+  $('#hud').innerHTML=G.prog.recursos.map(r=>'<span class="chip"><b>'+fmt(G.st.vars[r.id])+'</b>'+esc(r.nome)+'</span>').join('')
+    +G.st.itens.map(i=>'<span class="chip">🎒 '+esc(G.prog.itens[i]||i)+'</span>').join('');
+}
+setInterval(()=>{
+  if(!G.st||G.st.done||(G.tela!=='jogo'&&G.tela!=='gestao')||!G.prog.salas.length)return;
+  tick();atualizaHud();if(G.tela==='gestao')renderGestao();
+},1000);
+$('#gVoltar').onclick=()=>{
+  if(G.gestaoManual){G.gestaoManual=false;tela('jogo');marca();return}
+  tela('jogo');const nd=nodeAtual();if(nd&&nd.t==='gestao'){topo().ip++;run()}
+};
+
+/* ---------- saves ---------- */
+const SLOTS=['auto','1','2','3','4','5'];
+function salvar(k){if(!G.st)return;const s=LS.get('nv_saves',{});s[k]={st:G.st,h:G.hash,quando:Date.now(),prev:G.st.ultima};LS.set('nv_saves',s)}
+function carregar(k){
+  const s=LS.get('nv_saves',{})[k];if(!s)return;
+  if(s.h!==G.hash&&!confirm('Este save foi feito com outra versão do roteiro e pode dar erro. Carregar mesmo assim?'))return;
+  G.st=completaEstado(JSON.parse(JSON.stringify(s.st)));G.st.done=false;$('#dSlots').close();iniciaTela();run();
+}
+function iniciaTela(){
+  $('#erroJogo').style.display='none';G.modo=null;G.fala=null;G.hist=[];G.ultimoExplorar=null;G.lupa=false;
+  V.trans=null;V.cam=null;V.entra={};V.flash=null;V.shake=null;clearTimeout(tEspera);
+  tocaMusica(G.st.music);tela('jogo');botoes();atualizaHud();marca();
+}
+function abreSlots(modo){
+  $('#sTit').textContent=modo==='salvar'?'Salvar':'Carregar';
+  const s=LS.get('nv_saves',{}),box=$('#sLista');box.innerHTML='';
+  SLOTS.forEach(k=>{
+    const sv=s[k],d=document.createElement('div');d.className='slot';
+    const info=sv?new Date(sv.quando).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})+(sv.prev?' · '+sv.prev.slice(0,40):''):'Vazio';
+    d.innerHTML='<div><strong>'+(k==='auto'?'Automático':'Espaço '+k)+'</strong><span>'+esc(info)+'</span></div>';
+    const b=document.createElement('button');
+    if(modo==='salvar'){b.textContent='Salvar aqui';b.disabled=k==='auto';b.onclick=()=>{salvar(k);abreSlots('salvar');toast('Salvo.')}}
+    else{b.textContent='Carregar';b.disabled=!sv;b.onclick=()=>carregar(k)}
+    d.appendChild(b);box.appendChild(d);
+  });
+  if(!$('#dSlots').open)$('#dSlots').showModal();
+}
+$('#sFechar').onclick=()=>$('#dSlots').close();
+
+/* ---------- roteiro e editor ---------- */
+const ta=$('#roteiro');
+// o roteiro da engine antiga (mesmo site) entra sozinho na primeira vez
+function roteiroAtual(){return LS.get('nv_roteiro',null)??LS.get('ne_roteiro',null)??$('#demo').textContent}
+function compila(){
+  const src=ta.value;
+  try{G.prog=parse(src);G.hash=hash(src);$('#edErro').style.display='none';return true}
+  catch(e){mostraErroEditor(e);return false}
+}
+function mostraErroEditor(e){
+  if(!e)return;const box=$('#edErro');box.textContent=(e.linha?'Linha '+e.linha+': ':'')+e.message;box.style.display='block';
+  if(e.linha){const ls=ta.value.split('\n');let p=0;for(let i=0;i<e.linha-1;i++)p+=ls[i].length+1;ta.focus();ta.setSelectionRange(p,p+(ls[e.linha-1]||'').length)}
+}
+function abreEditor(){ta.value=roteiroAtual();tela('editor')}
+let tSalva;
+ta.addEventListener('input',e=>{
+  if(e.inputType==='insertLineBreak'){
+    const pos=ta.selectionStart,antes=ta.value.slice(0,pos-1),lin=antes.slice(antes.lastIndexOf('\n')+1);
+    let ind=lin.match(/^ */)[0];if(lin.trim().endsWith(':'))ind+='    ';
+    if(ind)ta.setRangeText(ind,pos,pos,'end');
+  }
+  clearTimeout(tSalva);tSalva=setTimeout(()=>LS.set('nv_roteiro',ta.value),600);
+});
+ta.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();recuo(e.shiftKey?-1:1)}});
+function recuo(dir){
+  const v=ta.value,s=ta.selectionStart,e=ta.selectionEnd,ini=v.lastIndexOf('\n',s-1)+1;
+  let fimL=v.indexOf('\n',e);if(fimL<0)fimL=v.length;
+  const linhas=v.slice(ini,fimL).split('\n').map(l=>dir>0?'    '+l:l.replace(/^ {1,4}/,''));
+  const novo=linhas.join('\n');ta.setRangeText(novo,ini,fimL,'preserve');
+  ta.setSelectionRange(ini,ini+novo.length);ta.focus();LS.set('nv_roteiro',ta.value);
+}
+const MOLDES={
+  fala:['sato "Escreva a fala aqui."'],narra:['"Escreva a narração aqui."'],cena:['cena nome_do_fundo com fade'],
+  mostra:['mostra sato feliz esquerda'],pula:['jump nome_do_label'],efeito:['treme'],
+  label:['label novo_label:','    "..."'],
+  menu:['menu:','    "Primeira opção":','        "..."','    "Segunda opção":','        "..."'],
+  explorar:['explorar:','    "Porta" 70 30 15 50:','        "Está trancada."','    "Sair" 0 85 15 15:','        sai'],
+  se:['se respeito >= 1:','    "..."','senao:','    "..."']
+};
+function insereLinhas(ls){
+  const v=ta.value,s=ta.selectionStart,ini=v.lastIndexOf('\n',s-1)+1;let fimL=v.indexOf('\n',s);if(fimL<0)fimL=v.length;
+  const atual=v.slice(ini,fimL);let ind=atual.match(/^ */)[0];
+  if(!atual.trim()){if(!ind){const ant=v.slice(0,Math.max(0,ini-1)),la=ant.slice(ant.lastIndexOf('\n')+1);ind=la.match(/^ */)[0];if(la.trim().endsWith(':'))ind+='    '}
+    const novo=ls.map(l=>ind+l).join('\n');ta.setRangeText(novo,ini,fimL,'end')}
+  else{if(atual.trim().endsWith(':'))ind+='    ';const novo='\n'+ls.map(l=>ind+l).join('\n');ta.setRangeText(novo,fimL,fimL,'end')}
+  ta.focus();LS.set('nv_roteiro',ta.value);
+}
+$('#moldes').onclick=e=>{const b=e.target.closest('[data-m]');if(b)insereLinhas(MOLDES[b.dataset.m])};
+$('#eMais').onclick=()=>recuo(1);
+$('#eMenos').onclick=()=>recuo(-1);
+$('#eTestar').onclick=()=>{LS.set('nv_roteiro',ta.value);if(!compila())return;G.st=novoEstado();iniciaTela();run()};
+$('#eDaqui').onclick=()=>{LS.set('nv_roteiro',ta.value);if(!compila())return;
+  const ls=ta.value.slice(0,ta.selectionStart).split('\n').reverse();let lab='inicio';
+  for(const l of ls){const m=l.match(/^label\s+(\w+)\s*:/);if(m){lab=m[1];break}}
+  G.st=novoEstado(lab);iniciaTela();run();toast('Começando do label '+lab+'.',1600)};
+$('#eAjuda').onclick=()=>{const a=$('#ajuda');a.style.display=a.style.display==='block'?'none':'block'};
+$('#eVoltar').onclick=()=>{LS.set('nv_roteiro',ta.value);abreMenu()};
+$('#eBaixar').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ta.value],{type:'text/plain'}));a.download='roteiro.txt';document.body.appendChild(a);a.click();a.remove()};
+$('#eAbrir').onclick=()=>$('#eArquivo').click();
+$('#eArquivo').onchange=ev=>{const f=ev.target.files[0];if(!f)return;f.text().then(t=>{ta.value=t;LS.set('nv_roteiro',t);compila()});ev.target.value=''};
+
+/* ---------- marcar área com o dedo ---------- */
+const acv=$('#areaCv'),acx=acv.getContext('2d');let marcaA=null,arrasto=null;
+function abreArea(){
+  const fundos=Object.values(ART).filter(a=>a.tipo==='imagem');
+  $('#arFundo').innerHTML='<option value="">(sem fundo)</option>'+fundos.map(a=>'<option value="'+esc(norm(a.nome))+'">'+esc(a.nome)+'</option>').join('');
+  // tenta achar a última "cena" escrita antes do cursor
+  const antes=ta.value.slice(0,ta.selectionStart).split('\n').reverse();
+  for(const l of antes){const m=l.trim().match(/^cena\s+(.+?)(?:\s+com\s+\w+)?$/);if(m){const k=norm(m[1]);if(ART[k])$('#arFundo').value=k;else if(ART['fundo '+k])$('#arFundo').value='fundo '+k;break}}
+  [acv.width,acv.height]=CFG.formato==='9:16'?[360,640]:[640,360];marcaA=null;$('#arPor').disabled=true;$('#arInfo').textContent='Nenhuma área marcada ainda.';$('#arNome').value='';
+  $('#dArea').showModal();desenhaArea();
+}
+function desenhaArea(){
+  const w=acv.width,h=acv.height,a=ART[$('#arFundo').value];acx.fillStyle='#262c3d';acx.fillRect(0,0,w,h);
+  if(a&&pronta(a.img)){const i=a.img,s=Math.max(w/i.naturalWidth,h/i.naturalHeight);acx.drawImage(i,(w-i.naturalWidth*s)/2,(h-i.naturalHeight*s)/2,i.naturalWidth*s,i.naturalHeight*s)}
+  acx.strokeStyle='rgba(255,255,255,.15)';acx.lineWidth=1;for(let i=1;i<10;i++){acx.beginPath();acx.moveTo(i*w/10,0);acx.lineTo(i*w/10,h);acx.moveTo(0,i*h/10);acx.lineTo(w,i*h/10);acx.stroke()}
+  if(marcaA){const r=marcaA;acx.setLineDash([8,5]);acx.lineWidth=3;acx.strokeStyle='#e3b448';acx.fillStyle='rgba(227,180,72,.2)';acx.fillRect(r.x/100*w,r.y/100*h,r.w/100*w,r.h/100*h);acx.strokeRect(r.x/100*w,r.y/100*h,r.w/100*w,r.h/100*h);acx.setLineDash([])}
+}
+$('#arFundo').onchange=desenhaArea;
+const pctA=e=>{const r=acv.getBoundingClientRect();return{x:Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100)),y:Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100))}};
+acv.addEventListener('pointerdown',e=>{acv.setPointerCapture(e.pointerId);arrasto=pctA(e)});
+acv.addEventListener('pointermove',e=>{if(!arrasto)return;const p=pctA(e);
+  marcaA={x:Math.round(Math.min(p.x,arrasto.x)),y:Math.round(Math.min(p.y,arrasto.y)),w:Math.round(Math.abs(p.x-arrasto.x)),h:Math.round(Math.abs(p.y-arrasto.y))};desenhaArea()});
+acv.addEventListener('pointerup',()=>{arrasto=null;if(marcaA&&marcaA.w>1&&marcaA.h>1){$('#arPor').disabled=false;$('#arInfo').textContent='x '+marcaA.x+' · y '+marcaA.y+' · largura '+marcaA.w+' · altura '+marcaA.h}});
+$('#arPor').onclick=()=>{if(!marcaA)return;const nome=($('#arNome').value.trim()||'Área').replace(/"/g,"'");
+  insereLinhas(['"'+nome+'" '+marcaA.x+' '+marcaA.y+' '+marcaA.w+' '+marcaA.h+':','    "O que acontece ao tocar em '+nome+'."']);
+  $('#dArea').close();toast('Área posta no roteiro. Ela precisa ficar dentro de um "explorar:".',3500)};
+$('#arFechar').onclick=()=>$('#dArea').close();
+$('#eArea').onclick=abreArea;
+
+/* ---------- tela de artes ---------- */
+async function abreArtes(){tela('artes');await listaArtes()}
+async function listaArtes(){
+  const lista=(await carregaArtes()).sort((a,b)=>a.nome.localeCompare(b.nome)),box=$('#aLista');
+  if(!lista.length){box.innerHTML='<div class="vazio">Nenhuma arte ainda.<br>Toque em <b>＋ Do aparelho</b> para escolher imagens e áudios da galeria.</div>';return}
+  box.innerHTML=lista.map(a=>{const o=ART[norm(a.nome)];return '<div class="arte" data-n="'+esc(a.nome)+'"><div class="th" style="'+(a.tipo==='imagem'?'background-image:url('+o.url+')':'')+'">'+(a.tipo==='audio'?'🎵':'')+'</div>'
+    +'<input type="text" value="'+esc(a.nome)+'" aria-label="Nome da arte"><div class="bts">'+(a.tipo==='audio'?'<button data-a="ouvir">▶ Ouvir</button>':'')+'<button data-a="tira">🗑 Apagar</button></div></div>'}).join('');
+}
+$('#aLista').addEventListener('change',async e=>{if(e.target.tagName!=='INPUT')return;const card=e.target.closest('.arte'),velho=card.dataset.n,novo=e.target.value.trim();
+  if(!novo||novo===velho)return;const lista=await ADB.todos(),it=lista.find(a=>a.nome===velho);if(!it)return;
+  if(lista.some(a=>norm(a.nome)===norm(novo)&&a.nome!==velho)){toast('Já existe uma arte com esse nome.');e.target.value=velho;return}
+  await ADB.por({...it,nome:novo});await ADB.tira(velho);card.dataset.n=novo;await carregaArtes();toast('Nome trocado.')});
+$('#aLista').addEventListener('click',async e=>{const b=e.target.closest('[data-a]');if(!b)return;const n=b.closest('.arte').dataset.n;
+  if(b.dataset.a==='ouvir'){const a=new Audio(ART[norm(n)].url);a.play().catch(()=>{});return}
+  if(b.dataset.a==='tira'&&confirm('Apagar a arte "'+n+'"?')){await ADB.tira(n);listaArtes()}});
+async function encolhe(f){
+  if(!f.type.startsWith('image/')||f.type==='image/gif'||!window.createImageBitmap)return f;
+  try{const bmp=await createImageBitmap(f),s=Math.min(1,1920/Math.max(bmp.width,bmp.height));
+    if(s===1&&f.size<1.5e6){bmp.close();return f}
+    const c=document.createElement('canvas');c.width=Math.round(bmp.width*s);c.height=Math.round(bmp.height*s);c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);bmp.close();
+    const b=await new Promise(ok=>c.toBlob(ok,/png|webp/.test(f.type)?'image/webp':'image/jpeg',.9));return b||f}catch(e){return f}
+}
+async function nomeLivre(base){const lista=await ADB.todos(),usados=new Set(lista.map(a=>norm(a.nome)));let n=base,i=2;while(usados.has(norm(n)))n=base+' '+i++;return n}
+async function guardaArte(blob,nomeBase){
+  const tipo=(blob.type||'').startsWith('audio/')?'audio':'imagem',img=tipo==='imagem'?await encolhe(blob):blob;
+  const nome=await nomeLivre(norm(nomeBase)||'arte');await ADB.por({nome,tipo,blob:img,criado:Date.now()});return nome;
+}
+$('#aEnviar').onclick=()=>$('#aArquivo').click();
+$('#aArquivo').onchange=async ev=>{const fs=[...ev.target.files];ev.target.value='';if(!fs.length)return;toast('Guardando '+fs.length+' arquivo(s)…',8000);
+  for(const f of fs){if(!/^(image|audio)\//.test(f.type))continue;await guardaArte(f,f.name)}await listaArtes();toast('Pronto.')};
+$('#aVoltar').onclick=()=>abreMenu();
+let urlsBib=[];
+$('#aBib').onclick=async()=>{
+  const box=$('#bibLista');box.innerHTML='<p class="nota">Carregando…</p>';$('#dBib').showModal();
+  const itens=await new Promise(ok=>{const r=indexedDB.open('tamaki-biblioteca',1),out=[];
+    r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('itens'))r.result.createObjectStore('itens',{keyPath:'id'})};r.onerror=()=>ok(out);
+    r.onsuccess=()=>{const db=r.result,q=db.transaction('itens').objectStore('itens').openCursor();
+      q.onsuccess=()=>{const c=q.result;if(!c){db.close();return ok(out)}const v=c.value;if((v.tipo==='imagem'||v.tipo==='audio')&&v.blob)out.push(v);c.continue()};q.onerror=()=>{db.close();ok(out)}}});
+  urlsBib.forEach(u=>URL.revokeObjectURL(u));urlsBib=[];
+  if(!itens.length){box.innerHTML='<p class="nota">Nenhuma imagem ou áudio na Biblioteca.</p>';return}
+  itens.sort((a,b)=>(b.criado||0)-(a.criado||0));
+  box.innerHTML=itens.map((v,i)=>{let fundo='';if(v.tipo==='imagem'){const u=URL.createObjectURL(v.blob);urlsBib.push(u);fundo='background-image:url('+u+')'}
+    return '<button data-i="'+i+'"><div class="th" style="'+fundo+'">'+(v.tipo==='audio'?'🎵':'')+'</div><small>'+esc(v.nome||'sem nome')+'</small></button>'}).join('');
+  box.onclick=async e=>{const b=e.target.closest('[data-i]');if(!b)return;const v=itens[+b.dataset.i];
+    const nome=prompt('Nome desta arte no roteiro (ex.: ninho, sato feliz, tema):',norm(v.nome||''));if(nome==null)return;
+    const blob=v.blob.type?v.blob:new Blob([v.blob],{type:v.mime||''});const n=await guardaArte(blob,nome);toast('“'+n+'” entrou nas Artes.');listaArtes()};
+};
+$('#bibFechar').onclick=()=>{$('#dBib').close();urlsBib.forEach(u=>URL.revokeObjectURL(u));urlsBib=[]};
+
+/* ---------- ajustes ---------- */
+function abreAjustes(){
+  $('#cFmt').value=CFG.formato;$('#cVel').value=String(CFG.vel);$('#cAuto').value=CFG.auto;$('#cMus').value=CFG.mus;$('#cSom').value=CFG.som;$('#cTrava').checked=!!CFG.trava;
+  $('#dCfg').showModal();
+}
+$('#cFechar').onclick=()=>{
+  CFG.formato=$('#cFmt').value;CFG.vel=+$('#cVel').value;CFG.auto=Math.max(.3,+$('#cAuto').value||1.2);CFG.mus=+$('#cMus').value;CFG.som=+$('#cSom').value;CFG.trava=$('#cTrava').checked;
+  salvaCfg();ajustaCanvas();if(audio.m)audio.m.volume=CFG.mus;$('#dCfg').close();
+};
+$('#cSenha').onclick=()=>{LS.set('ne_senha',null);try{localStorage.removeItem('ne_senha');sessionStorage.removeItem('ne_ok')}catch(e){}CFG.trava=true;$('#cTrava').checked=true;salvaCfg();toast('Na próxima vez que abrir, você cria a senha nova.',3500)};
+$('#cLidas').onclick=()=>{if(!confirm('Esquecer quais falas já foram lidas? O ⏩ Pular volta a parar em tudo.'))return;LIDAS.clear();LS.set('nv_lidas',[]);toast('Pronto.')};
+
+/* ---------- menu ---------- */
+function abreMenu(){
+  if(G.rec)pararGravacao();
+  tocaMusica(null);clearTimeout(tEspera);G.modo=null;G.auto=false;G.skip=false;
+  const src=roteiroAtual();
+  const ok=(()=>{try{G.prog=parse(src);G.hash=hash(src);G.erroMenu=null;return true}catch(e){G.erroMenu=e;return false}})();
+  $('#menuErro').textContent=ok?'':'O roteiro tem um erro. Abra o roteiro para ver.';
+  $('#mTitulo').textContent=(ok&&G.prog.titulo)||'Visual Novel';
+  const temAuto=!!LS.get('nv_saves',{}).auto;
+  $('#mContinuar').disabled=!ok||!temAuto;$('#mNovo').disabled=!ok;$('#mCarregar').disabled=!ok;$('#mGravar').disabled=!ok;
+  tela('menu');
+}
+$('#mNovo').onclick=()=>{G.st=novoEstado();iniciaTela();run()};
+$('#mContinuar').onclick=()=>carregar('auto');
+$('#mCarregar').onclick=()=>abreSlots('carregar');
+$('#mGravar').onclick=async()=>{G.st=novoEstado();iniciaTela();await gravar();run()};
+$('#mEditor').onclick=()=>{abreEditor();if(G.erroMenu){const e=G.erroMenu;G.erroMenu=null;setTimeout(()=>mostraErroEditor(e),50)}};
+$('#mArtes').onclick=abreArtes;
+$('#mAjustes').onclick=abreAjustes;
+
+/* ---------- senha (opcional) ---------- */
+function montaTrava(){
+  const h=LS.get('ne_senha',null),inp=$('#senha');
+  $('#lockTxt').textContent=h?'Digite sua senha.':'Crie uma senha. Ela fica só neste aparelho e serve para afastar curiosos, não é uma proteção forte.';
+  $('#lockBtn').textContent=h?'Entrar':'Criar senha';
+  const tenta=()=>{
+    const v=inp.value;
+    if(!h){if(v.length<4){$('#lockErro').textContent='Use pelo menos 4 caracteres.';return}LS.set('ne_senha',hash('ninho:'+v))}
+    else if(hash('ninho:'+v)!==h){$('#lockErro').textContent='Senha errada.';inp.select();return}
+    try{sessionStorage.setItem('ne_ok','1')}catch(e){}
+    abreMenu();
+  };
+  $('#lockBtn').onclick=tenta;inp.onkeydown=e=>{if(e.key==='Enter')tenta()};
+  tela('trava');inp.focus();
+}
+
+/* ---------- início ---------- */
+(async()=>{
+  try{
+    ajustaCanvas();
+    try{await document.fonts.load('700 30px "Chakra Petch"');await document.fonts.load('400 30px "Atkinson Hyperlegible"')}catch(e){}
+    await carregaArtes();
+    let ok=!CFG.trava;try{ok=ok||sessionStorage.getItem('ne_ok')==='1'}catch(e){}
+    ok?abreMenu():montaTrava();
+  }catch(e){fatal('Erro ao iniciar: '+e.message)}
+})();
+</script>
+</body>
+</html>

@@ -6,7 +6,8 @@ App que junta todos os projetos, um por aba, sem rolar a página.
 |---|---|
 | Universo | Site que já existe: `/universo/` |
 | Tamaki | Site que já existe: `/Tamaki_Personagem/` |
-| Escrita, Novel, Jogos | Pastas dentro deste repositório (`projetos/`) |
+| Escrita | Pasta dentro deste repositório (`projetos/`) |
+| Novel | `novel.html`: engine de visual novel point-and-click (roteiro estilo Ren'Py, artes do tablet, gravação em vídeo) |
 | Reunião | Junta Universo, Ficha da Tamaki, Biblioteca de Escrita e visual novel numa nota só |
 
 ## Como publicar

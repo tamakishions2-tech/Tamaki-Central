@@ -106,3 +106,10 @@ Tom das séries de gameplay: **diário em call com os amigos** — a Tamaki cont
 - O pajubá e os trejeitos vêm do roteiro, não do treino.
 - Versão 7 (emoções): `fazer_emocao` ouve cada versão com o emotion2vec+ base (funasr, `emotion2vec/emotion2vec_plus_base`, 9 rótulos) e mede ritmo (sílabas/s de fala), tom (semitons) e volume contra a referência da voz; pontos = .45 emoção + .35 jeito (perto do `alvo` da emoção no EMO_CAT) + .2 Whisper. `/emocoes/analisar` ouve as que já existem. `sua` e `ajustes` aceitam cfg/temp. Pacote v2 com exag/cfg/temp por emoção.
 - Diagnóstico das emoções antigas da Tamaki (cartão de 2026-11-15): todas saíram ~+3–4 semitons mais agudas que a voz normal e com o mesmo ritmo (triste tão rápida quanto brava) — por isso soavam parecidas e estridentes. Os alvos v7 põem triste/calma/cochicho mais graves e lentas.
+
+## Novel (`novel.html`)
+Engine de visual novel point-and-click do Tama (evolução do "Ninho", repositório `Visual-novel-`). Tudo é desenhado num canvas (16:9 ou 9:16) para a gravação em vídeo (⏺) ir direto para a Biblioteca (`origem:"novel"`).
+- Roteiro estilo Ren'Py em localStorage `nv_roteiro` (na 1ª vez lê o `ne_roteiro` da engine antiga); saves `nv_saves`; ajustes `nv_cfg`; falas lidas `nv_lidas`. Senha opcional usa o `ne_senha` antigo.
+- Artes no IndexedDB `tamaki-novel` (store `artes`, chave `nome`): o nome da arte é o que vai no roteiro (`cena ninho`, `mostra sato feliz`, `musica tema`, `voz fala1`). Pode puxar imagens e áudios da Biblioteca.
+- Comandos novos além do Ninho: `titulo`, `item`/`pega`/`larga`/`tem x`, `explorar:` com áreas `"Nome" x y largura altura:` (em % da tela) e `sai`, `cena x com fade|preto|flash|nada`, `zoom z x y [s]`, `treme [forte]`, `flash [cor]`, `espera s`, `voz`. Labels seguem para o próximo quando acabam (como no Ren'Py).
+- Jogador: voltar fala, histórico, automático, pular lidas, lupa (mostra áreas), esconder botões. Editor: moldes (＋ Fala, ＋ Explorar…), ▶ Daqui (testa do label do cursor) e 📐 Marcar área (desenha a área com o dedo sobre o fundo).
