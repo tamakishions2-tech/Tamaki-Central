@@ -68,7 +68,20 @@ input[type=text],input[type=password],input[type=number],select{padding:.6em;bor
 .sala span{color:var(--giz2);font-size:.9rem}
 
 /* editor */
-#editor,#artes{flex-direction:column}
+#editor,#artes,#atores{flex-direction:column}
+#atLista{flex:1;overflow:auto;padding:.8rem;display:flex;flex-direction:column;gap:.7rem}
+.atc{border:1px solid var(--aco);border-radius:10px;background:var(--ferro2);padding:.8rem;display:flex;gap:.8rem;align-items:flex-start}
+.atc .foto{width:92px;height:110px;flex:none;border-radius:8px;background:#11141d center/contain no-repeat;display:flex;align-items:center;justify-content:center;font-size:2rem;border:2px solid var(--aco)}
+.atc .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:.45rem}
+.atc h3{margin:0;font-size:1.05rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.atc .st{font-size:.85rem;padding:.15em .6em;border-radius:999px;border:1px solid var(--aco)}
+.atc .st.ok{background:#1f3a2a;border-color:#4fae74;color:#bff0cf}.atc .st.av{background:#3a2f1f;border-color:#d8a54a;color:#ffe3b0}.atc .st.no{background:#2a2f3d;color:var(--giz2)}
+.atc select{max-width:100%}
+.emos{display:flex;flex-wrap:wrap;gap:.35rem}
+.emos span{display:flex;align-items:center;gap:.3rem;font-size:.82rem;border:1px solid var(--aco);border-radius:999px;padding:.1em .55em .1em .15em;background:#1a1f2d}
+.emos span i{width:26px;height:26px;border-radius:50%;background:#11141d center/cover no-repeat;display:inline-block;font-style:normal;text-align:center;line-height:26px}
+.emos span.falta{border-color:var(--erro);color:#ffd9d6}
+.atsec{font-size:.8rem;color:var(--giz2);margin:.1rem 0 -.2rem}
 .eBarra{display:flex;gap:.35rem;padding:.5rem;border-bottom:1px solid var(--aco);background:var(--ferro2);overflow-x:auto;scrollbar-width:none;flex:none}
 .eBarra::-webkit-scrollbar{display:none}
 .eBarra button{padding:.35em .8em;font-size:.88rem;white-space:nowrap;flex:none}
@@ -140,6 +153,7 @@ dialog h2{margin:0 0 .6rem;font-size:1.25rem}
     <button id="mCarregar">Carregar</button>
     <button id="mGravar">🎥 Gravar vídeo do começo</button>
     <div class="lin"><button id="mEditor">✎ Roteiro</button><button id="mArtes">🖼 Artes</button></div>
+    <button id="mAtores">🎭 Atores</button>
     <button id="mAjustes">⚙ Ajustes</button>
   </div>
   <p id="menuErro" class="nota" style="color:var(--erro)"></p>
@@ -182,6 +196,7 @@ dialog h2{margin:0 0 .6rem;font-size:1.25rem}
     <button id="eMenos">Recuo −</button>
     <button id="eArea">📐 Marcar área</button>
     <button id="eProntos">📥 Abrir</button>
+    <button id="eAtores">🎭 Atores</button>
     <button id="eAjuda">Comandos</button>
     <button id="eBaixar">⬇ Baixar</button>
     <button id="eAbrir">⬆ Abrir .txt</button>
@@ -230,6 +245,15 @@ var capitulo = 1</pre>
     jump outro_label
     chama outro_label
     fim</pre>
+    <h3>Atores do Palco e sentimentos</h3>
+    <p class="nota">Ligue um personagem a um ator da aba Atriz: ele usa as poses de lá, pisca e mexe a boca enquanto a fala aparece. O sentimento entre colchetes vale só para aquela fala e depois volta ao do <code>mostra</code>. Também funciona sem ator: <code>sato [surpresa]</code> usa a arte <code>sato surpresa</code>.</p>
+<pre>personagem tamaki "Tamaki" #c58cff ator Tamaki
+
+label inicio:
+    mostra tamaki centro
+    tamaki "Oi, migos!"
+    tamaki [surpresa] "Bicha, nem te conto!"
+    tamaki (brava) "Aff, de novo não."</pre>
     <h3>Point-and-click</h3>
 <pre>    explorar:
         "Porta" 70 30 15 50:
@@ -276,6 +300,16 @@ var capitulo = 1</pre>
   </div>
   <p class="nota" style="padding:.6rem .8rem 0;max-width:none">O nome de cada arte é o que vai no roteiro. Fundos: o nome da cena (<b>ninho</b>). Personagens: id + expressão (<b>sato feliz</b>) ou só o id (<b>sato</b>). Arquivos chamados <b>sato_feliz.png</b> já entram como “sato feliz”.</p>
   <div id="aLista"></div>
+</section>
+
+<section id="atores" class="tela">
+  <div class="eBarra">
+    <button id="atRecarrega" class="pri">↻ Conferir de novo</button>
+    <button id="atRoteiro">✎ Roteiro</button>
+    <button id="atVoltar">Menu</button>
+  </div>
+  <p class="nota" style="padding:.6rem .8rem 0;max-width:none">Aqui você vê cada personagem do roteiro e se ele está ligado a um ator da aba Atriz. Ligado, ele usa as poses e os sentimentos de lá, pisca e mexe a boca. Escolha o ator na lista: o roteiro muda sozinho.</p>
+  <div id="atLista"></div>
 </section>
 
 <dialog id="dSlots"><h2 id="sTit"></h2><div id="sLista"></div><button id="sFechar" style="width:100%">Fechar</button></dialog>
@@ -407,7 +441,7 @@ function parse(src){
     const tem=t.endsWith(':'),corpo=tem?t.slice(0,-1).trim():t;
     // definições
     if(m=t.match(/^(?:titulo|título)\s+"([^"]+)"$/)){P.titulo=m[1];return D}
-    if(m=t.match(/^personagem\s+(\w+)\s+"([^"]+)"(?:\s+(#[0-9a-fA-F]{3,8}))?$/)){P.chars[m[1]]={nome:m[2],cor:m[3]||null};return D}
+    if(m=t.match(/^personagem\s+(\w+)\s+"([^"]+)"(?:\s+(#[0-9a-fA-F]{3,8}))?(?:\s+ator\s+(?:"([^"]+)"|(\S+)))?$/)){P.chars[m[1]]={nome:m[2],cor:m[3]||null,ator:m[4]||m[5]||null};return D}
     if(m=t.match(/^imagem\s+(\w+(?:\s+\w+)?)\s+"([^"]+)"$/)){P.imgs[norm(m[1])]=m[2];return D}
     if(m=t.match(/^item\s+(\w+)(?:\s+"([^"]+)")?$/)){P.itens[m[1]]=m[2]||m[1];return D}
     if(m=t.match(/^recurso\s+(\w+)\s+(-?\d+(?:\.\d+)?)(?:\s+"([^"]+)")?$/)){P.recursos.push({id:m[1],nome:m[3]||m[1]});P.vars[m[1]]=+m[2];return D}
@@ -450,6 +484,7 @@ function parse(src){
     if(m=t.match(/^flash(?:\s+(branco|vermelho|preto|ouro))?$/))return{t:'flash',c:{vermelho:'#d02828',preto:'#000',ouro:'#e3b448'}[m[1]]||'#fff',n};
     if(m=t.match(reZoom))return{t:'zoom',z:Math.max(1,+m[1]),x:m[2]!=null?+m[2]:50,y:m[3]!=null?+m[3]:50,d:m[4]!=null?+m[4]:1.2,n};
     // falas
+    if(m=t.match(/^(\w+)\s+(?:\[([^\]]+)\]|\(([^)]+)\))\s*"(.*)"$/))return{t:'fala',who:m[1],emo:EMO.limpa((m[2]||m[3]).split(',')[0])||null,txt:m[4],n};
     if(m=t.match(/^(\w+)\s+"(.*)"$/))return{t:'fala',who:m[1],txt:m[2],n};
     if(m=t.match(/^"(.*)"$/))return{t:'fala',who:null,txt:m[1],n};
     throw new ErroScript(n,'Não entendi esta linha: '+t);
@@ -549,6 +584,124 @@ function achaImg(...nomes){
 function achaAudio(nome){const a=ART[norm(nome)];return a&&a.tipo==='audio'?a.url:nome}
 const pronta=i=>i&&i.complete&&i.naturalWidth>0;
 
+/* ---------- sentimentos (o mesmo bloco no Animador, no Palco e na Novel) ---------- */
+// Cada sentimento é a personagem inteira com outra expressão, com as mesmas poses da aba Imagens:
+// Tamaki_surpresa.png (parada) · _fala · _fala2 · _pisca · _fala_pisca. Guardado em <ator>/img-emo-<sentimento>-<pose>.
+const EMO = (() => {
+  const SLOTS = ["idle", "talk", "talk2", "idleBlink", "talkBlink"];
+  const semAc = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const limpa = s => semAc(s).trim().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+  const PADRAO = {
+    feliz: ["amei", "que bom", "perfeito", "maravilh", "uhul", "adoro", "eba"],
+    rindo: ["kkk", "haha", "rsrs", "hihi", "morri"],
+    surpresa: ["?!", "!?", "nossa", "nem te conto", "caramba", "meu deus", "mentira", "serio"],
+    brava: ["aff", "affe", "que odio", "absurdo", "palhacada", "ridiculo"],
+    triste: ["poxa", "que pena", "chorei", "triste", "saudade"],
+    envergonhada: ["que vergonha", "vergonha", "desculpa", "ops", "foi mal"],
+    pensativa: ["hmm", "sera que", "talvez", "pensando bem", "sei la"],
+    assustada: ["socorro", "que medo", "credo"]
+  };
+  function lerNome(arq, nomeAtor){
+    let t = semAc(String(arq).replace(/\.[^.]+$/, "")).split(/[_\-\s]+/).filter(Boolean), f = 0, p = 0, tirou = false;
+    const pre = limpa(nomeAtor).split("_")[0];
+    if (pre && t[0] === pre) { t.shift(); tirou = true; }
+    t = t.filter(x => {
+      if (/^(fala|falando|boca|aberta)2$/.test(x)) { f = 2; return false; }
+      if (/^(fala|falando|boca|aberta)$/.test(x)) { if (!f) f = 1; return false; }
+      if (x === "2" && f) { f = 2; return false; }
+      if (/^(pisca|piscando|piscada|fechado|fechada|olhofechado)$/.test(x)) { p = 1; return false; }
+      return !/^(parada|parado|base)$/.test(x); });
+    if (!tirou && t.length > 1) t.shift(); // Sato_surpresa.png: tira o nome do personagem
+    const emo = limpa(t.join("_")) || "normal";
+    return {emo, slot: f == 2 ? "talk2" : f && p ? "talkBlink" : f ? "talk" : p ? "idleBlink" : "idle"};
+  }
+  // texto -> frases. "Tamaki: [surpresa] Bicha, nem te conto!" · "(brava) Aff." O sentimento vale até o fim da frase.
+  function dividir(texto, quemDe){
+    const out = [];
+    for (let linha of String(texto || "").split(/\n+/)) {
+      linha = linha.trim(); if (!linha) continue;
+      let quem = null, pend = null; const m = quemDe && linha.match(/^([^:\[\]()"]{1,30}?)\s*:\s*(.+)$/);
+      if (m) { const q = quemDe(m[1].trim()); if (q) { quem = q; linha = m[2]; } }
+      const antes = out.length;
+      for (const p of linha.match(/[^.!?…]+[.!?…]*["”')]*|[.!?…]+/g) || []) {
+        let emo = null;
+        let s = p.replace(/\[([^\]]{1,40})\]/g, (a, n) => { emo = limpa(n.split(",")[0]); return " "; });
+        s = s.replace(/^\s*\(([^)]{1,40})\)/, (a, n) => { emo = limpa(n.split(",")[0]); return " "; }).replace(/\s+/g, " ").trim();
+        if (!/[\p{L}\p{N}]/u.test(s)) { if (emo) pend = emo; if (s && out.length > antes) out[out.length - 1].texto += s; continue; }
+        out.push({texto: s, emo: emo || pend, quem, fimLinha: false}); pend = null;
+      }
+      if (out.length > antes) out[out.length - 1].fimLinha = true;
+    }
+    return out;
+  }
+  // sentimento automático: as palavras de cada sentimento (lista = [{id, palavras}])
+  function detectar(txt, lista){
+    const n = semAc(txt); let melhor = null, pts = 0;
+    for (const e of lista || []) { let s = 0;
+      for (const w of e.palavras || []) { const k = semAc(w).trim(); if (!k) continue;
+        const ok = /^[a-z0-9]/.test(k) ? new RegExp("(^|[^a-z0-9])" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).test(n) : n.includes(k);
+        if (ok) s += k.length > 2 ? 2 : 1; }
+      if (s > pts) { pts = s; melhor = e.id; } }
+    return melhor;
+  }
+  // a pose do momento; o que faltar no sentimento usa a parada dele mesmo (nunca a de outro sentimento)
+  function pose(im, aberta, pisc, flap){
+    if (aberta) { let b = flap && im.talk2 ? im.talk2 : im.talk || im.idle; if (pisc && im.talkBlink && b != im.talk2) b = im.talkBlink; return b; }
+    return pisc && im.idleBlink ? im.idleBlink : im.idle || im.talk;
+  }
+  const chave = (emo, slot) => "emo-" + emo + "-" + slot;
+  return {SLOTS, PADRAO, limpa, lerNome, dividir, detectar, pose, chave};
+})();
+
+/* ---------- atores do Palco na Novel ----------
+   personagem sato "Sato" #d9645a ator Sato   → o Sato da Novel usa as poses e os sentimentos do ator "Sato" da aba Atriz.
+   sato [surpresa] "Fala"                      → o sentimento só nesta fala; depois volta ao do "mostra". */
+const NVA=(()=>{
+  const D={},E={};
+  const chaveCfg=id=>id==='principal'?'palco-animador-v1':'palco-animador-v1:'+id;
+  const chaveImg=(id,k)=>id==='principal'?'img-'+k:id+'/img-'+k;
+  function atores(){try{const o=JSON.parse(localStorage.getItem('palco-atores'));if(o&&o.lista&&o.lista.length)return o.lista}catch(e){}return[{id:'principal',nome:'Tamaki'}]}
+  function idDe(nome){const n=EMO.limpa(nome),a=atores().find(a=>EMO.limpa(a.nome)===n||EMO.limpa(a.id)===n)||atores().find(a=>EMO.limpa(a.nome).split('_')[0]===n);return a?a.id:null}
+  const abrir=()=>new Promise((ok,no)=>{const r=indexedDB.open('palco-animador',1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});
+  const pega=(db,k)=>new Promise(ok=>{try{const q=db.transaction('files').objectStore('files').get(k);q.onsuccess=()=>ok(q.result||null);q.onerror=()=>ok(null)}catch(e){ok(null)}});
+  const imagem=b=>new Promise(ok=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>ok(null);i.src=URL.createObjectURL(b)});
+  async function carrega(id){
+    let S={};try{S=JSON.parse(localStorage.getItem(chaveCfg(id)))||{}}catch(e){}
+    const d={S,im:{},emo:{},pronto:true};
+    try{const db=await abrir();
+      for(const k of EMO.SLOTS){const b=await pega(db,chaveImg(id,k));if(b){const i=await imagem(b);if(i)d.im[k]=i}}
+      for(const em of S.emocoes||[])for(const k of EMO.SLOTS){const b=await pega(db,chaveImg(id,EMO.chave(em.id,k)));if(b){const i=await imagem(b);if(i)(d.emo[em.id]=d.emo[em.id]||{})[k]=i}}
+      db.close()}catch(e){}
+    const v=D[id];if(v){for(const k in v.im)URL.revokeObjectURL(v.im[k].src);for(const e in v.emo)for(const k in v.emo[e])URL.revokeObjectURL(v.emo[e][k].src)}
+    D[id]=d;marca();
+  }
+  function preparar(prog){
+    if(!prog)return;const ids=new Set(),falta=[];
+    for(const c of Object.values(prog.chars))if(c.ator){c.atorId=idDe(c.ator);if(c.atorId)ids.add(c.atorId);else falta.push(c.ator)}
+    for(const id of ids)if(!D[id])carrega(id);
+    if(falta.length)toast('Não achei o ator '+falta.join(', ')+' na aba Atriz. Confira o nome.',4000);
+  }
+  let tR;function recarregar(){clearTimeout(tR);tR=setTimeout(()=>{for(const id of Object.keys(D))carrega(id)},600)}
+  function ligado(who){const p=G.prog&&G.prog.chars[who],d=p&&p.atorId&&D[p.atorId];return d&&(d.im.idle||d.im.talk)?d:null}
+  const ativo=()=>!!(G.st&&Object.keys(G.st.chars).some(ligado));
+  function desenhar(who,x,h,a,emo,fala,now){
+    const d=ligado(who);if(!d)return false;
+    const e=E[who]||(E[who]={prox:now+1500,pisca:0,aberta:false,troca:0,alt:false,emo:null,pop:-1e9});
+    const set=emo&&d.emo[emo]&&(d.emo[emo].idle||d.emo[emo].talk)?d.emo[emo]:d.im,em=set===d.im?null:emo;
+    if(em!==e.emo){e.emo=em;e.pop=now;e.pisca=now+90}
+    if(now>e.prox){e.pisca=now+120;e.prox=now+(Math.random()<.2?260:(+d.S.blinkEvery||4)*1000*(.6+Math.random()*.8))}
+    if(!fala)e.aberta=false;else if(now>e.troca){e.aberta=!e.aberta;if(e.aberta)e.alt=!e.alt;e.troca=now+(e.aberta?90+Math.random()*120:60+Math.random()*90)}
+    const img=EMO.pose(set,e.aberta,now<e.pisca,e.alt);if(!pronta(img))return false;
+    const ref=d.im.idle||d.im.talk,k=h/ref.naturalHeight,p=(now-e.pop)/260,pop=p<1?.04*Math.sin(p*Math.PI):0;
+    const resp=.008*Math.sin(now/3200*Math.PI*2),w=img.naturalWidth*k*(1+pop),hh=img.naturalHeight*k*(1+resp+pop);
+    cx.drawImage(img,x-w/2,H-hh+(1-a)*18-(e.aberta?h*.008:0),w,hh);return true;
+  }
+  async function garante(id){if(!D[id])await carrega(id);return D[id]}
+  return{preparar,recarregar,ativo,desenhar,atores,idDe,garante};
+})();
+window.addEventListener('storage',e=>{if(e.key==='palco-atriz-versao'||e.key==='palco-atores'||(e.key||'').startsWith('palco-animador-v1'))NVA.recarregar()});
+const falandoAgora=now=>!falaCompleta(now)||!!(G.voz&&!G.voz.paused&&!G.voz.ended);
+
 /* ---------- execução ---------- */
 const topo=()=>G.st.stack[G.st.stack.length-1];
 function nodeAtual(){const f=topo();if(!f)return null;const b=G.prog.blocks[f.b];return b?b[f.ip]:null}
@@ -620,7 +773,7 @@ function mostraFala(nd){
   const st=G.st,p=nd.who?G.prog.chars[nd.who]:null,txt=interp(nd.txt),chave=hash(nd.n+'|'+nd.txt);
   G.hist.push(JSON.stringify(st));if(G.hist.length>60)G.hist.shift();
   G.modo='fala';
-  G.fala={who:nd.who,nome:p?p.nome:'',cor:p?.cor||null,txt,t0:performance.now(),tc:0,chave,lida:LIDAS.has(chave)};
+  G.fala={who:nd.who,nome:p?p.nome:'',cor:p?.cor||null,emo:nd.emo||null,txt,t0:performance.now(),tc:0,chave,lida:LIDAS.has(chave)};
   if(G.skip&&!G.fala.lida){G.skip=false;botoes()}
   if(G.skip||!(CFG.vel>0)||matchMedia('(prefers-reduced-motion: reduce)').matches)G.fala.t0=-1e9;
   st.ultima=(p?p.nome+': ':'')+txt;
@@ -707,8 +860,10 @@ function personagens(now){
   const st=G.st,fala=G.modo==='fala'&&G.fala&&G.fala.who;
   for(const [id,c] of Object.entries(st.chars)){
     const t0=V.entra[id]||0,a=Math.min(1,(now-t0)/260),h=H*(vert()?.58:.86),x=(POS[c.pos]??50)/100*W;
-    const img=achaImg(c.e?id+' '+c.e:null,id);
+    const emo=fala===id&&G.fala.emo?G.fala.emo:c.e; // sentimento da fala, senão o do "mostra"
     cx.save();cx.globalAlpha=a;if(fala&&fala!==id)cx.filter='brightness(55%)';
+    if(NVA.desenhar(id,x,h,a,emo?EMO.limpa(emo):null,fala===id&&falandoAgora(now),now)){cx.restore();continue}
+    const img=achaImg(emo?id+' '+emo:null,c.e?id+' '+c.e:null,id);
     if(pronta(img)){const w=h*img.naturalWidth/img.naturalHeight;cx.drawImage(img,x-w/2,H-h+(1-a)*18,w,h)}
     else{const w=h*.38,p=G.prog.chars[id];rr(x-w/2,H-h,w,h,[w*.46,w*.46,8,8]);cx.fillStyle=p?.cor||'#7d8597';cx.fill();
       cx.fillStyle='#fff';cx.textAlign='center';cx.textBaseline='middle';cx.font='700 '+Math.round(w*.16)+'px "Chakra Petch",sans-serif';
@@ -797,7 +952,7 @@ function quadro(now){
   }
   const pisca=G.modo==='fala'&&Math.floor(now/450)%2;if(pisca!==G.pisca){G.pisca=pisca;sujo=true}
   const anima=G.rec||V.trans||V.flash||(V.shake&&now<V.shake.t0+V.shake.dur)||(V.cam&&now<V.cam.t0+V.cam.dur)||(G.modo==='explorar'&&now<V.pulso)||
-    (G.modo==='fala'&&!falaCompleta(now))||Object.values(V.entra).some(t=>now-t<300);
+    (G.modo==='fala'&&!falaCompleta(now))||Object.values(V.entra).some(t=>now-t<300)||NVA.ativo();
   if(!anima&&!sujo)return;
   if(now-ultimo<(G.rec?30:16))return;ultimo=now;sujo=false;
   desenha(now);
@@ -1006,7 +1161,7 @@ $('#partes').onclick=e=>{
 
 function compila(){
   const src=TXT();
-  try{G.prog=parse(src);G.hash=hash(src);$('#edErro').style.display='none';return true}
+  try{G.prog=parse(src);G.hash=hash(src);NVA.preparar(G.prog);$('#edErro').style.display='none';return true}
   catch(e){mostraErroEditor(e);return false}
 }
 function mostraErroEditor(e){
@@ -1214,7 +1369,7 @@ function abreMenu(){
   if(G.rec)pararGravacao();
   tocaMusica(null);clearTimeout(tEspera);G.modo=null;G.auto=false;G.skip=false;
   const src=roteiroAtual();
-  const ok=(()=>{try{G.prog=parse(src);G.hash=hash(src);G.erroMenu=null;return true}catch(e){G.erroMenu=e;return false}})();
+  const ok=(()=>{try{G.prog=parse(src);G.hash=hash(src);NVA.preparar(G.prog);G.erroMenu=null;return true}catch(e){G.erroMenu=e;return false}})();
   $('#menuErro').textContent=ok?'':'O roteiro tem um erro. Abra o roteiro para ver.';
   $('#mTitulo').textContent=(ok&&G.prog.titulo)||'Visual Novel';
   const temAuto=!!LS.get('nv_saves',{}).auto;
@@ -1227,6 +1382,72 @@ $('#mCarregar').onclick=()=>abreSlots('carregar');
 $('#mGravar').onclick=async()=>{G.st=novoEstado();iniciaTela();await gravar();run()};
 $('#mEditor').onclick=()=>{abreEditor();if(G.erroMenu){const e=G.erroMenu;G.erroMenu=null;setTimeout(()=>mostraErroEditor(e),50)}};
 $('#mArtes').onclick=abreArtes;
+
+/* ---------- 🎭 Atores: conferir quem está ligado ---------- */
+const reChar=/^(\s*personagem\s+(\w+)\s+"([^"]+)"(?:\s+(#[0-9a-fA-F]{3,8}))?)(?:\s+ator\s+(?:"([^"]+)"|(\S+)))?\s*$/;
+function personagensDoRoteiro(txt){
+  const out=[];txt.split('\n').forEach((l,i)=>{const m=l.match(reChar);if(m)out.push({linha:i,id:m[2],nome:m[3],cor:m[4]||null,ator:m[5]||m[6]||null})});return out;
+}
+function usosDe(txt,id){ // sentimentos e expressões que o roteiro pede para este personagem
+  const u=new Set();
+  for(const l of txt.split('\n')){const t=l.trim();let m;
+    if(m=t.match(new RegExp('^'+id+'\\s+(?:\\[([^\\]]+)\\]|\\(([^)]+)\\))\\s*"')))u.add(EMO.limpa((m[1]||m[2]).split(',')[0]));
+    if(m=t.match(new RegExp('^(?:mostra|show)\\s+'+id+'\\s+(.+)$'))){const tk=m[1].split(/\s+/).filter(x=>x!=='at'&&x!=='em'&&POS[x]==null);if(tk.length)u.add(EMO.limpa(tk.join(' ')))}}
+  u.delete('');u.delete('normal');return[...u];
+}
+const fmtAtor=n=>/\s/.test(n)?'"'+n+'"':n;
+function mudaRoteiro(novo,msg){LS.set('nv_roteiro',novo);poeTexto(novo,true);marcaNaoSalvo();try{G.prog=parse(novo);G.hash=hash(novo);NVA.preparar(G.prog)}catch(e){}toast(msg);listaAtores()}
+function ligar(c,nomeAtor){
+  const ls=roteiroAtual().split('\n'),m=ls[c.linha]&&ls[c.linha].match(reChar);if(!m)return toast('Não achei a linha do personagem. Confira no Roteiro.');
+  ls[c.linha]=m[1]+(nomeAtor?' ator '+fmtAtor(nomeAtor):'');
+  mudaRoteiro(ls.join('\n'),nomeAtor?c.nome+' agora usa o ator '+nomeAtor:c.nome+' voltou a usar as Artes');
+}
+function criarPersonagem(a){
+  const txt=roteiroAtual(),ls=txt.split('\n'),chars=personagensDoRoteiro(txt),usados=new Set(chars.map(c=>c.id));
+  let id=EMO.limpa(a.nome).split('_')[0]||'ator',n=2;const base=id;while(usados.has(id))id=base+n++;
+  const linha='personagem '+id+' "'+a.nome.replace(/"/g,"'")+'" ator '+fmtAtor(a.nome);
+  let pos=chars.length?chars[chars.length-1].linha+1:(/^### PARTE:/.test(ls[0]||'')?1:0);
+  ls.splice(pos,0,linha);mudaRoteiro(ls.join('\n'),'Personagem '+id+' criado. No roteiro: '+id+' [surpresa] "fala"');
+}
+async function abreAtores(){if(G.tela==='editor')guardaParte();tela('atores');await listaAtores()}
+async function listaAtores(){
+  const box=$('#atLista'),txt=roteiroAtual(),chars=personagensDoRoteiro(txt),todos=NVA.atores();
+  if(!Object.keys(ART).length)await carregaArtes();
+  const ligados=new Set(),html=[];
+  if(!chars.length)html.push('<div class="vazio">Nenhum personagem no roteiro ainda. Use <b>＋ Criar personagem</b> num ator abaixo.</div>');
+  for(const c of chars){
+    const aid=c.ator?NVA.idDe(c.ator):null,d=aid?await NVA.garante(aid):null;if(aid)ligados.add(aid);
+    const ref=d&&(d.im.idle||d.im.talk),usos=usosDe(txt,c.id);
+    const emos=d?Object.keys(d.emo).filter(e=>d.emo[e].idle||d.emo[e].talk):[];
+    let st,foto='';
+    if(c.ator&&!aid)st='<span class="st av">⚠ o ator “'+esc(c.ator)+'” não existe na aba Atriz</span>';
+    else if(aid&&!ref)st='<span class="st av">⚠ ligado a '+esc(c.ator)+', mas ele ainda não tem a pose Parada</span>';
+    else if(aid){st='<span class="st ok">✅ ligado ao ator '+esc(c.ator)+'</span>';foto=ref.src}
+    else{st='<span class="st no">sem ator · usa as Artes</span>';const a=ART[norm(c.id)];if(a&&a.img)foto=a.url}
+    const temSent=e=>d?emos.includes(e):!!(ART[norm(c.id+' '+e.replace(/_/g,' '))]);
+    const fotoSent=e=>d&&d.emo[e]?(d.emo[e].idle||d.emo[e].talk).src:(ART[norm(c.id+' '+e.replace(/_/g,' '))]||{}).url||'';
+    const lista=d?emos:[],pedidos=usos.filter(e=>!lista.includes(e));
+    const chip=(e,ok)=>'<span'+(ok?'':' class="falta"')+'><i style="'+(ok&&fotoSent(e)?'background-image:url('+fotoSent(e)+')':'')+'">'+(ok?'':'!')+'</i>'+esc(e)+'</span>';
+    const opc='<option value="">(nenhum · usar as Artes)</option>'+todos.map(a=>'<option value="'+esc(a.nome)+'"'+(aid===a.id?' selected':'')+'>🎭 '+esc(a.nome)+'</option>').join('')+(c.ator&&!aid?'<option selected value="'+esc(c.ator)+'">⚠ '+esc(c.ator)+' (não existe)</option>':'');
+    html.push('<div class="atc"><div class="foto" style="'+(foto?'background-image:url('+foto+');':'')+(c.cor?'border-color:'+esc(c.cor):'')+'">'+(foto?'':'👤')+'</div><div class="info">'
+      +'<h3>'+esc(c.nome)+' <small style="color:var(--giz2)">'+esc(c.id)+'</small> '+st+'</h3>'
+      +'<label class="atsec">Ator da aba Atriz</label><select data-liga="'+c.linha+'">'+opc+'</select>'
+      +(d?'<div class="atsec">Sentimentos prontos ('+emos.length+')</div><div class="emos">'+(emos.length?emos.map(e=>chip(e,true)).join(''):'<span>nenhum ainda · ponha em Atriz › 😮 Sentimentos</span>')+'</div>':'')
+      +(usos.length?'<div class="atsec">O roteiro pede</div><div class="emos">'+usos.map(e=>chip(e,temSent(e))).join('')+'</div>':'')
+      +(usos.some(e=>!temSent(e))?'<div class="atsec" style="color:#ffb3ad">Os marcados com ! não têm pose: nessas falas ele fica com a pose normal.</div>':'')
+      +'</div></div>');
+  }
+  const soltos=todos.filter(a=>!ligados.has(a.id));
+  if(soltos.length){html.push('<div class="atsec" style="margin-top:.4rem">Atores da aba Atriz que ainda não estão no roteiro</div>');
+    for(const a of soltos){const d=await NVA.garante(a.id),ref=d&&(d.im.idle||d.im.talk),n=d?Object.keys(d.emo).length:0;
+      html.push('<div class="atc"><div class="foto" style="'+(ref?'background-image:url('+ref.src+')':'')+'">'+(ref?'':'🎭')+'</div><div class="info"><h3>'+esc(a.nome)+' <span class="st no">'+n+' sentimento(s)</span></h3><div><button data-cria="'+esc(a.id)+'">＋ Criar personagem com este ator</button></div></div></div>')}}
+  box.innerHTML=html.join('');
+  box.querySelectorAll('[data-liga]').forEach(sel=>sel.onchange=()=>{const c=chars.find(x=>x.linha===+sel.dataset.liga);if(c)ligar(c,sel.value)});
+  box.querySelectorAll('[data-cria]').forEach(b=>b.onclick=()=>{const a=todos.find(x=>x.id===b.dataset.cria);if(a)criarPersonagem(a)});
+}
+$('#mAtores').onclick=abreAtores;$('#eAtores').onclick=abreAtores;
+$('#atRecarrega').onclick=()=>{NVA.recarregar();setTimeout(listaAtores,900)};
+$('#atRoteiro').onclick=()=>abreEditor();$('#atVoltar').onclick=()=>abreMenu();
 $('#mAjustes').onclick=abreAjustes;
 
 /* ---------- senha (opcional) ---------- */

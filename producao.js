@@ -163,7 +163,7 @@
       const pausas = linhas.map(l => (l.tom || {}).pausa ?? .3);
       let durTot = 0; for (const id of ids) { const it = await bib("readonly", s => s.get(id)); try { const c = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, 44100); durTot += (await c.decodeAudioData(await it.blob.arrayBuffer())).duration; } catch (e) { durTot += 4; } }
       sinal("palco", "🎭 Abrindo o Palco…");
-      const pr = await palco({ids, textos: linhas.map(l => l.texto), pausas, ini: .2, semBalao: true, titulo: nota.titulo, pasta: pasta.id, duracao: durTot + pausas.reduce((a, b) => a + b, 0)}, aviso);
+      const pr = await palco({ids, textos: linhas.map(l => l.texto), emos: linhas.map(l => l.emo || ""), pausas, ini: .2, semBalao: true, titulo: nota.titulo, pasta: pasta.id, duracao: durTot + pausas.reduce((a, b) => a + b, 0)}, aviso);
       if (pr.erro) aviso(`⚠ Sem a cena do Palco (${pr.erro}). Monto só com o jogo.`);
       const r = await editor({palco: pr.id || null, palcoDur: pr.dur || null, layout: "palco", pausasFinais: pausas, titulo: nota.titulo || "", final: nota.final || "", legendas: linhas.map(l => l.texto), emos: linhas.map(l => l.emo), tons: linhas.map(l => l.tom || {}), falas: ids, pausas: linhas.map(l => (l.tom || {}).pausa ?? null), cenas: linhas.map(l => l.cena), closes: linhas.map(l => !!l.close), redes: nota.redes || "", video: nota.video && todos.some(it => it.id === nota.video) ? nota.video : vids[0] ? vids[0].id : null}, aviso);
       const extra = semEmo.size ? ` · sem emoção treinada: ${[...semEmo].join(", ")}` : "";

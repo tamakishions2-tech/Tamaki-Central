@@ -235,7 +235,7 @@ function audio(){
 document.addEventListener("pointerdown", () => { try { audio(); } catch (e) {} }, {passive: true});
 function legenda(t, ms){ cap = t || ""; capIni = performance.now(); capDur = Math.max(ms, 500); }
 function pararAtual(){ if (cur) { const s = cur; cur = null; try { s.stop(); } catch (e) {} } if (window.speechSynthesis) speechSynthesis.cancel(); sp = false; }
-function parar(){ fila.length = 0; cap = ""; pararAtual(); }
+function parar(){ fila.length = 0; cap = ""; pararAtual(); FALA.quem = null; FALA.emo = null; }
 // muda o tom e a velocidade sem deixar a voz de "esquilo" (WSOLA + reamostragem)
 function esticar(x, a, sr){
   const N = sr > 32000 ? 2048 : 1024, Hs = N / 4, Ha = Hs / a, S = N / 8, w = new Float32Array(N);
@@ -300,10 +300,23 @@ function vozNavegador(t){ return new Promise(ok => {
 if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => { if (aba == "voz" && subV == "motor" && cfg.motor == "browser") painel(); };
 const fila = []; let ocupado = false;
 const espera = ms => new Promise(r => setTimeout(r, ms));
-function falar(texto){ (texto || "").split(/\n+/).map(s => s.trim()).filter(Boolean).forEach(t => fila.push(t)); bomba(); }
+// "Tamaki: [surpresa] Bicha, nem te conto!" → só a Tamaki fala, com a pose surpresa até o ponto final
+function quemDe(n){ const k = EMO.limpa(n), at = ATRIZ.atores(), a = at.find(a => EMO.limpa(a.nome) == k) || at.find(a => EMO.limpa(a.nome).split("_")[0] == k); return a ? a.id : null; }
+const atoresNaCena = () => [...new Set(cfg.layers.filter(L => L.tipo == "atriz" && L.vis).map(L => L.ator || "principal"))];
+function emoDaFrase(f){
+  const ids = f.quem ? [f.quem] : atoresNaCena();
+  if (f.emo) { if (f.emo == "normal") return null; if (ids.some(id => ATRIZ.temEmo(id, f.emo))) return f.emo; }
+  const lista = []; for (const id of ids) if (ATRIZ.dados(id).S.emoAuto !== false) lista.push(...ATRIZ.emocoes(id));
+  return EMO.detectar(f.texto, lista);
+}
+function falar(texto){ EMO.dividir(texto, quemDe).forEach(f => { f.emo = emoDaFrase(f); fila.push(f); }); bomba(); }
 async function bomba(){ if (ocupado) return; ocupado = true;
-  while (fila.length) { const t = fila.shift(); try { await dizer(t); } catch (e) { aviso("Erro: " + (e.message || e)); } if (fila.length) await espera(cfg.pause * 1000 * (+cfg.ed.pausa || 1)); }
-  ocupado = false; }
+  while (fila.length) { const f = fila.shift(), t = typeof f == "string" ? f : f.texto;
+    FALA.quem = f.quem || null; FALA.emo = f.emo || null;
+    try { await dizer(t); } catch (e) { aviso("Erro: " + (e.message || e)); }
+    const n = fila[0]; if (!n || n.emo != f.emo || n.quem != f.quem) FALA.emo = null; // fim da frase: volta ao normal
+    if (fila.length) await espera(cfg.pause * 1000 * (+cfg.ed.pausa || 1) * (f.fimLinha === false ? .45 : 1)); }
+  FALA.quem = null; FALA.emo = null; ocupado = false; }
 function msgErro(e){ const m = e && e.message || String(e); return /fetch|network|load failed/i.test(m) ? "Não consegui conectar (" + ({termux: "o comando palco está ligado no Termux?", azure: "confira a internet e a região"}[cfg.motor] || "confira a internet") + ")" : m; }
 async function dizer(t){
   if (cfg.motor != "browser") { try { const ab = await obterAudio(t); if (ab) return await tocarBuffer(ab, t); } catch (e) { aviso(msgErro(e) + ". Usei a voz do aparelho."); } }
@@ -658,6 +671,76 @@ function criarSeparadas(){
     pintar(ctx, lista, img, lado, ox, oy, q){ for (const p of usar(lista, img)) { if ((p.camada || "atras") !== lado || !inst[p.id]) continue; const im = img(p.id), d = dimsDe(im); inst[p.id].pintar(ctx, im, ox, oy, d.w * q, d.h * q); } }
   };
 }
+/* ---------- sentimentos (o mesmo bloco no Animador, no Palco e na Novel) ---------- */
+// Cada sentimento é a personagem inteira com outra expressão, com as mesmas poses da aba Imagens:
+// Tamaki_surpresa.png (parada) · _fala · _fala2 · _pisca · _fala_pisca. Guardado em <ator>/img-emo-<sentimento>-<pose>.
+const EMO = (() => {
+  const SLOTS = ["idle", "talk", "talk2", "idleBlink", "talkBlink"];
+  const semAc = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const limpa = s => semAc(s).trim().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+  const PADRAO = {
+    feliz: ["amei", "que bom", "perfeito", "maravilh", "uhul", "adoro", "eba"],
+    rindo: ["kkk", "haha", "rsrs", "hihi", "morri"],
+    surpresa: ["?!", "!?", "nossa", "nem te conto", "caramba", "meu deus", "mentira", "serio"],
+    brava: ["aff", "affe", "que odio", "absurdo", "palhacada", "ridiculo"],
+    triste: ["poxa", "que pena", "chorei", "triste", "saudade"],
+    envergonhada: ["que vergonha", "vergonha", "desculpa", "ops", "foi mal"],
+    pensativa: ["hmm", "sera que", "talvez", "pensando bem", "sei la"],
+    assustada: ["socorro", "que medo", "credo"]
+  };
+  function lerNome(arq, nomeAtor){
+    let t = semAc(String(arq).replace(/\.[^.]+$/, "")).split(/[_\-\s]+/).filter(Boolean), f = 0, p = 0, tirou = false;
+    const pre = limpa(nomeAtor).split("_")[0];
+    if (pre && t[0] === pre) { t.shift(); tirou = true; }
+    t = t.filter(x => {
+      if (/^(fala|falando|boca|aberta)2$/.test(x)) { f = 2; return false; }
+      if (/^(fala|falando|boca|aberta)$/.test(x)) { if (!f) f = 1; return false; }
+      if (x === "2" && f) { f = 2; return false; }
+      if (/^(pisca|piscando|piscada|fechado|fechada|olhofechado)$/.test(x)) { p = 1; return false; }
+      return !/^(parada|parado|base)$/.test(x); });
+    if (!tirou && t.length > 1) t.shift(); // Sato_surpresa.png: tira o nome do personagem
+    const emo = limpa(t.join("_")) || "normal";
+    return {emo, slot: f == 2 ? "talk2" : f && p ? "talkBlink" : f ? "talk" : p ? "idleBlink" : "idle"};
+  }
+  // texto -> frases. "Tamaki: [surpresa] Bicha, nem te conto!" · "(brava) Aff." O sentimento vale até o fim da frase.
+  function dividir(texto, quemDe){
+    const out = [];
+    for (let linha of String(texto || "").split(/\n+/)) {
+      linha = linha.trim(); if (!linha) continue;
+      let quem = null, pend = null; const m = quemDe && linha.match(/^([^:\[\]()"]{1,30}?)\s*:\s*(.+)$/);
+      if (m) { const q = quemDe(m[1].trim()); if (q) { quem = q; linha = m[2]; } }
+      const antes = out.length;
+      for (const p of linha.match(/[^.!?…]+[.!?…]*["”')]*|[.!?…]+/g) || []) {
+        let emo = null;
+        let s = p.replace(/\[([^\]]{1,40})\]/g, (a, n) => { emo = limpa(n.split(",")[0]); return " "; });
+        s = s.replace(/^\s*\(([^)]{1,40})\)/, (a, n) => { emo = limpa(n.split(",")[0]); return " "; }).replace(/\s+/g, " ").trim();
+        if (!/[\p{L}\p{N}]/u.test(s)) { if (emo) pend = emo; if (s && out.length > antes) out[out.length - 1].texto += s; continue; }
+        out.push({texto: s, emo: emo || pend, quem, fimLinha: false}); pend = null;
+      }
+      if (out.length > antes) out[out.length - 1].fimLinha = true;
+    }
+    return out;
+  }
+  // sentimento automático: as palavras de cada sentimento (lista = [{id, palavras}])
+  function detectar(txt, lista){
+    const n = semAc(txt); let melhor = null, pts = 0;
+    for (const e of lista || []) { let s = 0;
+      for (const w of e.palavras || []) { const k = semAc(w).trim(); if (!k) continue;
+        const ok = /^[a-z0-9]/.test(k) ? new RegExp("(^|[^a-z0-9])" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).test(n) : n.includes(k);
+        if (ok) s += k.length > 2 ? 2 : 1; }
+      if (s > pts) { pts = s; melhor = e.id; } }
+    return melhor;
+  }
+  // a pose do momento; o que faltar no sentimento usa a parada dele mesmo (nunca a de outro sentimento)
+  function pose(im, aberta, pisc, flap){
+    if (aberta) { let b = flap && im.talk2 ? im.talk2 : im.talk || im.idle; if (pisc && im.talkBlink && b != im.talk2) b = im.talkBlink; return b; }
+    return pisc && im.idleBlink ? im.idleBlink : im.idle || im.talk;
+  }
+  const chave = (emo, slot) => "emo-" + emo + "-" + slot;
+  return {SLOTS, PADRAO, limpa, lerNome, dividir, detectar, pose, chave};
+})();
+// quem fala agora (id do ator, ou null = todos) e o sentimento da frase
+const FALA = {quem: null, emo: null};
 /* ---------- atores: as PNGtubers da aba Atriz (Animador) entram no palco ---------- */
 // Cada ator do Animador tem poses, movimentos e partes próprios, guardados neste mesmo endereço.
 const ATRIZ = (() => {
@@ -672,7 +755,7 @@ const ATRIZ = (() => {
   const nome = id => (atores().find(a => a.id == id) || {nome: "Ator"}).nome;
   function dados(id){
     id = id || "principal";
-    if (!D[id]) { D[id] = {id, S: Object.assign({}, DEFS), im: {}, pimg: {}, exemplo: true, PARTES: criarPartes(), SEP: criarSeparadas(), pronto: false}; lerCfg(id); lerImgs(id).then(() => { try { desenharLista(); } catch (e) {} }); }
+    if (!D[id]) { D[id] = {id, S: Object.assign({}, DEFS), im: {}, emo: {}, emoIds: "", pimg: {}, exemplo: true, PARTES: criarPartes(), SEP: criarSeparadas(), pronto: false}; lerCfg(id); lerImgs(id).then(() => { try { desenharLista(); } catch (e) {} }); }
     return D[id];
   }
   function lerCfg(id){ const d = D[id]; if (!d) return; try { const o = JSON.parse(localStorage.getItem(chaveCfg(id))); d.S = Object.assign({}, DEFS, o || {}); } catch (e) {} }
@@ -694,13 +777,16 @@ const ATRIZ = (() => {
   }
   async function lerImgs(id){
     const d = D[id]; if (!d) return;
-    const novo = {}, novasP = {};
+    const novo = {}, novasP = {}, novasE = {};
     const pega = (db, k) => new Promise(ok => { try { const q = db.transaction("files").objectStore("files").get(k); q.onsuccess = () => ok(q.result || null); q.onerror = () => ok(null); } catch (e) { ok(null); } });
     const imagem = async b => { const i = new Image(); i.src = URL.createObjectURL(b); await new Promise(ok => { i.onload = i.onerror = ok; }); return i.naturalWidth ? i : null; };
     try { const db = await abrir();
       for (const k of SLOTS) { const b = await pega(db, chaveImg(id, k)); if (b) { const i = await imagem(b); if (i) novo[k] = i; } }
       for (const p of d.S.partes || []) if (p.png) { const b = await pega(db, "parte-" + p.id); if (b) { const i = await imagem(b); if (i) novasP[p.id] = i; } }
+      for (const em of d.S.emocoes || []) for (const k of SLOTS) { const b = await pega(db, chaveImg(id, EMO.chave(em.id, k))); if (b) { const i = await imagem(b); if (i) (novasE[em.id] = novasE[em.id] || {})[k] = i; } }
       db.close(); } catch (e) {}
+    for (const e in d.emo || {}) for (const k in d.emo[e]) URL.revokeObjectURL(d.emo[e][k].src);
+    d.emo = novasE; d.emoIds = (d.S.emocoes || []).map(e => e.id).join(",");
     for (const k in d.pimg) URL.revokeObjectURL(d.pimg[k].src);
     for (const k in d.im) if (d.im[k].src && d.im[k].src.startsWith("blob:")) URL.revokeObjectURL(d.im[k].src);
     d.pimg = novasP; d.exemplo = !Object.keys(novo).length;
@@ -723,13 +809,14 @@ const ATRIZ = (() => {
     {id: "entrada", e: "🎬", n: "Entrar de baixo", dur: .8, f: p => ({ty: (1 - backOut(p)) * 520})}
   ];
   function acao(id, L){ if (!L) return; const e = estado(L.id), a = ACOES.find(x => x.id == id); if (!a) return; if (a.start) a.start(e); e.acts.push({a, t0: performance.now()}); }
-  function passo(S, im, e, now){
+  function passo(S, im, e, now, aid){
     e.popAmt = S.popAmt;
     const dt = Math.min(.05, (now - e.last) / 1000); e.last = now; e.t += dt; const t = e.t;
-    const loud = sp ? ((t * 6.5 * (+cfg.speed || 1)) % 1) < .72 : lvl > cfg.thr; // voz do aparelho: sílabas simuladas
+    const vez = !FALA.quem || FALA.quem == aid; // com "Nome: fala", só o ator que fala mexe a boca
+    const loud = vez && (sp ? ((t * 6.5 * (+cfg.speed || 1)) % 1) < .72 : lvl > cfg.thr); // voz do aparelho: sílabas simuladas
     if (loud) { e.mouth = now; e.loud = now; }
-    const aberta = sp ? loud : now - e.mouth < +S.holdMs, antes = e.fala;
-    e.fala = sp || now - e.loud < +S.holdMs + 350;
+    const aberta = vez && (sp ? loud : now - e.mouth < +S.holdMs), antes = e.fala;
+    e.fala = vez && (sp || now - e.loud < +S.holdMs + 350);
     if (S.pop && e.fala && !antes) kick(e, 1); if (S.pop && !e.fala && antes) kick(e, -.35);
     e.amt += ((e.fala ? 1 : 0) - e.amt) * Math.min(1, dt * 10);
     const fr = S.swap == "suave" ? dt / (Math.max(30, +S.fadeMs) / 1000) : 1;
@@ -760,9 +847,22 @@ const ATRIZ = (() => {
     if (aberta) { let b = e.flap && im.talk2 ? im.talk2 : im.talk || im.idle; if (pisc && im.talkBlink && b != im.talk2) b = im.talkBlink; return b; }
     return pisc && im.idleBlink ? im.idleBlink : im.idle || im.talk;
   }
+  const temEmo = (id, em) => { const s = dados(id).emo[em]; return !!(s && (s.idle || s.talk)); };
+  const emocoes = id => (dados(id).S.emocoes || []).filter(e => temEmo(id, e.id));
+  function sentir(em, L){ if (!L) return; const e = estado(L.id); e.emoManual = em && em != "normal" ? {emo: em, ate: performance.now() + 2500} : null; }
+  const mudouEmo = id => { const d = D[id]; return !!d && (d.S.emocoes || []).map(e => e.id).join(",") != d.emoIds; };
+  // o sentimento da frase (só no ator que fala) ou o do botão; sem pose para ele, fica o normal
+  function poseSet(d0, L, e, now){
+    const aid = L.ator || "principal";
+    let em = !FALA.quem || FALA.quem == aid ? FALA.emo : null;
+    if (!em && e.emoManual && now < e.emoManual.ate) em = e.emoManual.emo;
+    const set = em && d0.emo[em] && (d0.emo[em].idle || d0.emo[em].talk) ? d0.emo[em] : null, vis = set ? em : null;
+    if (vis !== (e.emoVisto || null)) { e.emoVisto = vis; if (d0.S.pop !== false) kick(e, .8); e.piscaAte = now + 90; }
+    return set || d0.im;
+  }
   function desenhar(L, G, W, H, base, now){
-    const d0 = dados(L.ator), S = d0.S, im = d0.im, ref = im.idle || im.talk; if (!d0.pronto || !ref) return;
-    const e = estado(L.id), m = passo(S, im, e, now), d = dims(ref), w = G.w / 100 * W, h = w * d.h / d.w, k = h / 560, q = w / d.w;
+    const d0 = dados(L.ator), S = d0.S, ref = d0.im.idle || d0.im.talk; if (!d0.pronto || !ref) return;
+    const e = estado(L.id), im = poseSet(d0, L, e, now), m = passo(S, im, e, now, L.ator || "principal"), d = dims(ref), w = G.w / 100 * W, h = w * d.h / d.w, k = h / 560, q = w / d.w;
     d0.PARTES.preparar(ref, (S.partes || []).filter(p => !p.png)); d0.PARTES.atualizar(now, {fala: e.amt, corpoY: m.ty});
     const imgP = id => d0.pimg[id] || null; d0.SEP.passo(S.partes, imgP, now, {fala: e.amt, corpoY: m.ty});
     mostrada[L.id] = {im: {naturalWidth: d.w, naturalHeight: d.h}, ox: 0, oy: 0, kk: 1};
@@ -780,7 +880,7 @@ const ATRIZ = (() => {
   const resumo = id => { const S = dados(id).S; return `Parada: ${NOMES[S.idleStyle] || S.idleStyle}. Falando: ${NOMES[S.talkStyle] || S.talkStyle}. Troca: ${S.swap == "suave" ? "suave" : "corte seco"}. ${(S.partes || []).length} parte(s) que mexem.`; };
   const faltaParte = id => { const d = D[id]; return !!d && (d.S.partes || []).some(p => p.png && !d.pimg[p.id]); };
   const carregados = () => Object.keys(D);
-  return {atores, nome, dados, lerCfg, lerImgs, miniatura, larguraPadrao, desenhar, acao, ACOES, resumo, faltaParte, carregados, exemplo: id => dados(id).exemplo};
+  return {atores, nome, dados, lerCfg, lerImgs, miniatura, larguraPadrao, desenhar, acao, ACOES, resumo, faltaParte, carregados, exemplo: id => dados(id).exemplo, temEmo, emocoes, sentir, mudouEmo};
 })();
 function novaAtriz(ator){
   ator = ator || ATRIZ.atores()[0].id;
@@ -796,7 +896,7 @@ async function checarPedido(){ // o botão "Mandar para o Palco" do Animador
 }
 window.addEventListener("storage", async e => {
   if (!e.key) return;
-  if (e.key.startsWith("palco-animador-v1")) { const id = e.key.includes(":") ? e.key.split(":")[1] : "principal"; if (ATRIZ.carregados().includes(id)) { ATRIZ.lerCfg(id); if (ATRIZ.faltaParte(id)) await ATRIZ.lerImgs(id); } }
+  if (e.key.startsWith("palco-animador-v1")) { const id = e.key.includes(":") ? e.key.split(":")[1] : "principal"; if (ATRIZ.carregados().includes(id)) { ATRIZ.lerCfg(id); if (ATRIZ.faltaParte(id) || ATRIZ.mudouEmo(id)) await ATRIZ.lerImgs(id); } }
   else if (e.key == "palco-atriz-versao") { const id = lerAviso(e.key).ator; if (ATRIZ.carregados().includes(id)) { await ATRIZ.lerImgs(id); desenharLista(); } }
   else if (e.key == "palco-atriz-pedido") await checarPedido();
   else if (e.key == "palco-atores") { desenharLista(); if (aba == "camada") painel(); }
@@ -808,9 +908,10 @@ function cabecalhoCamada(L){
 function trava(L){ return travada(L) ? `<p class="dica">🔒 Travada${L.lock ? "" : " pela pasta"}. <button class="bt" data-lock="${L.lock ? L.id : "f:" + L.parent}">Destravar</button></p>` : ""; }
 function painelAtriz(L, modo){
   const tr = travada(L), botoes = `<div class="chips">${ATRIZ.ACOES.map(a => `<button data-atriz="${a.id}">${a.e} ${a.n}</button>`).join("")}</div>`;
-  if (modo == "anim") return `<div class="g"><div class="f"><b>Ações do ator (toque para fazer uma vez)</b>${botoes}</div>
+  const sents = ATRIZ.emocoes(L.ator || "principal"), chipsE = sents.length ? `<div class="f"><b>Sentimentos (toque para mostrar por 2,5 s)</b><div class="chips"><button data-sentir="normal">🙂 normal</button>${sents.map(e => `<button data-sentir="${esc(e.id)}">${esc(e.id)}</button>`).join("")}</div></div>` : `<p class="dica">😮 Este ator ainda não tem sentimentos. Ponha as PNGs em Atriz › 😮 Sentimentos.</p>`;
+  if (modo == "anim") return `<div class="g"><div class="f"><b>Ações do ator (toque para fazer uma vez)</b>${botoes}</div>${chipsE}
     <div class="btns"><button class="bt pri" data-a="teste">▶ Testar fala</button></div></div>
-    <p class="dica">${esc(ATRIZ.resumo(L.ator))} Os movimentos e as poses vêm da aba Atriz: o que você muda lá aparece aqui na hora.</p>`;
+    <p class="dica">${esc(ATRIZ.resumo(L.ator))} Os movimentos e as poses vêm da aba Atriz: o que você muda lá aparece aqui na hora.</p><p class="dica">Na fala, <b>[surpresa] Bicha, nem te conto!</b> troca o sentimento até o ponto final. Com vários atores, <b>${esc(ATRIZ.nome(L.ator || "principal"))}: [brava] Aff.</b> escolhe quem fala.</p>`;
   const lista = ATRIZ.atores().map(a => [a.id, a.nome]);
   if (!lista.some(a => a[0] == (L.ator || "principal"))) lista.push([L.ator, "(ator apagado)"]);
   return `<fieldset${tr ? " disabled" : ""}><div class="g">${sl("k", "ator", "Qual ator aparece", lista, L.ator || "principal")}${cabecalhoCamada(L)}</div><div class="g">
@@ -1332,6 +1433,7 @@ document.addEventListener("click", e => {
   if ((b = q("button[data-a]"))) return acao(b.dataset.a, b);
   if ((b = q("[data-fx]"))) return disparar(b.dataset.fx);
   if ((b = q("[data-atriz]"))) return ATRIZ.acao(b.dataset.atriz, camada());
+  if ((b = q("[data-sentir]"))) return ATRIZ.sentir(b.dataset.sentir, camada());
   if ((b = q("[data-preset]"))) { Object.assign(cfg.ed, PRESET[b.dataset.preset]); if (cadV) cadV.ajustar(); salvar(); painel(); toast("Predefinição: " + b.textContent); return; }
   if ((b = q("[data-icone]"))) { const f = pastaSel(); if (f) { f.icon = b.dataset.icone; f.iconImg = null; salvar(); desenharLista(); painel(); } return; }
   if ((b = q("[data-membro]"))) { const f = pastaSel(), L = cfg.layers.find(l => l.id == b.dataset.membro); if (f && L) { L.parent = L.parent == f.id ? null : f.id; salvar(); desenharLista(); painel(); } return; }
@@ -1412,7 +1514,9 @@ window.__tamakiGravar = async function (d, sinal) {
     await espera((d.ini ?? .2) * 1000);
     for (const [i, ab] of bufs.entries()) {
       sinal(`Palco: fala ${i + 1} de ${bufs.length}`);
+      FALA.quem = null; FALA.emo = emoDaFrase({texto: (d.textos || [])[i] || "", emo: EMO.limpa((d.emos || [])[i] || "") || null}); // a emoção da linha do roteiro vira pose
       await tocarBuffer(ab, (d.textos || [])[i] || "");
+      FALA.emo = null;
       await espera(((d.pausas || [])[i] ?? .3) * 1000);
     }
     await espera(400); r.stop(); await fim; cap = "";
@@ -1422,7 +1526,7 @@ window.__tamakiGravar = async function (d, sinal) {
     await tx("readwrite", s => s.put(it));
     try { const b = new BroadcastChannel("tamaki-biblioteca"); b.postMessage({novo: it.id}); b.close(); } catch (e) {}
     return {id: it.id, dur, w: cv.width, h: cv.height};
-  } finally { rec = null; cfg.bal.on = antes.bal; cfg.guides = antes.guias; }
+  } finally { rec = null; cfg.bal.on = antes.bal; cfg.guides = antes.guias; FALA.quem = null; FALA.emo = null; }
 };
 })();
 </script>

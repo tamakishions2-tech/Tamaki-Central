@@ -86,6 +86,15 @@ textarea{resize:vertical;min-height:70px}
 .preset span{color:var(--muted);font-size:.84rem}
 .preset.on{border-color:var(--lamp);box-shadow:inset 0 0 0 1px var(--lamp)}
 
+.emo-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px;margin:10px 0}
+.emo-topo{display:flex;align-items:center;gap:8px;margin-bottom:8px}.emo-topo b{margin-right:auto;font-size:1.05rem}
+.emo-slots{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:8px}
+.eslot{position:relative;aspect-ratio:1;border:2px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.4rem;color:var(--muted);overflow:hidden;background:var(--surface2)}
+.eslot.cheio{border-style:solid}.eslot img{width:100%;height:100%;object-fit:contain}
+.eslot small{position:absolute;bottom:0;left:0;right:0;font-size:.62rem;background:rgba(0,0,0,.6);color:#fff;text-align:center;line-height:1.35}
+.eslot .x{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;border:0;background:#e5484d;color:#fff;font-size:13px;line-height:22px;padding:0;cursor:pointer}
+.emo-card textarea{width:100%;min-height:54px}
+.emo-teste{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
 .slot{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:6px}
 .slot .thumb{aspect-ratio:1;border-radius:10px;background:
@@ -173,6 +182,7 @@ textarea{resize:vertical;min-height:70px}
     <nav class="tabs" role="tablist">
       <button role="tab" data-tab="mov" aria-selected="true">🎭 Movimentos</button>
       <button role="tab" data-tab="img" aria-selected="false">🖼️ Imagens</button>
+      <button role="tab" data-tab="emo" aria-selected="false">😮 Sentimentos</button>
       <button role="tab" data-tab="rosto" aria-selected="false">🙂 Rosto</button>
       <button role="tab" data-tab="partes" aria-selected="false">🪄 Partes</button>
       <button role="tab" data-tab="fala" aria-selected="false">🎙️ Fala</button>
@@ -253,6 +263,19 @@ textarea{resize:vertical;min-height:70px}
         </div>
       </div>
 
+      <!-- SENTIMENTOS -->
+      <div class="pane" id="pane-emo">
+        <h2>Sentimentos</h2>
+        <p class="hint">Cada sentimento é a personagem inteira com outra expressão. Na fala ela troca sozinha e, no fim da frase, volta para as poses da aba Imagens (o “normal”).</p>
+        <p class="hint">Dê nome aos arquivos assim e carregue todos de uma vez: <b>Tamaki_surpresa.png</b> (parada), <b>Tamaki_surpresa_fala.png</b>, <b>Tamaki_surpresa_fala2.png</b>, <b>Tamaki_surpresa_pisca.png</b>, <b>Tamaki_surpresa_fala_pisca.png</b>. Sentimento novo aparece sozinho. Exporte com o mesmo tamanho de tela das outras poses.</p>
+        <div class="btns"><button class="btn main" id="emoVarias">📂 Carregar várias imagens</button><button class="btn" id="emoNovo">+ Sentimento</button><input type="file" id="emoFiles" accept="image/png,image/*" multiple hidden></div>
+        <p class="hint" id="emoMsg"></p>
+        <h2>Testar</h2>
+        <div class="emo-teste" id="emoTeste"></div>
+        <label class="check"><input type="checkbox" data-k="emoAuto"> Escolher o sentimento sozinha pelas palavras da fala</label>
+        <p class="hint">Na fala (aqui, no Palco e na Novel): <b>[surpresa] Bicha, nem te conto!</b> vale até o ponto final. No Palco, <b>Tamaki: [brava] Aff.</b> escolhe também quem fala.</p>
+        <div id="emoLista"></div>
+      </div>
       <!-- ROSTO -->
       <div class="pane" id="pane-rosto">
         <h2>Camadas do rosto</h2>
@@ -377,7 +400,7 @@ const DEFAULTS = {
   blinkEvery:4, size:1, x:640, y:720,
   bgMode:'cor', bgColor:'#2a2440',
   gain:3, thresh:0.14, rate:1, pitch:1.1, voice:'',
-  caption:true, actAmt:1, preset:'classico', partes:[], rosto:[],
+  caption:true, actAmt:1, preset:'classico', partes:[], rosto:[], emocoes:[], emoAuto:true,
   humorBoca:'', bocaJuntas:true, formaMs:90, tampa:{on:false, x:.5, y:.36, w:.07, h:.025, cor:'#d9967a'}
 };
 /* Vários atores: cada um com poses, movimentos e partes próprios */
@@ -389,7 +412,7 @@ const chaveImg = (id, k) => id === 'principal' ? 'img-' + k : id + '/img-' + k;
 function salvarAtores(){ try { localStorage.setItem('palco-atores', JSON.stringify(ATORES)); } catch(e) {} }
 function carregarS(id){
   let saved = null; try { saved = JSON.parse(localStorage.getItem(chaveCfg(id)) || 'null'); } catch(e) {}
-  const o = {...DEFAULTS, ...(saved || {})}; o.partes = Array.isArray(saved && saved.partes) ? saved.partes : []; o.rosto = Array.isArray(saved && saved.rosto) ? saved.rosto : []; return o;
+  const o = {...DEFAULTS, ...(saved || {})}; o.partes = Array.isArray(saved && saved.partes) ? saved.partes : []; o.rosto = Array.isArray(saved && saved.rosto) ? saved.rosto : []; o.emocoes = Array.isArray(saved && saved.emocoes) ? saved.emocoes : []; return o;
 }
 let S = carregarS(ATORES.atual);
 let saveTimer;
@@ -953,6 +976,166 @@ function desenharRosto(sc, ref, abre, blinking){ // dentro da mesma transformaç
   for (const [bx, by, w, h, r, cx, cy] of selec){ ctx.save(); ctx.translate(cx, cy); if (r) ctx.rotate(r * Math.PI / 180); ctx.translate(bx - cx, by - cy); ctx.setLineDash([10, 8]); ctx.lineWidth = 3; ctx.strokeStyle = '#f2b544'; ctx.strokeRect(-w / 2, -h / 2, w, h); ctx.restore(); }
 }
 
+/* ---------- sentimentos (o mesmo bloco no Animador, no Palco e na Novel) ---------- */
+// Cada sentimento é a personagem inteira com outra expressão, com as mesmas poses da aba Imagens:
+// Tamaki_surpresa.png (parada) · _fala · _fala2 · _pisca · _fala_pisca. Guardado em <ator>/img-emo-<sentimento>-<pose>.
+const EMO = (() => {
+  const SLOTS = ["idle", "talk", "talk2", "idleBlink", "talkBlink"];
+  const semAc = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const limpa = s => semAc(s).trim().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+  const PADRAO = {
+    feliz: ["amei", "que bom", "perfeito", "maravilh", "uhul", "adoro", "eba"],
+    rindo: ["kkk", "haha", "rsrs", "hihi", "morri"],
+    surpresa: ["?!", "!?", "nossa", "nem te conto", "caramba", "meu deus", "mentira", "serio"],
+    brava: ["aff", "affe", "que odio", "absurdo", "palhacada", "ridiculo"],
+    triste: ["poxa", "que pena", "chorei", "triste", "saudade"],
+    envergonhada: ["que vergonha", "vergonha", "desculpa", "ops", "foi mal"],
+    pensativa: ["hmm", "sera que", "talvez", "pensando bem", "sei la"],
+    assustada: ["socorro", "que medo", "credo"]
+  };
+  function lerNome(arq, nomeAtor){
+    let t = semAc(String(arq).replace(/\.[^.]+$/, "")).split(/[_\-\s]+/).filter(Boolean), f = 0, p = 0, tirou = false;
+    const pre = limpa(nomeAtor).split("_")[0];
+    if (pre && t[0] === pre) { t.shift(); tirou = true; }
+    t = t.filter(x => {
+      if (/^(fala|falando|boca|aberta)2$/.test(x)) { f = 2; return false; }
+      if (/^(fala|falando|boca|aberta)$/.test(x)) { if (!f) f = 1; return false; }
+      if (x === "2" && f) { f = 2; return false; }
+      if (/^(pisca|piscando|piscada|fechado|fechada|olhofechado)$/.test(x)) { p = 1; return false; }
+      return !/^(parada|parado|base)$/.test(x); });
+    if (!tirou && t.length > 1) t.shift(); // Sato_surpresa.png: tira o nome do personagem
+    const emo = limpa(t.join("_")) || "normal";
+    return {emo, slot: f == 2 ? "talk2" : f && p ? "talkBlink" : f ? "talk" : p ? "idleBlink" : "idle"};
+  }
+  // texto -> frases. "Tamaki: [surpresa] Bicha, nem te conto!" · "(brava) Aff." O sentimento vale até o fim da frase.
+  function dividir(texto, quemDe){
+    const out = [];
+    for (let linha of String(texto || "").split(/\n+/)) {
+      linha = linha.trim(); if (!linha) continue;
+      let quem = null, pend = null; const m = quemDe && linha.match(/^([^:\[\]()"]{1,30}?)\s*:\s*(.+)$/);
+      if (m) { const q = quemDe(m[1].trim()); if (q) { quem = q; linha = m[2]; } }
+      const antes = out.length;
+      for (const p of linha.match(/[^.!?…]+[.!?…]*["”')]*|[.!?…]+/g) || []) {
+        let emo = null;
+        let s = p.replace(/\[([^\]]{1,40})\]/g, (a, n) => { emo = limpa(n.split(",")[0]); return " "; });
+        s = s.replace(/^\s*\(([^)]{1,40})\)/, (a, n) => { emo = limpa(n.split(",")[0]); return " "; }).replace(/\s+/g, " ").trim();
+        if (!/[\p{L}\p{N}]/u.test(s)) { if (emo) pend = emo; if (s && out.length > antes) out[out.length - 1].texto += s; continue; }
+        out.push({texto: s, emo: emo || pend, quem, fimLinha: false}); pend = null;
+      }
+      if (out.length > antes) out[out.length - 1].fimLinha = true;
+    }
+    return out;
+  }
+  // sentimento automático: as palavras de cada sentimento (lista = [{id, palavras}])
+  function detectar(txt, lista){
+    const n = semAc(txt); let melhor = null, pts = 0;
+    for (const e of lista || []) { let s = 0;
+      for (const w of e.palavras || []) { const k = semAc(w).trim(); if (!k) continue;
+        const ok = /^[a-z0-9]/.test(k) ? new RegExp("(^|[^a-z0-9])" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).test(n) : n.includes(k);
+        if (ok) s += k.length > 2 ? 2 : 1; }
+      if (s > pts) { pts = s; melhor = e.id; } }
+    return melhor;
+  }
+  // a pose do momento; o que faltar no sentimento usa a parada dele mesmo (nunca a de outro sentimento)
+  function pose(im, aberta, pisc, flap){
+    if (aberta) { let b = flap && im.talk2 ? im.talk2 : im.talk || im.idle; if (pisc && im.talkBlink && b != im.talk2) b = im.talkBlink; return b; }
+    return pisc && im.idleBlink ? im.idleBlink : im.idle || im.talk;
+  }
+  const chave = (emo, slot) => "emo-" + emo + "-" + slot;
+  return {SLOTS, PADRAO, limpa, lerNome, dividir, detectar, pose, chave};
+})();
+
+/* ---------- aba Sentimentos ---------- */
+const emoImgs = {};       // sentimento -> {pose: imagem}
+let emoAtual = null, emoAte = 0, ttsVez = 0;
+const EMO_NOMES = {idle: 'Parada', talk: 'Falando', talk2: 'Falando 2', idleBlink: 'Piscando', talkBlink: 'Fala piscando'};
+function emoLista(){ if (!Array.isArray(S.emocoes)) S.emocoes = []; return S.emocoes; }
+const temEmo = e => { const s = emoImgs[e]; return !!(s && (s.idle || s.talk)); };
+const emoSet = () => emoAtual && temEmo(emoAtual) ? emoImgs[emoAtual] : null;
+function emoMsg(t){ const el = $('#emoMsg'); if (el) el.textContent = t || ''; }
+async function carregarEmoPNG(){
+  const id = ATORES.atual, novo = {};
+  for (const e of emoLista()) for (const k of EMO.SLOTS){ const b = await dbGet(chaveImg(id, EMO.chave(e.id, k))); if (b){ try { (novo[e.id] = novo[e.id] || {})[k] = await blobToImage(b); } catch(err) {} } }
+  if (id !== ATORES.atual){ for (const e in novo) for (const k in novo[e]) URL.revokeObjectURL(novo[e][k].url); return; }
+  for (const e in emoImgs){ for (const k in emoImgs[e]) if (emoImgs[e][k].url) URL.revokeObjectURL(emoImgs[e][k].url); delete emoImgs[e]; }
+  Object.assign(emoImgs, novo); renderEmo();
+}
+function novoEmo(id){
+  let e = emoLista().find(x => x.id === id);
+  if (!e){ e = {id, palavras: (EMO.PADRAO[id] || []).slice()}; S.emocoes.push(e); clearTimeout(saveTimer); gravarS(); }
+  return e;
+}
+async function setEmo(emo, k, blob){
+  if (emo === 'normal') return setSlot(k, blob);
+  novoEmo(emo);
+  const velho = emoImgs[emo] && emoImgs[emo][k]; if (velho && velho.url) URL.revokeObjectURL(velho.url);
+  if (!blob){ if (emoImgs[emo]) delete emoImgs[emo][k]; }
+  else (emoImgs[emo] = emoImgs[emo] || {})[k] = await blobToImage(blob);
+  await dbPut(chaveImg(ATORES.atual, EMO.chave(emo, k)), blob || null);
+}
+async function apagarEmo(e){
+  for (const k of EMO.SLOTS) await dbPut(chaveImg(ATORES.atual, EMO.chave(e.id, k)), null);
+  if (emoImgs[e.id]){ for (const k in emoImgs[e.id]) URL.revokeObjectURL(emoImgs[e.id][k].url); delete emoImgs[e.id]; }
+  S.emocoes = emoLista().filter(x => x !== e); if (emoAtual === e.id) emoAtual = null;
+  clearTimeout(saveTimer); gravarS(); avisarPalco('palco-atriz-versao'); renderEmo();
+}
+async function renomearEmo(e){
+  const n = EMO.limpa(prompt('Novo nome do sentimento:', e.id) || ''); if (!n || n === e.id) return;
+  if (n === 'normal' || emoLista().some(x => x.id === n)){ alert('Já existe um sentimento com esse nome.'); return; }
+  const velho = e.id; e.id = n; clearTimeout(saveTimer); gravarS();
+  for (const k of EMO.SLOTS){ const b = await dbGet(chaveImg(ATORES.atual, EMO.chave(velho, k))); if (b){ await dbPut(chaveImg(ATORES.atual, EMO.chave(n, k)), b); await dbPut(chaveImg(ATORES.atual, EMO.chave(velho, k)), null); } }
+  if (emoImgs[velho]){ emoImgs[n] = emoImgs[velho]; delete emoImgs[velho]; }
+  if (emoAtual === velho) emoAtual = n; renderEmo();
+}
+function mudarEmoAnim(e){ e = e && temEmo(e) ? e : null; if (e === emoAtual) return; emoAtual = e; kickPop(.7); blinkUntil = performance.now() + 90; marcarEmo(); }
+function testarEmo(e){ mudarEmoAnim(e); emoAte = e ? performance.now() + 2500 : 0; }
+function emoDaFrase(f){
+  if (f.emo) return temEmo(f.emo) ? f.emo : null;
+  if (S.emoAuto === false) return null;
+  return EMO.detectar(f.texto, emoLista().filter(e => temEmo(e.id)));
+}
+function marcarEmo(){ document.querySelectorAll('#emoTeste button').forEach(b => b.classList.toggle('main', b.dataset.e === (emoAtual || 'normal'))); }
+function renderEmo(){
+  const lista = $('#emoLista'), teste = $('#emoTeste'); if (!lista || !teste) return;
+  const L = emoLista();
+  teste.innerHTML = [['normal', '🙂 normal'], ...L.map(e => [e.id, e.id + (temEmo(e.id) ? '' : ' (sem pose)')])].map(([id, n]) => `<button class="btn" data-e="${escH(id)}">${escH(n)}</button>`).join('');
+  teste.querySelectorAll('button').forEach(b => b.onclick = () => testarEmo(b.dataset.e === 'normal' ? null : b.dataset.e));
+  marcarEmo();
+  lista.innerHTML = L.length ? '' : '<p class="hint">Nenhum sentimento ainda. Toque em 📂 Carregar várias imagens ou em + Sentimento.</p>';
+  for (const e of L){
+    const set = emoImgs[e.id] || {}, card = document.createElement('div'); card.className = 'emo-card';
+    card.innerHTML = `<div class="emo-topo"><b>${escH(e.id)}</b>${temEmo(e.id) ? '' : '<span class="sub">falta a Parada</span>'}<button class="btn" data-x="ren" aria-label="Renomear">✎</button><button class="btn" data-x="del" aria-label="Apagar">🗑</button></div>
+      <div class="emo-slots">${EMO.SLOTS.map(k => `<div class="eslot${set[k] ? ' cheio' : ''}" data-s="${k}" role="button" tabindex="0">${set[k] ? `<img src="${set[k].url}" alt=""><button class="x" data-tira="${k}" aria-label="Tirar">×</button>` : '+'}<small>${EMO_NOMES[k]}</small></div>`).join('')}</div>
+      <label class="sub">Palavras que chamam este sentimento sozinho (separe por vírgula)</label>
+      <textarea rows="2">${escH((e.palavras || []).join(', '))}</textarea>
+      <input type="file" accept="image/png,image/*" hidden>`;
+    const inp = card.querySelector('input[type=file]'); let alvo = null;
+    card.querySelectorAll('.eslot').forEach(s => s.onclick = ev => {
+      const tira = ev.target.closest('[data-tira]');
+      if (tira){ ev.stopPropagation(); setEmo(e.id, tira.dataset.tira, null).then(renderEmo); return; }
+      alvo = s.dataset.s; inp.click(); });
+    inp.onchange = async () => { const f = inp.files[0]; inp.value = ''; if (f && alvo){ await setEmo(e.id, alvo, f); renderEmo(); } };
+    card.querySelector('textarea').oninput = ev => { e.palavras = ev.target.value.split(',').map(x => x.trim()).filter(Boolean); save(); };
+    card.querySelector('[data-x=ren]').onclick = () => renomearEmo(e);
+    card.querySelector('[data-x=del]').onclick = ev => { const b = ev.currentTarget; if (!b.dataset.ok){ b.dataset.ok = 1; b.textContent = 'Apagar?'; return; } apagarEmo(e); };
+    lista.appendChild(card);
+  }
+}
+$('#emoVarias').onclick = () => $('#emoFiles').click();
+$('#emoFiles').onchange = async ev => {
+  const fs = [...ev.target.files]; ev.target.value = ''; if (!fs.length) return;
+  const nomeAtor = (ATORES.lista.find(a => a.id === ATORES.atual) || {}).nome || '', vistos = new Set();
+  emoMsg('Carregando ' + fs.length + ' imagem(ns)…');
+  for (const f of fs){ const {emo, slot} = EMO.lerNome(f.name, nomeAtor); await setEmo(emo, slot, f); vistos.add(emo); }
+  renderEmo(); renderSlots();
+  emoMsg(fs.length + ' imagem(ns) em: ' + [...vistos].join(', ') + '. Toque em Mandar para o Palco quando terminar.');
+};
+$('#emoNovo').onclick = () => {
+  const n = EMO.limpa(prompt('Nome do sentimento (ex.: surpresa, brava, rindo):') || ''); if (!n) return;
+  if (n === 'normal'){ alert('O normal são as poses da aba Imagens.'); return; }
+  novoEmo(n); renderEmo();
+};
+
 /* ---------- Atores ---------- */
 function listaAtores(){
   const sel = $('#atorSel'); sel.innerHTML = ATORES.lista.map(a => `<option value="${a.id}">🎭 ${a.nome.replace(/</g, '&lt;')}</option>`).join(''); sel.value = ATORES.atual;
@@ -968,7 +1151,7 @@ async function trocarAtor(id, semSalvar){
   if (hasUserImages()) for (const s of SLOTS) if (images[s.k] && !images[s.k].user) delete images[s.k];
   parteSel = (S.partes[0] || {}).id || null; vista = null; pilha.length = 0;
   if (S.voice) voiceSel.value = S.voice;
-  listaAtores(); renderSlots(); syncControls(); listaPartes(); carregarPartesPNG(); carregarRostoPNG();
+  listaAtores(); renderSlots(); syncControls(); listaPartes(); carregarPartesPNG(); carregarRostoPNG(); emoAtual = null; carregarEmoPNG();
   runAction(ACTIONS.find(a => a.id === 'entrada'));
 }
 $('#atorSel').onchange = e => trocarAtor(e.target.value);
@@ -987,6 +1170,7 @@ $('#atorApaga').onclick = async () => {
   for (const s of SLOTS) await dbPut(chaveImg(a.id, s.k), null);
   for (const p of S.partes) if (p.png) await dbPut('parte-' + p.id, null);
   for (const c of S.rosto) await dbPut('rosto-' + c.id, null);
+  for (const e of emoLista()) for (const k of EMO.SLOTS) await dbPut(chaveImg(a.id, EMO.chave(e.id, k)), null);
   try { localStorage.removeItem(chaveCfg(a.id)); } catch(e) {}
   ATORES.lista = ATORES.lista.filter(x => x !== a); trocarAtor(ATORES.lista[0].id, true);
 };
@@ -1116,15 +1300,24 @@ voiceSel.onchange = () => { S.voice = voiceSel.value; save(); };
 $('#ttsBtn').onclick = () => {
   const text = $('#ttsText').value.trim(); if (!text || !('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  const v = speechSynthesis.getVoices().find(v => v.name === voiceSel.value); if (v){ u.voice = v; u.lang = v.lang; } else u.lang = 'pt-BR';
-  u.rate = S.rate; u.pitch = S.pitch;
-  u.onstart = () => { tts.on = true; caption.text = text; caption.shown = 0; caption.until = Infinity; };
-  u.onboundary = e => { tts.bump = 1; if (e.charIndex != null) caption.shown = Math.max(caption.shown, e.charIndex + (e.charLength || 1)); };
-  u.onend = u.onerror = () => { tts.on = false; caption.shown = caption.text.length; caption.until = performance.now() + 1800; };
-  speechSynthesis.speak(u);
+  const vez = ++ttsVez, frases = EMO.dividir(text); let i = 0;
+  const fim = () => { tts.on = false; mudarEmoAnim(null); caption.shown = caption.text.length; caption.until = performance.now() + 1800; };
+  // uma frase por vez: o sentimento da frase fica até ela acabar
+  const prox = () => {
+    if (vez !== ttsVez) return;
+    if (i >= frases.length) return fim();
+    const f = frases[i++], u = new SpeechSynthesisUtterance(f.texto);
+    const v = speechSynthesis.getVoices().find(v => v.name === voiceSel.value); if (v){ u.voice = v; u.lang = v.lang; } else u.lang = 'pt-BR';
+    u.rate = S.rate; u.pitch = S.pitch;
+    u.onstart = () => { if (vez !== ttsVez) return; tts.on = true; emoAte = 0; mudarEmoAnim(emoDaFrase(f)); caption.text = f.texto; caption.shown = 0; caption.until = Infinity; };
+    u.onboundary = e => { tts.bump = 1; if (e.charIndex != null) caption.shown = Math.max(caption.shown, e.charIndex + (e.charLength || 1)); };
+    u.onend = () => { if (vez !== ttsVez) return; tts.on = false; const n = frases[i]; if (!n || emoDaFrase(n) !== emoAtual) mudarEmoAnim(null); prox(); };
+    u.onerror = () => { if (vez !== ttsVez) return; i = frases.length; fim(); };
+    speechSynthesis.speak(u);
+  };
+  prox();
 };
-$('#ttsStop').onclick = () => { if ('speechSynthesis' in window) speechSynthesis.cancel(); tts.on = false; caption.until = 0; };
+$('#ttsStop').onclick = () => { ttsVez++; if ('speechSynthesis' in window) speechSynthesis.cancel(); tts.on = false; caption.until = 0; mudarEmoAnim(null); };
 
 /* ---------- Falar segurando ---------- */
 let manual = false;
@@ -1230,6 +1423,7 @@ let lastStatus = '';
 
 function tick(now){
   const dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
+  if (emoAte && now > emoAte){ emoAte = 0; mudarEmoAnim(null); }
 
   // 1. nível de voz e fonte
   let raw = 0, src = '';
@@ -1311,6 +1505,7 @@ const fmtTime = s => Math.floor(s/60) + ':' + String(Math.floor(s%60)).padStart(
 
 function pick(k, fallback){ return images[k] || images[fallback] || null; }
 function poseFor(open, blinking){
+  const es = emoSet(); if (es) return EMO.pose(es, open, blinking, flap);
   if (open){
     let base = (flap && images.talk2) ? images.talk2 : pick('talk', 'idle');
     if (blinking && images.talkBlink && base !== images.talk2) base = images.talkBlink;
@@ -1353,7 +1548,7 @@ function render(m){
     if (S.swap === 'suave' && mix > 0 && mix < 1){
       drawImg(poseFor(false, m.blinking)); drawImg(poseFor(true, m.blinking), mix);
     } else drawImg(poseFor(mix >= .5, m.blinking));
-    ctx.globalAlpha = 1; desenharRosto(sc, ref, mix >= .5, m.blinking);
+    ctx.globalAlpha = 1; if (!emoSet()) desenharRosto(sc, ref, mix >= .5, m.blinking); // o sentimento já traz o rosto
     SEP.pintar(ctx, S.partes, imgParte, 'frente', -ref.w*sc/2, -ref.h*sc, sc);
   }
   ctx.restore();
@@ -1380,7 +1575,7 @@ function drawCaption(){
   for (const s of SLOTS){ const b = await dbGet(chaveImg(ATORES.atual, s.k)); if (b) { try { images[s.k] = await blobToImage(b); } catch(e) {} } }
   if (hasUserImages()) for (const s of SLOTS) if (images[s.k] && !images[s.k].user) delete images[s.k];
   const bg = await dbGet('bg'); if (bg) { try { bgImage = await blobToImage(bg); } catch(e) {} }
-  renderSlots(); syncControls(); carregarPartesPNG(); carregarRostoPNG();
+  renderSlots(); syncControls(); carregarPartesPNG(); carregarRostoPNG(); carregarEmoPNG();
   runAction(ACTIONS.find(a => a.id === 'entrada'));
 })();
 requestAnimationFrame(tick);
