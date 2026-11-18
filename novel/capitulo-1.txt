@@ -5,7 +5,7 @@
 # As outras escolhas dão falas diferentes e voltam para o canon.
 #
 # ARTES (envie em 🖼 Artes com estes nomes; sem arte aparece um molde)
-# Fundos: estrada_noite e estrada_noite_lampioes (prólogo), casa_shion, estrada, taverna, escola, sala_aula, muro,
+# Fundos: estrada_noite, estrada_noite_lampioes, pais_alivio e pais_medo (prólogo), casa_shion, estrada, taverna, escola, sala_aula, muro,
 #   patio, praca, cozinha, quarto, cercado, moinho, delegacia,
 #   casa_utagawa, celeiro, casa_reika, porao, biblioteca
 #   (preto e branco já existem)
@@ -91,7 +91,10 @@ label inicio:
     crianca "Não. Não, não, não. Volta."
     "E a luz volta. Agora mais devagar."
     "Desta vez, o dono da voz que berrava pelo filho o encara."
+    cena pais_alivio com fade
     "Ele o abraça e sorri, chamando por outra pessoa."
+    cena pais_medo com fade
+    treme fraco
     "Mas o sorriso se desfaz quando a luz do lampião mostra o rosto da criança com mais calma."
     crianca "Vejo duas pessoas assustadas. E escuto uma terceira voz... até meus olhos se fecharem."
     para musica
