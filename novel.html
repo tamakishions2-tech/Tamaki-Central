@@ -75,6 +75,11 @@ input[type=text],input[type=password],input[type=number],select{padding:.6em;bor
 .eBarra.mold{background:#232838}
 .eBarra.mold button{background:none;border-style:dashed;color:var(--giz2)}
 #roteiro{flex:1;min-height:0;width:100%;resize:none;border:0;background:#161a26;color:var(--giz);font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;padding:1rem;tab-size:4;white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto}
+#partes{display:flex;gap:.35rem;padding:.45rem .5rem;overflow-x:auto;background:#1a1f2d;border-bottom:1px solid var(--aco);flex:none;scrollbar-width:none;align-items:center}
+#partes::-webkit-scrollbar{display:none}
+#partes .pt{flex:none;min-height:34px;padding:.25em .8em;font-size:.86rem;border-radius:999px;white-space:nowrap}
+#partes .pt.on{background:var(--corvo);border-color:var(--corvo);color:#fff;font-weight:700}
+#partes .acao{flex:none;min-height:34px;padding:.2em .6em;font-size:.86rem;background:none;border-style:dashed}
 #eNome{max-width:42vw;overflow:hidden;text-overflow:ellipsis;font-family:var(--t)}
 #edErro{display:none;background:#3a1f22;color:#ffd9d6;padding:.6rem 1rem;border-top:1px solid var(--erro)}
 #ajuda{display:none;max-height:52%;overflow:auto;padding:1rem 1.2rem;background:var(--ferro2);border-top:1px solid var(--aco);font-size:.92rem;line-height:1.5}
@@ -183,6 +188,7 @@ dialog h2{margin:0 0 .6rem;font-size:1.25rem}
     <button id="eVoltar">Menu</button>
     <input id="eArquivo" type="file" accept=".txt,text/plain" hidden>
   </div>
+  <div id="partes" aria-label="Partes do roteiro"></div>
   <div class="eBarra mold" id="moldes">
     <button data-m="fala">＋ Fala</button>
     <button data-m="narra">＋ Narração</button>
@@ -198,6 +204,8 @@ dialog h2{margin:0 0 .6rem;font-size:1.25rem}
   <textarea id="roteiro" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Roteiro"></textarea>
   <div id="edErro"></div>
   <div id="ajuda">
+    <h3>Partes</h3>
+    <p class="nota">O roteiro é dividido em partes (⚙ Definições, Prólogo, Cena 1…), na barra roxa. Toque numa parte para editar só ela. ＋ Parte cria outra depois da atual; ✎ Nome, ◀ ▶ para mudar a ordem e 🗑 para apagar. O jogo junta tudo na ordem da barra. Personagens, itens e variáveis ficam em ⚙ Definições.</p>
     <h3>Artes (sem caminho de arquivo)</h3>
     <p class="nota">Em 🖼 Artes, envie as imagens e os áudios do tablet. O nome da arte é o que você usa no roteiro: fundo <code>ninho</code> → <code>cena ninho</code>; personagem <code>sato feliz</code> → <code>mostra sato feliz</code>; música <code>tema</code> → <code>musica tema</code>.</p>
     <h3>Definições (sem recuo)</h3>
@@ -484,7 +492,8 @@ function parse(src){
     return id;
   }
   bloco(0,'raiz');
-  if(P.labels.inicio==null)throw new ErroScript(0,'Falta o "label inicio:". É por ele que o jogo começa.');
+  if(!P.ordem||!P.ordem.length)throw new ErroScript(0,'O roteiro ainda não tem nenhum "label". Comece uma parte com: label nome:');
+  P.inicio=P.labels.inicio!=null?'inicio':P.ordem[0];
   const rec=new Set(P.recursos.map(r=>r.id));
   P.salas.forEach(s=>{[s.custoRec,s.rendaRec].forEach(r=>{if(!rec.has(r))throw new ErroScript(s.n,'O recurso "'+r+'" não foi definido. Use: recurso '+r+' 0 "Nome"')})});
   P.blocks.forEach(b=>b.forEach(nd=>{
@@ -544,7 +553,7 @@ const pronta=i=>i&&i.complete&&i.naturalWidth>0;
 const topo=()=>G.st.stack[G.st.stack.length-1];
 function nodeAtual(){const f=topo();if(!f)return null;const b=G.prog.blocks[f.b];return b?b[f.ip]:null}
 function novoEstado(label){
-  return{stack:[{b:G.prog.labels[label||'inicio'],ip:0}],vars:JSON.parse(JSON.stringify(G.prog.vars)),itens:[],vistos:[],log:[],
+  return{stack:[{b:G.prog.labels[label||G.prog.inicio],ip:0}],vars:JSON.parse(JSON.stringify(G.prog.vars)),itens:[],vistos:[],log:[],
     bg:null,chars:{},music:null,cam:{z:1,x:50,y:50},t:Date.now(),ultima:'',done:false};
 }
 function completaEstado(st){st.itens=st.itens||[];st.vistos=st.vistos||[];st.log=st.log||[];st.cam=st.cam||{z:1,x:50,y:50};st.chars=st.chars||{};return st}
@@ -943,16 +952,69 @@ $('#sFechar').onclick=()=>$('#dSlots').close();
 const ta=$('#roteiro');
 // o roteiro da engine antiga (mesmo site) entra sozinho na primeira vez
 function roteiroAtual(){return LS.get('nv_roteiro',null)??LS.get('ne_roteiro',null)??$('#demo').textContent}
+/* ---------- roteiro em partes (Definições, Prólogo, Cena 1…) ----------
+   Guardado como um texto só, com uma linha "### PARTE: Nome" no começo de cada parte.
+   Assim o .txt, a Escrita e os Prontos continuam sendo um arquivo só. */
+const MARCA=/^### PARTE:\s*(.*)$/;
+let PROJ={partes:[{nome:'Roteiro',texto:''}],atual:0};
+function dividir(t){
+  const ls=String(t||'').replace(/\r/g,'').split('\n'),partes=[];let cur=null;
+  const fecha=()=>{if(cur){cur.texto=cur.l.join('\n').replace(/\n+$/,'').replace(/^\n+/,'');delete cur.l;partes.push(cur)}};
+  if(ls.some(l=>MARCA.test(l))){
+    for(const l of ls){const m=l.match(MARCA);if(m){fecha();cur={nome:m[1].trim()||'Parte',l:[]}}else{if(!cur)cur={nome:'Definições',l:[]};cur.l.push(l)}}
+    fecha();
+    return partes.filter((p,i)=>!(i===0&&p.nome==='Definições'&&!p.texto.trim()&&partes.length>1));
+  }
+  // texto antigo, sem marcas: o que vem antes do primeiro label vira "Definições"
+  const i=ls.findIndex(l=>/^label\s+\w+\s*:/.test(l));
+  if(i>0&&ls.slice(0,i).some(l=>l.trim()&&!l.trim().startsWith('#')))return[{nome:'Definições',texto:ls.slice(0,i).join('\n').replace(/\n+$/,'')},{nome:'Roteiro',texto:ls.slice(i).join('\n').replace(/\n+$/,'')}];
+  return[{nome:'Roteiro',texto:ls.join('\n').replace(/\n+$/,'')}];
+}
+function serializar(pr){
+  const mapa=[];let linha=1,out=[];
+  pr.partes.forEach((p,i)=>{out.push('### PARTE: '+p.nome);linha++;mapa.push({i,ini:linha});const n=p.texto.split('\n').length;out.push(p.texto);linha+=n;if(i<pr.partes.length-1){out.push('');linha++}});
+  return{texto:out.join('\n')+'\n',mapa};
+}
+const TXT=()=>serializar(PROJ).texto;
+function poeTexto(t,manter){const a=PROJ.atual;PROJ={partes:dividir(t),atual:0};if(manter)PROJ.atual=Math.min(a,PROJ.partes.length-1);
+  else{const j=PROJ.partes.findIndex(p=>p.nome!=='Definições');PROJ.atual=j<0?0:j}
+  ta.value=PROJ.partes[PROJ.atual].texto;LS.set('nv_roteiro',TXT());LS.set('nv_parte',PROJ.atual);desenhaPartes()}
+function guardaParte(){PROJ.partes[PROJ.atual].texto=ta.value;LS.set('nv_roteiro',TXT());LS.set('nv_parte',PROJ.atual)}
+function vaiParte(i,linha){guardaParte();PROJ.atual=i;ta.value=PROJ.partes[i].texto;LS.set('nv_parte',i);desenhaPartes();$('#edErro').style.display='none';
+  if(linha){const ls=ta.value.split('\n');let p=0;for(let k=0;k<linha-1&&k<ls.length;k++)p+=ls[k].length+1;ta.focus();ta.setSelectionRange(p,p+(ls[linha-1]||'').length)}
+  else ta.scrollTop=0}
+function desenhaPartes(){
+  const box=$('#partes');
+  box.innerHTML=PROJ.partes.map((p,i)=>'<button class="pt'+(i===PROJ.atual?' on':'')+'" data-p="'+i+'">'+(p.nome==='Definições'?'⚙ ':'')+esc(p.nome)+'</button>').join('')
+    +'<button class="acao" data-a="nova">＋ Parte</button><button class="acao" data-a="nome">✎ Nome</button><button class="acao" data-a="esq">◀</button><button class="acao" data-a="dir">▶</button><button class="acao" data-a="tira">🗑</button>';
+  const on=box.querySelector('.on');if(on)box.scrollLeft=Math.max(0,on.offsetLeft-box.offsetLeft-40);
+}
+const slug=n=>norm(n).replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'parte';
+$('#partes').onclick=e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.p!=null){const i=+b.dataset.p;if(i!==PROJ.atual)vaiParte(i);return}
+  const a=b.dataset.a,i=PROJ.atual,P=PROJ.partes;
+  if(a==='nova'){const n=(prompt('Nome da parte nova (ex.: Cena 2 · A carroça):','')||'').trim();if(!n)return;guardaParte();
+    P.splice(i+1,0,{nome:n,texto:'label '+slug(n)+':\n    "..."'});vaiParte(i+1);marcaNaoSalvo();return}
+  if(a==='nome'){const n=(prompt('Nome desta parte:',P[i].nome)||'').trim();if(!n)return;P[i].nome=n;guardaParte();desenhaPartes();marcaNaoSalvo();return}
+  if(a==='esq'&&i>0){guardaParte();[P[i-1],P[i]]=[P[i],P[i-1]];PROJ.atual=i-1;guardaParte();desenhaPartes();marcaNaoSalvo();return}
+  if(a==='dir'&&i<P.length-1){guardaParte();[P[i+1],P[i]]=[P[i],P[i+1]];PROJ.atual=i+1;guardaParte();desenhaPartes();marcaNaoSalvo();return}
+  if(a==='tira'){if(P.length<2)return toast('O roteiro precisa de pelo menos uma parte.');
+    if(!confirm('Apagar a parte “'+P[i].nome+'”? (O roteiro de antes fica em 📥 Abrir › Voltar ao roteiro de antes.)'))return;
+    guardaParte();LS.set('nv_roteiro_antes',TXT());P.splice(i,1);PROJ.atual=Math.max(0,i-1);ta.value=P[PROJ.atual].texto;guardaParte();desenhaPartes();marcaNaoSalvo()}
+};
+
 function compila(){
-  const src=ta.value;
+  const src=TXT();
   try{G.prog=parse(src);G.hash=hash(src);$('#edErro').style.display='none';return true}
   catch(e){mostraErroEditor(e);return false}
 }
 function mostraErroEditor(e){
   if(!e)return;const box=$('#edErro');box.textContent=(e.linha?'Linha '+e.linha+': ':'')+e.message;box.style.display='block';
-  if(e.linha){const ls=ta.value.split('\n');let p=0;for(let i=0;i<e.linha-1;i++)p+=ls[i].length+1;ta.focus();ta.setSelectionRange(p,p+(ls[e.linha-1]||'').length)}
+  if(e.linha){const mapa=serializar(PROJ).mapa;let alvo=null;for(const m of mapa)if(e.linha>=m.ini)alvo=m;
+    if(alvo){const local=e.linha-alvo.ini+1;box.textContent='Parte “'+PROJ.partes[alvo.i].nome+'”, linha '+local+': '+e.message;if(alvo.i!==PROJ.atual)vaiParte(alvo.i,local);else vaiParte(alvo.i,local);box.style.display='block'}}
 }
-function abreEditor(){ta.value=roteiroAtual();mostraNome();tela('editor')}
+function abreEditor(){const k=LS.get('nv_parte',null);poeTexto(roteiroAtual());if(k!=null&&PROJ.partes[k]){PROJ.atual=k;ta.value=PROJ.partes[k].texto;desenhaPartes()}mostraNome();tela('editor')}
 let tSalva;
 ta.addEventListener('input',e=>{
   if(e.inputType==='insertLineBreak'){
@@ -960,7 +1022,7 @@ ta.addEventListener('input',e=>{
     let ind=lin.match(/^ */)[0];if(lin.trim().endsWith(':'))ind+='    ';
     if(ind)ta.setRangeText(ind,pos,pos,'end');
   }
-  clearTimeout(tSalva);tSalva=setTimeout(()=>LS.set('nv_roteiro',ta.value),600);marcaNaoSalvo();
+  clearTimeout(tSalva);tSalva=setTimeout(guardaParte,500);marcaNaoSalvo();
 });
 ta.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();recuo(e.shiftKey?-1:1)}});
 function recuo(dir){
@@ -968,7 +1030,7 @@ function recuo(dir){
   let fimL=v.indexOf('\n',e);if(fimL<0)fimL=v.length;
   const linhas=v.slice(ini,fimL).split('\n').map(l=>dir>0?'    '+l:l.replace(/^ {1,4}/,''));
   const novo=linhas.join('\n');ta.setRangeText(novo,ini,fimL,'preserve');
-  ta.setSelectionRange(ini,ini+novo.length);ta.focus();LS.set('nv_roteiro',ta.value);marcaNaoSalvo();
+  ta.setSelectionRange(ini,ini+novo.length);ta.focus();guardaParte();marcaNaoSalvo();
 }
 const MOLDES={
   fala:['sato "Escreva a fala aqui."'],narra:['"Escreva a narração aqui."'],cena:['cena nome_do_fundo com fade'],
@@ -984,19 +1046,21 @@ function insereLinhas(ls){
   if(!atual.trim()){if(!ind){const ant=v.slice(0,Math.max(0,ini-1)),la=ant.slice(ant.lastIndexOf('\n')+1);ind=la.match(/^ */)[0];if(la.trim().endsWith(':'))ind+='    '}
     const novo=ls.map(l=>ind+l).join('\n');ta.setRangeText(novo,ini,fimL,'end')}
   else{if(atual.trim().endsWith(':'))ind+='    ';const novo='\n'+ls.map(l=>ind+l).join('\n');ta.setRangeText(novo,fimL,fimL,'end')}
-  ta.focus();LS.set('nv_roteiro',ta.value);marcaNaoSalvo();
+  ta.focus();guardaParte();marcaNaoSalvo();
 }
 $('#moldes').onclick=e=>{const b=e.target.closest('[data-m]');if(b)insereLinhas(MOLDES[b.dataset.m])};
 $('#eMais').onclick=()=>recuo(1);
 $('#eMenos').onclick=()=>recuo(-1);
-$('#eTestar').onclick=()=>{LS.set('nv_roteiro',ta.value);if(!compila())return;G.st=novoEstado();iniciaTela();run()};
-$('#eDaqui').onclick=()=>{LS.set('nv_roteiro',ta.value);if(!compila())return;
-  const ls=ta.value.slice(0,ta.selectionStart).split('\n').reverse();let lab='inicio';
-  for(const l of ls){const m=l.match(/^label\s+(\w+)\s*:/);if(m){lab=m[1];break}}
+$('#eTestar').onclick=()=>{guardaParte();if(!compila())return;G.st=novoEstado();iniciaTela();run()};
+$('#eDaqui').onclick=()=>{guardaParte();if(!compila())return;
+  // o label acima do cursor; se não tiver, o primeiro desta parte; se a parte não tiver, o último das partes de antes
+  const achaLabels=t=>[...t.matchAll(/^label\s+(\w+)\s*:/gm)].map(m=>m[1]);
+  let lab=achaLabels(ta.value.slice(0,ta.selectionStart)).pop()||achaLabels(ta.value)[0];
+  for(let i=PROJ.atual-1;!lab&&i>=0;i--)lab=achaLabels(PROJ.partes[i].texto).pop();lab=lab||G.prog.inicio;
   G.st=novoEstado(lab);iniciaTela();run();toast('Começando do label '+lab+'.',1600)};
 $('#eAjuda').onclick=()=>{const a=$('#ajuda');a.style.display=a.style.display==='block'?'none':'block'};
-$('#eVoltar').onclick=()=>{LS.set('nv_roteiro',ta.value);abreMenu()};
-$('#eBaixar').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ta.value],{type:'text/plain'}));
+$('#eVoltar').onclick=()=>{guardaParte();abreMenu()};
+$('#eBaixar').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([TXT()],{type:'text/plain'}));
   a.download=(LS.get('nv_nome','')||'roteiro').replace(/[\\/:*?"<>|]+/g,'-').trim()+'.txt';document.body.appendChild(a);a.click();a.remove()};
 
 /* ---------- vários roteiros: novo, salvar na aba Escrita (pasta "Visual novel"), abrir de lá ---------- */
@@ -1016,30 +1080,30 @@ function salvarNaEscrita(){
   if(!D.pastas.some(p=>p.id===ESC_PASTA))D.pastas.push({id:ESC_PASTA,nome:'Visual novel',cor:'#7a6ad8'});
   const id=LS.get('nv_nota',null),agora=Date.now();let n=id&&D.notas.find(x=>x.id===id);
   if(!n){n={id:'nv'+agora.toString(36),criado:agora,fav:false,papel:'',order:D.notas.length,pasta:ESC_PASTA};D.notas.push(n);LS.set('nv_nota',n.id)}
-  Object.assign(n,{titulo:nome,html:paraHtml(ta.value),editado:agora});
+  guardaParte();Object.assign(n,{titulo:nome,html:paraHtml(TXT()),editado:agora});
   try{localStorage.setItem(ESC_KEY,JSON.stringify(D))}catch(e){toast('Sem espaço no aparelho para salvar na Escrita.');return false}
-  LS.set('nv_roteiro',ta.value);LS.set('nv_sujo',false);mostraNome();
+  LS.set('nv_sujo',false);mostraNome();
   toast('Salvo na aba Escrita, pasta “Visual novel”.',2600);return true;
 }
 $('#eSalvar').onclick=()=>salvarNaEscrita();
 $('#eNome').onclick=()=>{const n=(prompt('Nome deste roteiro:',LS.get('nv_nome',''))||'').trim();if(!n)return;LS.set('nv_nome',n);marcaNaoSalvo();mostraNome()};
 $('#eNovo').onclick=()=>{
-  if(ta.value.trim()&&LS.get('nv_sujo',true)){
+  guardaParte();if(TXT().replace(/^### PARTE:.*$/gm,'').trim()&&LS.get('nv_sujo',true)){
     if(confirm('Salvar o roteiro atual na Escrita antes de começar um novo?')){if(!salvarNaEscrita())return}
     else if(!confirm('Começar um novo sem salvar? O atual ainda fica em 📥 Abrir › Voltar ao roteiro de antes.'))return}
   const nome=(prompt('Nome do roteiro novo:','')||'').trim();if(!nome)return;
-  LS.set('nv_roteiro_antes',ta.value);ta.value='';LS.set('nv_roteiro','');LS.set('nv_nome',nome);LS.set('nv_nota',null);LS.set('nv_sujo',false);
+  LS.set('nv_roteiro_antes',TXT());poeTexto('### PARTE: Prólogo\n');LS.set('nv_nome',nome);LS.set('nv_nota',null);LS.set('nv_sujo',false);
   $('#edErro').style.display='none';mostraNome();ta.focus();toast('Página em branco. Escreva do seu jeito; 💾 Salvar manda para a Escrita.',3200)};
 function listaEscrita(){
   const D=escLer(),ns=(D.notas||[]).filter(n=>n.pasta===ESC_PASTA).sort((a,b)=>(b.editado||0)-(a.editado||0)),box=$('#prEscrita');
   box.innerHTML=ns.length?ns.map(n=>'<div class="slot"><div><strong>'+esc(n.titulo||'Sem nome')+'</strong><span>'+new Date(n.editado||n.criado||0).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})+'</span></div><button data-id="'+esc(n.id)+'">Abrir</button></div>').join(''):'<p class="nota">Nenhum ainda. Use 💾 Salvar no roteiro.</p>';
   box.onclick=e=>{const b=e.target.closest('[data-id]');if(!b)return;const n=(escLer().notas||[]).find(x=>x.id===b.dataset.id);if(!n)return;
-    if(LS.get('nv_sujo',false)&&ta.value.trim()&&!confirm('O roteiro aberto tem mudanças não salvas. Abrir outro mesmo assim? (Ele fica em Voltar ao roteiro de antes.)'))return;
-    LS.set('nv_roteiro_antes',ta.value);ta.value=deHtml(n.html||'');LS.set('nv_roteiro',ta.value);LS.set('nv_nome',n.titulo||'');LS.set('nv_nota',n.id);LS.set('nv_sujo',false);
+    if(LS.get('nv_sujo',false)&&TXT().replace(/^### PARTE:.*$/gm,'').trim()&&!confirm('O roteiro aberto tem mudanças não salvas. Abrir outro mesmo assim? (Ele fica em Voltar ao roteiro de antes.)'))return;
+    LS.set('nv_roteiro_antes',TXT());poeTexto(deHtml(n.html||''));LS.set('nv_nome',n.titulo||'');LS.set('nv_nota',n.id);LS.set('nv_sujo',false);
     $('#dProntos').close();mostraNome();compila();toast('Aberto: '+(n.titulo||'roteiro'))};
 }
 $('#eAbrir').onclick=()=>$('#eArquivo').click();
-$('#eArquivo').onchange=ev=>{const f=ev.target.files[0];if(!f)return;f.text().then(t=>{LS.set('nv_roteiro_antes',ta.value);ta.value=t;LS.set('nv_roteiro',t);LS.set('nv_nome',f.name.replace(/\.txt$/i,''));LS.set('nv_nota',null);LS.set('nv_sujo',true);mostraNome();compila()});ev.target.value=''};
+$('#eArquivo').onchange=ev=>{const f=ev.target.files[0];if(!f)return;f.text().then(t=>{LS.set('nv_roteiro_antes',TXT());poeTexto(t);LS.set('nv_nome',f.name.replace(/\.txt$/i,''));LS.set('nv_nota',null);LS.set('nv_sujo',true);mostraNome();compila()});ev.target.value=''};
 
 /* ---------- roteiros prontos (pasta novel/ do repositório) ---------- */
 $('#eProntos').onclick=async()=>{
@@ -1049,10 +1113,10 @@ $('#eProntos').onclick=async()=>{
     box.onclick=async e=>{const b=e.target.closest('[data-i]');if(!b)return;const r=lista[+b.dataset.i];
       if(!confirm('Abrir “'+r.nome+'”? O roteiro atual fica guardado em “Voltar ao roteiro de antes”.'))return;
       const t=await (await fetch('novel/'+r.arquivo+'?v='+Date.now().toString(36),{cache:'no-store'})).text();
-      LS.set('nv_roteiro_antes',ta.value);ta.value=t;LS.set('nv_roteiro',t);LS.set('nv_nome',r.nome);LS.set('nv_nota',null);LS.set('nv_sujo',true);mostraNome();$('#dProntos').close();if(compila())toast('Roteiro aberto. Toque em ▶ Testar.',3000)}}
+      LS.set('nv_roteiro_antes',TXT());poeTexto(t);LS.set('nv_nome',r.nome);LS.set('nv_nota',null);LS.set('nv_sujo',true);mostraNome();$('#dProntos').close();if(compila())toast('Roteiro aberto. Toque em ▶ Testar.',3000)}}
   catch(e){box.innerHTML='<p class="nota">Não consegui buscar os roteiros (sem internet?).</p>'}
 };
-$('#prVoltar').onclick=()=>{const v=LS.get('nv_roteiro_antes',null);if(v==null)return;const atual=ta.value;ta.value=v;LS.set('nv_roteiro',v);LS.set('nv_roteiro_antes',atual);LS.set('nv_nota',null);LS.set('nv_nome','');LS.set('nv_sujo',true);mostraNome();$('#dProntos').close();compila();toast('Voltei ao roteiro de antes.')};
+$('#prVoltar').onclick=()=>{const v=LS.get('nv_roteiro_antes',null);if(v==null)return;const atual=TXT();poeTexto(v);LS.set('nv_roteiro_antes',atual);LS.set('nv_nota',null);LS.set('nv_nome','');LS.set('nv_sujo',true);mostraNome();$('#dProntos').close();compila();toast('Voltei ao roteiro de antes.')};
 $('#prFechar').onclick=()=>$('#dProntos').close();
 
 /* ---------- marcar área com o dedo ---------- */

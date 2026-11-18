@@ -1,3 +1,4 @@
+### PARTE: Definições
 # ============================================================
 # KAORO · CAPÍTULO 1 · O LIVRO DA VILA
 # Roteiro de visual novel feito a partir da campanha jogada.
@@ -54,9 +55,8 @@ var ninho1 = False
 var pluma = False
 var zul = False
 
-# ------------------------------------------------------------
+### PARTE: Prólogo · A árvore da curva
 label inicio:
-    # ---------- PRÓLOGO · A árvore da curva ----------
     cena preto
     musica grilos
     espera 1.2
@@ -109,8 +109,8 @@ label inicio:
     "Cinco anos depois."
     jump manha
 
+### PARTE: Cena 1 · A manhã dos ovos
 label manha:
-    # ---------- CENA 1 · A manhã dos ovos ----------
     cena casa_shion com fade
     musica manha
     "Primeiro dia de aula do outono."
@@ -163,6 +163,9 @@ label manha:
         "Sair com a cesta" 38 4 24 14 se ovos >= 6:
             sai
     "Seis ovos na cesta. Inteiros. Por enquanto."
+
+### PARTE: Cena 2 · A carroça
+label carroca:
     cena estrada com fade
     "O sol ainda nem passou do moinho, e eu já estou atrasado."
     som carroca
@@ -204,7 +207,7 @@ label ovos:
             "Ele fica quieto até a vila. Fica estranho, ele quieto."
     jump taverna_manha
 
-# ------------------------------------------------------------
+### PARTE: Cena 3 · A Taverna
 label taverna_manha:
     cena taverna com fade
     musica taverna
@@ -228,6 +231,7 @@ label taverna_manha:
     kenichi "Quem perder faz o que o outro mandar."
     jump corrida
 
+### PARTE: Cena 4 · A corrida
 label corrida:
     cena estrada com fade
     musica corrida
@@ -261,7 +265,7 @@ label portao:
     "O Yoru sorri de um jeito que eu não sei ler."
     jump sorteio
 
-# ------------------------------------------------------------
+### PARTE: Cena 5 · O sorteio
 label sorteio:
     cena sala_aula com fade
     musica escola
@@ -300,6 +304,7 @@ label sorteio:
     $ laco_momo += 1
     jump recreio
 
+### PARTE: Cena 6 · O recreio e o pátio
 label recreio:
     cena muro com fade
     musica recreio
@@ -347,6 +352,7 @@ label patio:
     "Eu ainda tenho que recolher as Tufonas. Vou chegar atrasado."
     jump praca
 
+### PARTE: Cena 7 · A praça
 label praca:
     cena praca com fade
     musica tensao
@@ -376,7 +382,7 @@ label praca:
     tetsuo "Agora eu levo os dois pra casa."
     jump casa_noite
 
-# ------------------------------------------------------------
+### PARTE: Cena 8 · Em casa
 label casa_noite:
     cena estrada com preto
     musica fim_de_tarde
@@ -426,6 +432,7 @@ label zulado_noite:
     "De manhã, o Zulado está dormindo nos meus pés."
     jump primeiro_treino
 
+### PARTE: Cena 9 · O primeiro treino
 label primeiro_treino:
     cena estrada com preto
     musica madrugada
@@ -459,7 +466,7 @@ label primeiro_treino:
     tetsuo "...Mas não pararam. Amanhã, mesma hora."
     jump tufonas
 
-# ------------------------------------------------------------
+### PARTE: Cena 10 · As Tufonas
 label tufonas:
     cena cercado com fade
     musica tufonas
@@ -504,6 +511,7 @@ label tufonas:
     $ laco_kenichi += 1
     jump jantar_estrada
 
+### PARTE: Cena 11 · O jantar
 label jantar_estrada:
     cena cozinha com fade
     musica casa
@@ -535,7 +543,7 @@ label jantar_estrada:
             kenichi "...Boa noite, Kaoro."
     jump entrevista
 
-# ------------------------------------------------------------
+### PARTE: Cena 12 · O senhor Gen
 label entrevista:
     cena taverna com fade
     musica taverna
@@ -591,6 +599,7 @@ label entrevista:
     momo "Sábado a gente passa a limpo. Na casa da minha avó."
     jump midori
 
+### PARTE: Cena 13 · A Midori e o celeiro
 label midori:
     cena casa_utagawa com fade
     musica tensao
@@ -652,7 +661,7 @@ label noite_haru:
     "Acordo na minha cama."
     jump fugir
 
-# ------------------------------------------------------------
+### PARTE: Cena 14 · Fugir de casa
 label fugir:
     cena quarto com preto
     musica madrugada
@@ -740,7 +749,7 @@ label sino:
     "Guardo o sino na caixinha de tesouros, debaixo da cama."
     jump verdade_momo
 
-# ------------------------------------------------------------
+### PARTE: Cena 15 · A verdade e o sábado
 label verdade_momo:
     cena casa_utagawa com fade
     musica tensao
@@ -786,6 +795,7 @@ label sabado:
     "E eu preciso levar outra história. De verdade."
     jump livro_delegacia
 
+### PARTE: Cena 16 · O livro da delegacia
 label livro_delegacia:
     cena cercado com fade
     musica tufonas
@@ -828,7 +838,7 @@ label livro_delegacia:
     "Castigo: a louça do domingo."
     jump o_que_quer
 
-# ------------------------------------------------------------
+### PARTE: Cena 17 · O que o Kaoro quer
 label o_que_quer:
     cena porao com preto
     musica fim
