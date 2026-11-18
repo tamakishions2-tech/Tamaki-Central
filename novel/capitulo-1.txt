@@ -5,7 +5,7 @@
 # As outras escolhas dão falas diferentes e voltam para o canon.
 #
 # ARTES (envie em 🖼 Artes com estes nomes; sem arte aparece um molde)
-# Fundos: casa_shion, estrada, taverna, escola, sala_aula, muro,
+# Fundos: estrada_noite (prólogo), casa_shion, estrada, taverna, escola, sala_aula, muro,
 #   patio, praca, cozinha, quarto, cercado, moinho, delegacia,
 #   casa_utagawa, celeiro, casa_reika, porao, biblioteca
 #   (preto e branco já existem)
@@ -35,6 +35,10 @@ personagem banji "Banji" #8f6f5a
 personagem tora "Tora" #77808c
 personagem hiyori "Hiyori" #4fa3c4
 personagem kaname "Kaname" #a3a3c2
+personagem crianca "Criança" #9aa3b8
+personagem misterio "???" #3b3f52
+personagem vozh "Voz de homem" #7fa86a
+personagem vozm "Voz de mulher" #d9a441
 
 item sininho "Sininho da vovó Chiyo"
 item lencinho "Lencinho bordado da Momo"
@@ -48,6 +52,55 @@ var pistas = 0
 
 # ------------------------------------------------------------
 label inicio:
+    # ---------- PRÓLOGO · A árvore da curva ----------
+    cena preto
+    musica grilos
+    espera 1.2
+    "A noite era escura. Poderia ser uma noite tranquila, como tantas outras em Yotsuji. Mas..."
+    crianca "Estava frio. E não era só pelos pés descalços, nem por eu estar de pijama."
+    crianca "Como eu vim parar aqui? Por que eu estou aqui?"
+    crianca "Estou com medo."
+    misterio "Criança barulhenta. Apenas volte a dormir. Deixe o resto comigo."
+    cena estrada_noite com fade
+    zoom 1.25 50 45 6
+    "A lua parecia enorme, redonda num céu sem estrelas. Só os galhos da grande árvore a cobriam."
+    "O garoto olhava fixo para a estrada, que seguia ao longe e parecia não ter fim."
+    vozh "Filho!"
+    "Um farfalhar de folhas. Passos agitados. Não de uma pessoa só, mas de duas."
+    vozm "Responde, meu amor! Responde!"
+    misterio "Vamos, criança maldita! Eu não fiz tudo isso para..."
+    treme fraco
+    "Um arrepio percorre a espinha da criança. E o motivo está longe de ser o vento da madrugada."
+    menu:
+        "Responder":
+            "Ele olha para onde as vozes chamam e abre a boca para gritar: Tô aqui!"
+            "Não sai nada. Nem um fiapo de voz."
+        "Ficar quietinho":
+            "Ele fica quieto."
+            "A criança escuta uma risada bem pertinho. Os olhos se enchem de lágrimas."
+    "Ele tenta se levantar. As pernas não respondem."
+    "Tenta mexer um dedo. Nada."
+    "Então, lá longe, um pontinho amarelo aparece na estrada."
+    "Uma luz balançando. Um lampião."
+    crianca "Eles vão me achar. Eles vão me achar!"
+    flash ouro
+    "A luz chega na árvore. Passa pela pequenina criatura..."
+    "...e vai embora, como se caçoasse do desespero dela."
+    crianca "Não. Não, não, não. Volta."
+    "E a luz volta. Agora mais devagar."
+    "Desta vez, o dono da voz que berrava pelo filho o encara."
+    "Ele o abraça e sorri, chamando por outra pessoa."
+    "Mas o sorriso se desfaz quando a luz do lampião mostra o rosto da criança com mais calma."
+    crianca "Vejo duas pessoas assustadas. E escuto uma terceira voz... até meus olhos se fecharem."
+    para musica
+    cena branco com flash
+    espera 1.5
+    cena preto com preto
+    "Yotsuji, onde os quatro caminhos se cruzam."
+    "Cinco anos depois."
+    jump manha
+
+label manha:
     cena preto
     "Seis ovos numa cesta."
     "Uma estrada de terra."
@@ -404,8 +457,10 @@ label jantar_estrada:
     "O Kenichi janta com a gente. O pai dele tem plantão."
     haru "Já contei que esse aqui fugiu de pijama com três anos?"
     haru "Saiu pela estrada. Disse que queria ver onde ela acabava."
-    haru "O lampião passou duas vezes por ele, debaixo da árvore da curva."
-    haru "E não achou."
+    haru "O lampião passou do lado dele, debaixo da árvore da curva, e eu não vi."
+    haru "Só na volta..."
+    "Ele para de falar. Olha pro prato."
+    haru "Enfim. Quem quer mais sopa?"
     "Eu não lembro de nada disso."
     cena quarto com preto
     musica noite
