@@ -5,7 +5,7 @@
 # As outras escolhas dão falas diferentes e voltam para o canon.
 #
 # ARTES (envie em 🖼 Artes com estes nomes; sem arte aparece um molde)
-# Fundos: estrada_noite, estrada_noite_lampioes, pais_alivio e pais_medo (prólogo), casa_shion, estrada, taverna, escola, sala_aula, muro,
+# Fundos: estrada_noite, estrada_noite_lampioes, pais_alivio e pais_medo (prólogo), ninhos_manha (cena 1), casa_shion, estrada, taverna, escola, sala_aula, muro,
 #   patio, praca, cozinha, quarto, cercado, moinho, delegacia,
 #   casa_utagawa, celeiro, casa_reika, porao, biblioteca
 #   (preto e branco já existem)
@@ -49,6 +49,10 @@ var laco_shun = 0
 var sonho_contado = False
 var venceu_corrida = False
 var pistas = 0
+var ovos = 0
+var ninho1 = False
+var pluma = False
+var zul = False
 
 # ------------------------------------------------------------
 label inicio:
@@ -106,15 +110,61 @@ label inicio:
     jump manha
 
 label manha:
-    cena preto
-    "Seis ovos numa cesta."
-    "Uma estrada de terra."
-    "E o primeiro dia de aula do outono."
-    espera 0.6
-    cena estrada com preto
+    # ---------- CENA 1 · A manhã dos ovos ----------
+    cena casa_shion com fade
     musica manha
+    "Primeiro dia de aula do outono."
+    "A mãe diz que Tufona sente quando a gente está com pressa."
+    "Hoje eu estou com muita pressa."
+    mostra kaede centro
+    kaede "Seis ovos para a Yuzu, na Taverna. Inteiros, Kaoro. Inteiros."
+    haru "E volta antes de escurecer! Primeiro dia de aula!"
+    "A voz do meu pai vem da cozinha, junto com o cheiro do pão."
+    esconde kaede
+    cena ninhos_manha com fade
+    "No galinheiro, as Tufonas ainda estão sonolentas."
+    "Toque nos ninhos para recolher os ovos."
+    explorar:
+        "Ninho da esquerda" 4 52 26 30:
+            se not ninho1:
+                $ ninho1 = True
+                $ ovos += 3
+                "Três ovos mornos. Fácil."
+            senao:
+                "Vazio. Já peguei tudo daqui."
+        "Madame Pluma" 34 30 30 45:
+            se not pluma:
+                $ pluma = True
+                treme fraco
+                "A Madame Pluma arrepia o topete e me encara."
+                "Eu respiro fundo e ando devagar. Sem pressa. Sem pressa nenhuma."
+                $ ovos += 2
+                "Ela deixa eu pegar dois. De olho em mim o tempo todo."
+            senao:
+                "A Madame Pluma ainda me olha torto. Melhor não abusar."
+        "Zulado" 68 48 26 32:
+            se not zul:
+                $ zul = True
+                "O Zulado está sentado em cima de um ovo. E não sai."
+                kaoro "Zulado, sai. Por favor."
+                menu:
+                    "Pegar o ovo mesmo assim":
+                        "Enfio a mão por baixo dele, rapidinho."
+                    "Oferecer o resto do pão":
+                        kaoro "Eu te dou o resto do meu pão."
+                        "Ele olha o pão. Pensa. Desce do ovo."
+                som bicada
+                treme
+                "E bica o meu dedo."
+                kaoro "Ai!"
+                $ ovos += 1
+            senao:
+                "O Zulado vira de costas pra mim. Está ofendido."
+        "Sair com a cesta" 38 4 24 14 se ovos >= 6:
+            sai
+    "Seis ovos na cesta. Inteiros. Por enquanto."
+    cena estrada com fade
     "O sol ainda nem passou do moinho, e eu já estou atrasado."
-    "A mãe disse: seis ovos para a Yuzu, na Taverna. Inteiros."
     som carroca
     "Uma carroça para do meu lado, rangendo."
     mostra goro direita
