@@ -5,7 +5,7 @@
 # As outras escolhas dão falas diferentes e voltam para o canon.
 #
 # ARTES (envie em 🖼 Artes com estes nomes; sem arte aparece um molde)
-# Fundos: estrada_noite (prólogo), casa_shion, estrada, taverna, escola, sala_aula, muro,
+# Fundos: estrada_noite e estrada_noite_lampioes (prólogo), casa_shion, estrada, taverna, escola, sala_aula, muro,
 #   patio, praca, cozinha, quarto, cercado, moinho, delegacia,
 #   casa_utagawa, celeiro, casa_reika, porao, biblioteca
 #   (preto e branco já existem)
@@ -80,11 +80,13 @@ label inicio:
             "A criança escuta uma risada bem pertinho. Os olhos se enchem de lágrimas."
     "Ele tenta se levantar. As pernas não respondem."
     "Tenta mexer um dedo. Nada."
-    "Então, lá longe, um pontinho amarelo aparece na estrada."
-    "Uma luz balançando. Um lampião."
+    cena estrada_noite_lampioes com fade
+    zoom 1.3 50 55 6
+    "Então, lá longe, dois pontinhos amarelos aparecem na estrada."
+    "Duas luzes balançando. Lampiões."
     crianca "Eles vão me achar. Eles vão me achar!"
     flash ouro
-    "A luz chega na árvore. Passa pela pequenina criatura..."
+    "Uma das luzes chega na árvore. Passa pela pequenina criatura..."
     "...e vai embora, como se caçoasse do desespero dela."
     crianca "Não. Não, não, não. Volta."
     "E a luz volta. Agora mais devagar."
