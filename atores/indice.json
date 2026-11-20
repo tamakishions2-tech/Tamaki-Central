@@ -47,5 +47,228 @@
    "Kaoro_pisca.webp",
    "Kaoro_fala_pisca.webp"
   ]
+ },
+ {
+  "nome": "Tora",
+  "pasta": "atores/tora",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Tora.webp",
+   "Tora_fala.webp",
+   "Tora_fala2.webp",
+   "Tora_pisca.webp",
+   "Tora_fala_pisca.webp"
+  ]
+ },
+ {
+  "nome": "Goro",
+  "pasta": "atores/goro",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Goro.webp",
+   "Goro_fala.webp",
+   "Goro_fala2.webp",
+   "Goro_pisca.webp",
+   "Goro_fala_pisca.webp"
+  ]
+ },
+ {
+  "nome": "Reika",
+  "pasta": "atores/reika",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Reika.webp",
+   "Reika_fala.webp",
+   "Reika_fala2.webp",
+   "Reika_pisca.webp",
+   "Reika_fala_pisca.webp"
+  ]
+ },
+ {
+  "nome": "Yoru",
+  "pasta": "atores/yoru",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Yoru.webp",
+   "Yoru_fala.webp",
+   "Yoru_fala2.webp",
+   "Yoru_pisca.webp",
+   "Yoru_fala_pisca.webp"
+  ]
+ },
+ {
+  "nome": "Kiyoshi",
+  "pasta": "atores/kiyoshi",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Kiyoshi.webp",
+   "Kiyoshi_fala.webp",
+   "Kiyoshi_fala2.webp",
+   "Kiyoshi_pisca.webp",
+   "Kiyoshi_fala_pisca.webp"
+  ]
+ },
+ {
+  "nome": "Midori",
+  "pasta": "atores/midori",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Midori.webp",
+   "Midori_fala.webp",
+   "Midori_fala2.webp",
+   "Midori_pisca.webp",
+   "Midori_fala_pisca.webp"
+  ]
+ },
+ {
+  "nome": "Gen",
+  "pasta": "atores/gen",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Gen.webp",
+   "Gen_fala.webp",
+   "Gen_fala2.webp",
+   "Gen_pisca.webp",
+   "Gen_fala_pisca.webp"
+  ]
+ },
+ {
+  "nome": "Yuzu",
+  "pasta": "atores/yuzu",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Yuzu.webp",
+   "Yuzu_fala.webp",
+   "Yuzu_fala2.webp",
+   "Yuzu_pisca.webp",
+   "Yuzu_fala_pisca.webp"
+  ]
+ },
+ {
+  "nome": "Tetsuo",
+  "pasta": "atores/tetsuo",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Tetsuo.webp",
+   "Tetsuo_fala.webp",
+   "Tetsuo_fala2.webp",
+   "Tetsuo_pisca.webp",
+   "Tetsuo_fala_pisca.webp"
+  ]
+ },
+ {
+  "nome": "Banji",
+  "pasta": "atores/banji",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Banji.webp",
+   "Banji_fala.webp",
+   "Banji_fala2.webp",
+   "Banji_pisca.webp",
+   "Banji_fala_pisca.webp"
+  ],
+  "tamanho": 0.85
+ },
+ {
+  "nome": "Hiyori",
+  "pasta": "atores/hiyori",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Hiyori.webp",
+   "Hiyori_fala.webp",
+   "Hiyori_fala2.webp",
+   "Hiyori_pisca.webp",
+   "Hiyori_fala_pisca.webp"
+  ],
+  "tamanho": 0.72
+ },
+ {
+  "nome": "Shun",
+  "pasta": "atores/shun",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Shun.webp",
+   "Shun_fala.webp",
+   "Shun_fala2.webp",
+   "Shun_pisca.webp",
+   "Shun_fala_pisca.webp"
+  ],
+  "tamanho": 0.72
+ },
+ {
+  "nome": "Kenichi",
+  "pasta": "atores/kenichi",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Kenichi.webp",
+   "Kenichi_fala.webp",
+   "Kenichi_fala2.webp",
+   "Kenichi_pisca.webp",
+   "Kenichi_fala_pisca.webp"
+  ],
+  "tamanho": 0.72
+ },
+ {
+  "nome": "Momo",
+  "pasta": "atores/momo",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Momo.webp",
+   "Momo_fala.webp",
+   "Momo_fala2.webp",
+   "Momo_pisca.webp",
+   "Momo_fala_pisca.webp"
+  ],
+  "tamanho": 0.72
+ },
+ {
+  "nome": "Kaname",
+  "pasta": "atores/kaname",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Kaname.webp",
+   "Kaname_fala.webp",
+   "Kaname_fala2.webp",
+   "Kaname_pisca.webp",
+   "Kaname_fala_pisca.webp"
+  ],
+  "tamanho": 0.75
+ },
+ {
+  "nome": "Kaede",
+  "pasta": "atores/kaede",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Kaede.webp",
+   "Kaede_fala.webp",
+   "Kaede_fala2.webp",
+   "Kaede_pisca.webp",
+   "Kaede_fala_pisca.webp"
+  ]
+ },
+ {
+  "nome": "Haru",
+  "pasta": "atores/haru",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Haru.webp",
+   "Haru_fala.webp",
+   "Haru_fala2.webp",
+   "Haru_pisca.webp",
+   "Haru_fala_pisca.webp"
+  ]
+ },
+ {
+  "nome": "Tamaki criança",
+  "pasta": "atores/tamaki-crianca",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Tamaki.webp",
+   "Tamaki_fala.webp",
+   "Tamaki_fala2.webp",
+   "Tamaki_pisca.webp",
+   "Tamaki_fala_pisca.webp"
+  ],
+  "tamanho": 0.55
  }
 ]

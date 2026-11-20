@@ -1042,8 +1042,9 @@ async function atoresProntos(){
       try { const b = await (await fetch(p.pasta + "/" + arq, {cache: "no-store"})).blob();
         await poe(id + "/img-" + (emo ? "emo-" + emo + "-" : "") + slot, b); if (emo && !emos.includes(emo)) emos.push(emo); } catch (e) {}
     }
-    if (emos.length) gravaJ("palco-animador-v1:" + id, {emocoes: emos.map(e => ({id: e, palavras: []})), emoAuto: true});
-    A.lista.push({id, nome: p.nome}); A.atual = id;
+    const cfg = {}; if (emos.length) Object.assign(cfg, {emocoes: emos.map(e => ({id: e, palavras: []})), emoAuto: true}); if (p.tamanho) cfg.size = p.tamanho; // criança menor que adulto no palco
+    if (Object.keys(cfg).length) gravaJ("palco-animador-v1:" + id, cfg);
+    A.lista.push({id, nome: p.nome}); if (novos.length == 1) A.atual = id;
   }
   db.close(); gravaJ("palco-atores", A); gravaJ("central-atores-prontos", feitos);
   try { localStorage.setItem("palco-atriz-versao", JSON.stringify({t: Date.now(), ator: A.atual})); } catch (e) {}
