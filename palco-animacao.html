@@ -268,7 +268,7 @@ textarea{resize:vertical;min-height:70px}
         <h2>Sentimentos</h2>
         <p class="hint">Cada sentimento é a personagem inteira com outra expressão. Na fala ela troca sozinha e, no fim da frase, volta para as poses da aba Imagens (o “normal”).</p>
         <p class="hint">Dê nome aos arquivos assim e carregue todos de uma vez: <b>Tamaki_surpresa.png</b> (parada), <b>Tamaki_surpresa_fala.png</b>, <b>Tamaki_surpresa_fala2.png</b>, <b>Tamaki_surpresa_pisca.png</b>, <b>Tamaki_surpresa_fala_pisca.png</b>. Sentimento novo aparece sozinho. Exporte com o mesmo tamanho de tela das outras poses.</p>
-        <div class="btns"><button class="btn main" id="emoVarias">📂 Carregar várias imagens</button><button class="btn" id="emoNovo">+ Sentimento</button><input type="file" id="emoFiles" accept="image/png,image/*" multiple hidden></div>
+        <div class="btns"><button class="btn main" id="emoVarias">📂 Carregar várias imagens</button><button class="btn" id="emoNovo">+ Sentimento</button><button class="btn" id="emoGit">📥 Sentimentos prontos</button><input type="file" id="emoFiles" accept="image/png,image/*" multiple hidden></div>
         <p class="hint" id="emoMsg"></p>
         <h2>Testar</h2>
         <div class="emo-teste" id="emoTeste"></div>
@@ -991,7 +991,10 @@ const EMO = (() => {
     triste: ["poxa", "que pena", "chorei", "triste", "saudade"],
     envergonhada: ["que vergonha", "vergonha", "desculpa", "ops", "foi mal"],
     pensativa: ["hmm", "sera que", "talvez", "pensando bem", "sei la"],
-    assustada: ["socorro", "que medo", "credo"]
+    assustada: ["socorro", "que medo", "credo"],
+    animada: ["eba", "uhul", "que demais", "bora", "amei"],
+    convencida: ["obvio", "claro que", "eu sabia", "sou dessas", "diva"],
+    emburrada: ["hunf", "nao quero", "que saco", "chato"]
   };
   function lerNome(arq, nomeAtor){
     let t = semAc(String(arq).replace(/\.[^.]+$/, "")).split(/[_\-\s]+/).filter(Boolean), f = 0, p = 0, tirou = false;
@@ -1129,6 +1132,24 @@ $('#emoFiles').onchange = async ev => {
   for (const f of fs){ const {emo, slot} = EMO.lerNome(f.name, nomeAtor); await setEmo(emo, slot, f); vistos.add(emo); }
   renderEmo(); renderSlots();
   emoMsg(fs.length + ' imagem(ns) em: ' + [...vistos].join(', ') + '. Toque em Mandar para o Palco quando terminar.');
+};
+// pacotes prontos no repositório: atores/indice.json → [{nome, pasta, nota, arquivos:[Tamaki_feliz_fala.webp…]}]
+$('#emoGit').onclick = async () => {
+  let lista;
+  try { lista = await (await fetch('atores/indice.json', {cache: 'no-store'})).json(); }
+  catch (e) { emoMsg('Não achei os sentimentos prontos (atores/indice.json).'); return; }
+  const nomeAtor = (ATORES.lista.find(a => a.id === ATORES.atual) || {}).nome || '';
+  const p = lista.find(x => EMO.limpa(x.nome) === EMO.limpa(nomeAtor)) || (lista.length === 1 ? lista[0] : null);
+  if (!p){ emoMsg('Prontos: ' + lista.map(x => x.nome).join(', ') + '. Troque para o ator com esse nome.'); return; }
+  if (!confirm('Pôr ' + p.arquivos.length + ' imagens prontas (' + p.nome + ') neste ator? ' + (p.nota || '') + '\nAs poses que já existem com o mesmo nome são trocadas.')) return;
+  let n = 0;
+  for (const arq of p.arquivos){
+    emoMsg('Baixando ' + (++n) + ' de ' + p.arquivos.length + '…');
+    try { const b = await (await fetch(p.pasta + '/' + arq, {cache: 'no-store'})).blob(); const {emo, slot} = EMO.lerNome(arq, p.nome); await setEmo(emo, slot, b); }
+    catch (e) { console.warn(arq, e); }
+  }
+  renderEmo(); renderSlots();
+  emoMsg('Pronto: ' + n + ' imagens. Toque em Mandar para o Palco.');
 };
 $('#emoNovo').onclick = () => {
   const n = EMO.limpa(prompt('Nome do sentimento (ex.: surpresa, brava, rindo):') || ''); if (!n) return;

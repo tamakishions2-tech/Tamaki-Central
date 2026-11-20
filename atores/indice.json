@@ -1,0 +1,39 @@
+[
+ {
+  "nome": "Tamaki",
+  "pasta": "atores/tamaki",
+  "nota": "6 sentimentos com as 5 poses (parada, falando, falando 2, piscando, fala piscando)",
+  "arquivos": [
+   "Tamaki_animada.webp",
+   "Tamaki_animada_fala.webp",
+   "Tamaki_animada_fala2.webp",
+   "Tamaki_animada_fala_pisca.webp",
+   "Tamaki_animada_pisca.webp",
+   "Tamaki_convencida.webp",
+   "Tamaki_convencida_fala.webp",
+   "Tamaki_convencida_fala2.webp",
+   "Tamaki_convencida_fala_pisca.webp",
+   "Tamaki_convencida_pisca.webp",
+   "Tamaki_emburrada.webp",
+   "Tamaki_emburrada_fala.webp",
+   "Tamaki_emburrada_fala2.webp",
+   "Tamaki_emburrada_fala_pisca.webp",
+   "Tamaki_emburrada_pisca.webp",
+   "Tamaki_feliz.webp",
+   "Tamaki_feliz_fala.webp",
+   "Tamaki_feliz_fala2.webp",
+   "Tamaki_feliz_fala_pisca.webp",
+   "Tamaki_feliz_pisca.webp",
+   "Tamaki_pensativa.webp",
+   "Tamaki_pensativa_fala.webp",
+   "Tamaki_pensativa_fala2.webp",
+   "Tamaki_pensativa_fala_pisca.webp",
+   "Tamaki_pensativa_pisca.webp",
+   "Tamaki_surpresa.webp",
+   "Tamaki_surpresa_fala.webp",
+   "Tamaki_surpresa_fala2.webp",
+   "Tamaki_surpresa_fala_pisca.webp",
+   "Tamaki_surpresa_pisca.webp"
+  ]
+ }
+]
