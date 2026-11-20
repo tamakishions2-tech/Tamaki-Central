@@ -35,5 +35,17 @@
    "Tamaki_surpresa_fala_pisca.webp",
    "Tamaki_surpresa_pisca.webp"
   ]
+ },
+ {
+  "nome": "Kaoro",
+  "pasta": "atores/kaoro",
+  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "arquivos": [
+   "Kaoro.webp",
+   "Kaoro_fala.webp",
+   "Kaoro_fala2.webp",
+   "Kaoro_pisca.webp",
+   "Kaoro_fala_pisca.webp"
+  ]
  }
 ]

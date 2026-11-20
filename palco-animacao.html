@@ -1139,8 +1139,15 @@ $('#emoGit').onclick = async () => {
   try { lista = await (await fetch('atores/indice.json', {cache: 'no-store'})).json(); }
   catch (e) { emoMsg('Não achei os sentimentos prontos (atores/indice.json).'); return; }
   const nomeAtor = (ATORES.lista.find(a => a.id === ATORES.atual) || {}).nome || '';
-  const p = lista.find(x => EMO.limpa(x.nome) === EMO.limpa(nomeAtor)) || (lista.length === 1 ? lista[0] : null);
-  if (!p){ emoMsg('Prontos: ' + lista.map(x => x.nome).join(', ') + '. Troque para o ator com esse nome.'); return; }
+  // escolhe o pronto (o do ator aberto vem marcado); se o ator ainda não existe aqui, cria com o nome dele
+  const meu = Math.max(0, lista.findIndex(x => EMO.limpa(x.nome) === EMO.limpa(nomeAtor)));
+  const r = lista.length === 1 ? '1' : prompt('Qual ator pronto?\n' + lista.map((x, i) => (i + 1) + '. ' + x.nome).join('\n') + '\n\nSe ele ainda não existe aqui, eu crio o ator.', String(meu + 1));
+  const p = lista[(parseInt(r, 10) || 0) - 1]; if (!p) return;
+  if (EMO.limpa(p.nome) !== EMO.limpa(nomeAtor)){
+    const ja = ATORES.lista.find(a => EMO.limpa(a.nome) === EMO.limpa(p.nome));
+    if (ja) await trocarAtor(ja.id);
+    else { const id = 'a' + Math.random().toString(36).slice(2, 8); ATORES.lista.push({id, nome: p.nome}); await trocarAtor(id); gravarS(); }
+  }
   if (!confirm('Pôr ' + p.arquivos.length + ' imagens prontas (' + p.nome + ') neste ator? ' + (p.nota || '') + '\nAs poses que já existem com o mesmo nome são trocadas.')) return;
   let n = 0;
   for (const arq of p.arquivos){
