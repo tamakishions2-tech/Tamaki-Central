@@ -1020,8 +1020,42 @@ async function produzirRoteiro(r, jaConfirmou){
   await TamakiProducao.produzir(nota, t => aviso(t));
 }
 if (window.TamakiOrganizador) TamakiOrganizador.iniciar({aviso: t => aviso(t)}); // a Biblioteca se arruma sozinha, mesmo com a aba fechada
+// atores prontos do repositório (atores/indice.json): o ator que ainda não existe no aparelho é criado sozinho,
+// com as poses (Kaoro.webp, Kaoro_fala.webp…) e os sentimentos (Kaoro_feliz.webp…). Cada um só uma vez (apagou, não volta).
+async function atoresProntos(){
+  let lista; try { lista = await (await fetch("atores/indice.json", {cache: "no-store"})).json(); } catch (e) { return false; }
+  const limpa = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+  const A = lerJ("palco-atores", null) || {lista: [{id: "principal", nome: "Tamaki"}], atual: "principal"}, feitos = lerJ("central-atores-prontos", []);
+  const novos = lista.filter(p => !feitos.includes(limpa(p.nome)) && !A.lista.some(a => limpa(a.nome) == limpa(p.nome)));
+  for (const p of lista) if (!feitos.includes(limpa(p.nome))) feitos.push(limpa(p.nome));
+  if (!novos.length) { gravaJ("central-atores-prontos", feitos); return false; }
+  const db = await new Promise((ok, erro) => { const r = indexedDB.open("palco-animador", 1); r.onupgradeneeded = () => r.result.createObjectStore("files"); r.onsuccess = () => ok(r.result); r.onerror = () => erro(r.error); });
+  const poe = (k, v) => new Promise(ok => { const tx = db.transaction("files", "readwrite"); tx.objectStore("files").put(v, k); tx.oncomplete = tx.onerror = ok; });
+  for (const p of novos) {
+    const id = "a" + Math.random().toString(36).slice(2, 8), pre = limpa(p.nome).split("_")[0], emos = [];
+    aviso(`🎭 Colocando o ator ${p.nome}…`);
+    for (const arq of p.arquivos) {
+      let t = limpa(arq.replace(/\.[^.]+$/, "")).split("_").filter(Boolean), f = 0, pi = 0;
+      if (t[0] == pre) t.shift();
+      t = t.filter(x => { if (x == "fala2") { f = 2; return false; } if (x == "fala") { if (!f) f = 1; return false; } if (x == "pisca") { pi = 1; return false; } return true; });
+      const slot = f == 2 ? "talk2" : f && pi ? "talkBlink" : f ? "talk" : pi ? "idleBlink" : "idle", emo = t.join("_");
+      try { const b = await (await fetch(p.pasta + "/" + arq, {cache: "no-store"})).blob();
+        await poe(id + "/img-" + (emo ? "emo-" + emo + "-" : "") + slot, b); if (emo && !emos.includes(emo)) emos.push(emo); } catch (e) {}
+    }
+    if (emos.length) gravaJ("palco-animador-v1:" + id, {emocoes: emos.map(e => ({id: e, palavras: []})), emoAuto: true});
+    A.lista.push({id, nome: p.nome}); A.atual = id;
+  }
+  db.close(); gravaJ("palco-atores", A); gravaJ("central-atores-prontos", feitos);
+  try { localStorage.setItem("palco-atriz-versao", JSON.stringify({t: Date.now(), ator: A.atual})); } catch (e) {}
+  aviso(`🎭 Ator pronto: ${novos.map(p => p.nome).join(", ")}. Está na aba Palco Animação.`);
+  return true;
+}
 const salvo = localStorage.getItem("central_aba");
-ir(salvo || "universo").then(roteiroDoLink);
+const atoresOk = atoresProntos().catch(() => false);
+// se demorou e a aba já abriu, recarrega o Palco Animação e o Palco para o ator novo aparecer
+atoresOk.then(novo => { if (novo) for (const k of ["palcoanim", "palco"]) if (frames[k]) frames[k].src = frames[k].src; });
+Promise.race([atoresOk, new Promise(ok => setTimeout(() => ok(false), 8000))])
+  .then(() => ir(salvo || "universo")).then(roteiroDoLink);
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
 </body>
