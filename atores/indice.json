@@ -246,15 +246,62 @@
  {
   "nome": "Kenichi",
   "pasta": "atores/kenichi",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): corpo único e rosto trocado; piscar = só os olhos trocados; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Kenichi.webp",
+   "Kenichi_bravo.webp",
+   "Kenichi_bravo_fala.webp",
+   "Kenichi_bravo_fala2.webp",
+   "Kenichi_bravo_fala_pisca.webp",
+   "Kenichi_bravo_pisca.webp",
    "Kenichi_fala.webp",
    "Kenichi_fala2.webp",
+   "Kenichi_fala_pisca.webp",
+   "Kenichi_feliz.webp",
+   "Kenichi_feliz_fala.webp",
+   "Kenichi_feliz_fala2.webp",
+   "Kenichi_feliz_fala_pisca.webp",
+   "Kenichi_feliz_pisca.webp",
    "Kenichi_pisca.webp",
-   "Kenichi_fala_pisca.webp"
+   "Kenichi_surpreso.webp",
+   "Kenichi_surpreso_fala.webp",
+   "Kenichi_surpreso_fala2.webp",
+   "Kenichi_surpreso_fala_pisca.webp",
+   "Kenichi_surpreso_pisca.webp",
+   "Kenichi_triste.webp",
+   "Kenichi_triste_fala.webp",
+   "Kenichi_triste_fala2.webp",
+   "Kenichi_triste_fala_pisca.webp",
+   "Kenichi_triste_pisca.webp"
   ],
-  "tamanho": 0.72
+  "tamanho": 0.72,
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Momo",
