@@ -39,14 +39,59 @@
  {
   "nome": "Kaoro",
   "pasta": "atores/kaoro",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): corpo único e rosto trocado; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Kaoro.webp",
    "Kaoro_fala.webp",
    "Kaoro_fala2.webp",
+   "Kaoro_fala_pisca.webp",
    "Kaoro_pisca.webp",
-   "Kaoro_fala_pisca.webp"
-  ]
+   "Kaoro_feliz.webp",
+   "Kaoro_feliz_fala.webp",
+   "Kaoro_feliz_fala2.webp",
+   "Kaoro_feliz_fala_pisca.webp",
+   "Kaoro_feliz_pisca.webp",
+   "Kaoro_bravo.webp",
+   "Kaoro_bravo_fala.webp",
+   "Kaoro_bravo_fala2.webp",
+   "Kaoro_bravo_fala_pisca.webp",
+   "Kaoro_triste.webp",
+   "Kaoro_triste_fala.webp",
+   "Kaoro_triste_fala2.webp",
+   "Kaoro_triste_fala_pisca.webp",
+   "Kaoro_surpreso.webp",
+   "Kaoro_surpreso_fala.webp",
+   "Kaoro_surpreso_fala2.webp",
+   "Kaoro_surpreso_fala_pisca.webp"
+  ],
+  "versao": 2,
+  "tamanho": 0.72,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Tora",
