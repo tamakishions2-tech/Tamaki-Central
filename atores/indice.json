@@ -285,14 +285,61 @@
  {
   "nome": "Kaede",
   "pasta": "atores/kaede",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): corpo único e rosto trocado; piscar = só os olhos trocados; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Kaede.webp",
+   "Kaede_bravo.webp",
+   "Kaede_bravo_fala.webp",
+   "Kaede_bravo_fala2.webp",
+   "Kaede_bravo_fala_pisca.webp",
+   "Kaede_bravo_pisca.webp",
    "Kaede_fala.webp",
    "Kaede_fala2.webp",
+   "Kaede_fala_pisca.webp",
+   "Kaede_feliz.webp",
+   "Kaede_feliz_fala.webp",
+   "Kaede_feliz_fala2.webp",
+   "Kaede_feliz_fala_pisca.webp",
+   "Kaede_feliz_pisca.webp",
    "Kaede_pisca.webp",
-   "Kaede_fala_pisca.webp"
-  ]
+   "Kaede_surpreso.webp",
+   "Kaede_surpreso_fala.webp",
+   "Kaede_surpreso_fala2.webp",
+   "Kaede_surpreso_fala_pisca.webp",
+   "Kaede_surpreso_pisca.webp",
+   "Kaede_triste.webp",
+   "Kaede_triste_fala.webp",
+   "Kaede_triste_fala2.webp",
+   "Kaede_triste_fala_pisca.webp",
+   "Kaede_triste_pisca.webp"
+  ],
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Haru",
