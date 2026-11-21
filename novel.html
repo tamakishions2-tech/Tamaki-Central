@@ -128,6 +128,35 @@ dialog h2{margin:0 0 .6rem;font-size:1.25rem}
 #bibLista small{padding:.3em;font-size:.75rem;word-break:break-word}
 #toast{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);background:#11141d;border:1px solid var(--aco);border-radius:10px;padding:.6rem 1rem;z-index:60;display:none;max-width:92vw;text-align:center}
 #fatal{position:fixed;left:1rem;right:1rem;bottom:1rem;background:#3a1f22;border:1px solid var(--erro);color:#ffd9d6;padding:.8rem 1rem;border-radius:6px;display:none;z-index:99;white-space:pre-wrap}
+/* montar cenas */
+#montar{flex-direction:column}
+#mcPalco{flex:none;background:#000;display:flex;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;position:relative}
+#mcv{display:block;max-width:100%;max-height:42vh;width:auto;height:auto;touch-action:none}
+#mcDica{position:absolute;left:.4rem;bottom:.35rem;font-size:.75rem;color:var(--giz2);background:rgba(18,22,34,.8);border-radius:999px;padding:.1em .6em;pointer-events:none}
+#mcCorpo{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);border-top:1px solid var(--aco)}
+#mcCamadas{overflow:auto;padding:.45rem;border-right:1px solid var(--aco);display:flex;flex-direction:column;gap:.35rem}
+#mcCamadas .tit{font-family:var(--t);font-size:.85rem;color:var(--giz2);display:flex;justify-content:space-between}
+#mcProps{overflow:auto;padding:.6rem .7rem}
+#mcProps h3{margin:0 0 .5rem;font-size:1rem;display:flex;gap:.4rem;align-items:center}
+.cam{display:flex;align-items:center;gap:.35rem;border:1px solid var(--aco);border-radius:8px;background:var(--ferro2);padding:.25rem;min-height:50px;cursor:pointer}
+.cam.on{border-color:var(--ouro);box-shadow:0 0 0 1px var(--ouro) inset}
+.cam .th{width:42px;height:42px;flex:none;border-radius:6px;background:#11141d center/contain no-repeat;display:flex;align-items:center;justify-content:center}
+.cam .nm{flex:1;min-width:0;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cam .nm small{display:block;color:var(--giz2);font-size:.72rem}
+.cam button{min-height:34px;min-width:32px;padding:0;font-size:.95rem;background:none;border-color:transparent}
+.cam.off .th,.cam.off .nm{opacity:.4}
+#mcProps .campo{margin-bottom:.5rem}
+#mcProps .campo label{display:flex;justify-content:space-between}
+#mcProps input[type=range]{width:100%}
+#mcProps input[type=text],#mcProps select{width:100%}
+#mcProps .lin{margin:.35rem 0}
+#mcProps .lin button{padding:.35em .5em;font-size:.85rem;min-height:38px}
+#mcLista{max-width:44vw;font-family:var(--t)}
+#esLista{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:.5rem;margin:.5rem 0}
+#esLista button{padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+#esLista .th{aspect-ratio:3/4;width:100%;background:#11141d center/contain no-repeat;display:flex;align-items:center;justify-content:center;font-size:1.8rem}
+#esLista small{padding:.3em;font-size:.78rem;word-break:break-word}
+@media (orientation:landscape) and (min-width:820px){#mcv{max-height:52vh}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -154,6 +183,7 @@ dialog h2{margin:0 0 .6rem;font-size:1.25rem}
     <button id="mGravar">🎥 Gravar vídeo do começo</button>
     <div class="lin"><button id="mEditor">✎ Roteiro</button><button id="mArtes">🖼 Artes</button></div>
     <button id="mAtores">🎭 Atores</button>
+    <button id="mMontar">🎬 Montar cenas</button>
     <button id="mAjustes">⚙ Ajustes</button>
   </div>
   <p id="menuErro" class="nota" style="color:var(--erro)"></p>
@@ -196,6 +226,7 @@ dialog h2{margin:0 0 .6rem;font-size:1.25rem}
     <button id="eMenos">Recuo −</button>
     <button id="eArea">📐 Marcar área</button>
     <button id="eProntos">📥 Abrir</button>
+    <button id="eMontar">🎬 Montar cena</button>
     <button id="eAtores">🎭 Atores</button>
     <button id="eAjuda">Comandos</button>
     <button id="eBaixar">⬇ Baixar</button>
@@ -287,6 +318,8 @@ label inicio:
     <h3>Gestão</h3>
 <pre>    gestao</pre>
     <p class="nota">Abre o painel de salas. Cada sala vira a variável <code>sala_oficina</code> com o nível dela. As salas rendem a cada 5 segundos, inclusive com o jogo fechado (até 2 horas).</p>
+    <h3>Cenas montadas (🎬 Montar cena)</h3>
+    <p class="nota">Monte a cena arrastando o cenário, os atores e os itens, dê um nome (ex.: <b>praca</b>) e use <code>cena praca</code> no roteiro: tudo aparece no lugar. Os atores ligados a um personagem do roteiro falam, piscam e mudam de sentimento ali mesmo; os outros ficam de figurantes (só piscam). <code>esconde</code> tira um personagem da cena; <code>mostra kaoro direita</code> tira ele do lugar montado e põe na posição pedida.</p>
     <p class="nota">Posições: esquerda, centro, direita. Recuo é sempre 4 espaços; o Enter já copia o recuo.</p>
   </div>
 </section>
@@ -312,6 +345,32 @@ label inicio:
   <div id="atLista"></div>
 </section>
 
+<section id="montar" class="tela">
+  <div class="eBarra">
+    <select id="mcLista" aria-label="Cena aberta"></select>
+    <button id="mcNova">＋ Nova cena</button>
+    <button id="mcNome">✎ Nome</button>
+    <button id="mcRoteiro" class="pri">✎ Pôr no roteiro</button>
+    <button id="mcFala" title="Mexe a boca do ator escolhido">🗣 Testar fala</button>
+    <button id="mcApagar">🗑 Apagar cena</button>
+    <button id="mcVoltar">Voltar</button>
+  </div>
+  <div id="mcPalco"><canvas id="mcv" width="1280" height="720" aria-label="Cena montada. Arraste para mover; dois dedos para mudar o tamanho."></canvas><span id="mcDica">Arraste para mover · dois dedos para o tamanho</span></div>
+  <div class="eBarra mold" id="mcAdd">
+    <button data-add="cenario">＋ 🏞 Cenário</button>
+    <button data-add="ator">＋ 🎭 Ator</button>
+    <button data-add="item">＋ 📦 Item</button>
+  </div>
+  <div id="mcCorpo"><div id="mcCamadas"></div><div id="mcProps"></div></div>
+</section>
+
+<dialog id="dEscolhe">
+  <h2 id="esTit"></h2>
+  <p class="nota" id="esNota"></p>
+  <div id="esLista"></div>
+  <div class="lin"><button id="esEnviar">＋ Imagem do aparelho</button><button id="esFechar">Fechar</button></div>
+  <input id="esArquivo" type="file" accept="image/*" multiple hidden>
+</dialog>
 <dialog id="dSlots"><h2 id="sTit"></h2><div id="sLista"></div><button id="sFechar" style="width:100%">Fechar</button></dialog>
 <dialog id="dLog"><h2>Histórico</h2><div id="logLista"></div><button id="logFechar" style="width:100%">Fechar</button></dialog>
 <dialog id="dCfg">
@@ -663,8 +722,10 @@ const NVA=(()=>{
   const D={},E={};
   const chaveCfg=id=>id==='principal'?'palco-animador-v1':'palco-animador-v1:'+id;
   const chaveImg=(id,k)=>id==='principal'?'img-'+k:id+'/img-'+k;
-  function atores(){try{const o=JSON.parse(localStorage.getItem('palco-atores'));if(o&&o.lista&&o.lista.length)return o.lista}catch(e){}return[{id:'principal',nome:'Tamaki'}]}
-  function idDe(nome){const n=EMO.limpa(nome),a=atores().find(a=>EMO.limpa(a.nome)===n||EMO.limpa(a.id)===n)||atores().find(a=>EMO.limpa(a.nome).split('_')[0]===n);return a?a.id:null}
+  let cacheA=null,cacheId={};const pend={};
+  function atores(){if(cacheA)return cacheA;try{const o=JSON.parse(localStorage.getItem('palco-atores'));if(o&&o.lista&&o.lista.length)return cacheA=o.lista}catch(e){}return cacheA=[{id:'principal',nome:'Tamaki'}]}
+  function idDe(nome){if(nome in cacheId)return cacheId[nome];return cacheId[nome]=idDe0(nome)}
+  function idDe0(nome){const n=EMO.limpa(nome),a=atores().find(a=>EMO.limpa(a.nome)===n||EMO.limpa(a.id)===n)||atores().find(a=>EMO.limpa(a.nome).split('_')[0]===n);return a?a.id:null}
   const abrir=()=>new Promise((ok,no)=>{const r=indexedDB.open('palco-animador',1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});
   const pega=(db,k)=>new Promise(ok=>{try{const q=db.transaction('files').objectStore('files').get(k);q.onsuccess=()=>ok(q.result||null);q.onerror=()=>ok(null)}catch(e){ok(null)}});
   const imagem=b=>new Promise(ok=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>ok(null);i.src=URL.createObjectURL(b)});
@@ -684,12 +745,13 @@ const NVA=(()=>{
     for(const id of ids)if(!D[id])carrega(id);
     if(falta.length)toast('Não achei o ator '+falta.join(', ')+' na aba Atriz. Confira o nome.',4000);
   }
-  let tR;function recarregar(){clearTimeout(tR);tR=setTimeout(()=>{for(const id of Object.keys(D))carrega(id)},600)}
+  let tR;function recarregar(){cacheA=null;cacheId={};clearTimeout(tR);tR=setTimeout(()=>{for(const id of Object.keys(D))carrega(id)},600)}
   function ligado(who){const p=G.prog&&G.prog.chars[who],d=p&&p.atorId&&D[p.atorId];return d&&(d.im.idle||d.im.talk)?d:null}
   const ativo=()=>!!(G.st&&Object.keys(G.st.chars).some(ligado));
-  function desenhar(who,x,h,a,emo,fala,now){
-    const d=ligado(who);if(!d)return false;
-    const e=E[who]||(E[who]={prox:now+1500,pisca:0,aberta:false,troca:0,alt:false,emo:null,pop:-1e9});
+  // y = onde ficam os pés; g = canvas onde desenhar (o do jogo ou o do Montar cena)
+  function desenhaD(d,key,x,y,h,a,emo,fala,now,flip,rot,g){
+    g=g||cx;
+    const e=E[key]||(E[key]={prox:now+800+Math.random()*2200,pisca:0,aberta:false,troca:0,alt:false,emo:null,pop:-1e9});
     const set=emo&&d.emo[emo]&&(d.emo[emo].idle||d.emo[emo].talk)?d.emo[emo]:d.im,em=set===d.im?null:emo;
     if(em!==e.emo){e.emo=em;e.pop=now;e.pisca=now+90}
     if(now>e.prox){e.pisca=now+120;e.prox=now+(Math.random()<.2?260:(+d.S.blinkEvery||4)*1000*(.6+Math.random()*.8))}
@@ -697,10 +759,16 @@ const NVA=(()=>{
     const img=EMO.pose(set,e.aberta,now<e.pisca,e.alt);if(!pronta(img))return false;
     const ref=d.im.idle||d.im.talk,k=h/ref.naturalHeight,p=(now-e.pop)/260,pop=p<1?.04*Math.sin(p*Math.PI):0;
     const resp=.008*Math.sin(now/3200*Math.PI*2),w=img.naturalWidth*k*(1+pop),hh=img.naturalHeight*k*(1+resp+pop);
-    cx.drawImage(img,x-w/2,H-hh+(1-a)*18-(e.aberta?h*.008:0),w,hh);return true;
+    g.save();g.translate(x,y+(1-a)*18-(e.aberta?h*.008:0));if(rot)g.rotate(rot*Math.PI/180);if(flip)g.scale(-1,1);
+    g.drawImage(img,-w/2,-hh,w,hh);g.restore();return true;
   }
+  function desenhar(who,x,h,a,emo,fala,now,o){const d=ligado(who);if(!d)return false;o=o||{};return desenhaD(d,who,x,o.y!=null?o.y:H,h,a,emo,fala,now,o.flip,o.r)}
+  // ator sem personagem no roteiro (figurante) ou no Montar cena
+  function desenharId(id,key,x,y,h,a,emo,now,flip,rot,g,fala){const d=D[id];if(!d){if(!pend[id]){pend[id]=1;carrega(id)}return false}
+    if(!(d.im.idle||d.im.talk))return false;return desenhaD(d,'#'+key,x,y,h,a,emo,!!fala,now,flip,rot,g)}
+  const dados=id=>D[id]||null;
   async function garante(id){if(!D[id])await carrega(id);return D[id]}
-  return{preparar,recarregar,ativo,desenhar,atores,idDe,garante};
+  return{preparar,recarregar,ativo,desenhar,desenharId,dados,atores,idDe,garante};
 })();
 window.addEventListener('storage',e=>{if(e.key==='palco-atriz-versao'||e.key==='palco-atores'||(e.key||'').startsWith('palco-animador-v1'))NVA.recarregar()});
 const falandoAgora=now=>!falaCompleta(now)||!!(G.voz&&!G.voz.paused&&!G.voz.ended);
@@ -746,8 +814,12 @@ function exec(nd,f){
     case 'sai':{const s=st.stack;if(!s.some(x=>x.area))throw new ErroScript(nd.n,'"sai" só funciona dentro de uma área do explorar.');
       while(s.length){if(s.pop().area)break}if(topo())topo().ip++;return}
     case 'cena':V.trans=nd.tr==='nada'||G.skip?null:{de:st.bg,tipo:nd.tr,t0:agora,dur:nd.tr==='preto'?900:nd.tr==='flash'?500:450};
-      st.bg=nd.img;st.chars={};st.cam={z:1,x:50,y:50};V.cam=null;if(nd.tr==='flash'&&!G.skip)V.flash={t0:agora,c:'#fff'};f.ip++;return;
-    case 'mostra':{const prev=st.chars[nd.who];if(!prev)V.entra[nd.who]=agora;st.chars[nd.who]={e:nd.expr??prev?.e??null,pos:nd.pos||prev?.pos||'centro'};f.ip++;return}
+      st.bg=nd.img;st.chars={};st.mmap=null;st.cam={z:1,x:50,y:50};V.cam=null;if(nd.tr==='flash'&&!G.skip)V.flash={t0:agora,c:'#fff'};
+      {const mt=montDe(nd.img);if(mt){st.mmap={};
+        for(const L of mt.camadas){if(L.tipo!=='ator'||!L.vis)continue;const aid=NVA.idDe(L.ref),id=aid&&Object.keys(G.prog.chars).find(k=>G.prog.chars[k].atorId===aid);
+          st.mmap[L.id]=id||null;if(id&&!st.chars[id]){st.chars[id]={e:L.emo||null,pos:'centro',m:L.id};V.entra[id]=agora}}}}
+      f.ip++;return;
+    case 'mostra':{const prev=st.chars[nd.who];if(!prev)V.entra[nd.who]=agora;st.chars[nd.who]={e:nd.expr??prev?.e??null,pos:nd.pos||prev?.pos||'centro'};if(prev&&prev.m&&!nd.pos)st.chars[nd.who].m=prev.m;else if(!prev&&!nd.pos&&st.mmap){const lid=Object.keys(st.mmap).find(k=>st.mmap[k]===nd.who);if(lid)st.chars[nd.who].m=lid}f.ip++;return}
     case 'esconde':delete st.chars[nd.who];f.ip++;return;
     case 'musica':st.music=nd.src;tocaMusica(nd.src);f.ip++;return;
     case 'paramusica':st.music=null;tocaMusica(null);f.ip++;return;
@@ -847,7 +919,39 @@ function cobre(img,a){
   const s=Math.max(W/img.naturalWidth,H/img.naturalHeight),w=img.naturalWidth*s,h=img.naturalHeight*s;
   cx.globalAlpha=a;cx.drawImage(img,(W-w)/2,(H-h)/2,w,h);cx.globalAlpha=1;
 }
+/* ---------- cenas montadas (🎬 Montar cena) ---------- */
+// localStorage nv_cenas = {chave: {nome, camadas:[{id,tipo:'cenario'|'ator'|'item',ref,nome,x,y,s,r,flip,alpha,vis,lock,emo}]}}
+// cenário: x,y = centro em % da tela, s = zoom sobre "cobrir a tela"; ator e item: x = centro, y = onde ficam os pés (% da tela), s = altura em % da tela
+let CENAS=LS.get('nv_cenas',{});
+const montDe=nome=>nome?CENAS[norm(nome)]||null:null;
+function salvaCenas(){LS.set('nv_cenas',CENAS)}
+function pintaCamada(g,L,Wc,Hc,ga,now,ator){
+  const x=L.x/100*Wc,y=L.y/100*Hc;
+  if(L.tipo==='ator')return ator(x,y,L.s/100*Hc);
+  const img=L.tipo==='cenario'?achaImg('fundo '+L.ref,L.ref):achaImg(L.ref);
+  g.save();g.globalAlpha=ga;g.translate(x,y);if(L.r)g.rotate(L.r*Math.PI/180);if(L.flip)g.scale(-1,1);
+  if(pronta(img)){
+    if(L.tipo==='cenario'){const k=Math.max(Wc/img.naturalWidth,Hc/img.naturalHeight)*(L.s||1),w=img.naturalWidth*k,h=img.naturalHeight*k;g.drawImage(img,-w/2,-h/2,w,h)}
+    else{const h=L.s/100*Hc,w=h*img.naturalWidth/img.naturalHeight;g.drawImage(img,-w/2,-h,w,h)}
+  }else{ // a arte não existe (ainda)
+    const w=L.tipo==='cenario'?Wc:Hc*.18,h=L.tipo==='cenario'?Hc:Hc*.18,oy=L.tipo==='cenario'?-h/2:-h;
+    g.fillStyle='#262c3d';g.fillRect(-w/2,oy,w,h);g.fillStyle='#a9adb8';g.textAlign='center';g.textBaseline='middle';
+    g.font='600 '+Math.round(Hc*.03)+'px "Chakra Petch",sans-serif';g.fillText('falta a arte “'+L.ref+'”',0,oy+h/2);
+  }
+  g.restore();
+}
+function pintaMont(m,a,now,atual){
+  for(const L of m.camadas){if(!L.vis)continue;const ga=a*(L.alpha==null?1:L.alpha);
+    pintaCamada(cx,L,W,H,ga,now,(x,y,h)=>{
+      const quem=atual&&G.st.mmap?G.st.mmap[L.id]:null;
+      if(quem){const c=G.st.chars[quem];if(c&&c.m===L.id)umPersonagem(quem,c,now,x,y,h,L.flip,L.r,ga);return}
+      const aid=NVA.idDe(L.ref);if(aid){cx.save();cx.globalAlpha=ga;NVA.desenharId(aid,m.nome+'/'+L.id,x,y,h,1,L.emo||null,now,L.flip,L.r);cx.restore()}
+    });
+  }
+}
 function fundo(nome,a){
+  const mt=montDe(nome);
+  if(mt){cx.globalAlpha=a;cx.fillStyle='#11141d';cx.fillRect(0,0,W,H);cx.globalAlpha=1;pintaMont(mt,a,performance.now(),!!G.st&&nome===G.st.bg);return}
   if(!nome){cx.globalAlpha=a;cx.fillStyle='#11141d';cx.fillRect(0,0,W,H);cx.globalAlpha=1;return}
   const liso={preto:'#000',branco:'#fff'}[norm(nome)];
   if(liso&&!achaImg(nome)){cx.globalAlpha=a;cx.fillStyle=liso;cx.fillRect(0,0,W,H);cx.globalAlpha=1;return}
@@ -859,19 +963,25 @@ function fundo(nome,a){
   cx.fillText(nome,W/2,H*.38);cx.globalAlpha=1;
 }
 function rr(x,y,w,h,r){cx.beginPath();if(cx.roundRect)cx.roundRect(x,y,w,h,r);else cx.rect(x,y,w,h)}
+function umPersonagem(id,c,now,x,y,h,flip,rot,ga){
+  const fala=G.modo==='fala'&&G.fala&&G.fala.who;
+  const t0=V.entra[id]||0,a=Math.min(1,(now-t0)/260);
+  const emo=fala===id&&G.fala.emo?G.fala.emo:c.e; // sentimento da fala, senão o do "mostra"
+  cx.save();cx.globalAlpha=a*(ga==null?1:ga);if(fala&&fala!==id)cx.filter='brightness(55%)';
+  if(NVA.desenhar(id,x,h,a,emo?EMO.limpa(emo):null,fala===id&&falandoAgora(now),now,{y,flip,r:rot})){cx.restore();return}
+  const img=achaImg(emo?id+' '+emo:null,c.e?id+' '+c.e:null,id);
+  cx.translate(x,y+(1-a)*18);if(rot)cx.rotate(rot*Math.PI/180);if(flip)cx.scale(-1,1);
+  if(pronta(img)){const w=h*img.naturalWidth/img.naturalHeight;cx.drawImage(img,-w/2,-h,w,h)}
+  else{const w=h*.38,p=G.prog.chars[id];rr(-w/2,-h,w,h,[w*.46,w*.46,8,8]);cx.fillStyle=p?.cor||'#7d8597';cx.fill();
+    cx.fillStyle='#fff';cx.textAlign='center';cx.textBaseline='middle';cx.font='700 '+Math.round(w*.16)+'px "Chakra Petch",sans-serif';
+    cx.fillText(p?.nome||id,0,-h*.55);if(c.e){cx.font='500 '+Math.round(w*.12)+'px "Chakra Petch",sans-serif';cx.fillText(c.e,0,-h*.55+w*.2)}}
+  cx.restore();
+}
 function personagens(now){
-  const st=G.st,fala=G.modo==='fala'&&G.fala&&G.fala.who;
+  const st=G.st,mont=!!(st.mmap&&montDe(st.bg));
   for(const [id,c] of Object.entries(st.chars)){
-    const t0=V.entra[id]||0,a=Math.min(1,(now-t0)/260),h=H*(vert()?.58:.86),x=(POS[c.pos]??50)/100*W;
-    const emo=fala===id&&G.fala.emo?G.fala.emo:c.e; // sentimento da fala, senão o do "mostra"
-    cx.save();cx.globalAlpha=a;if(fala&&fala!==id)cx.filter='brightness(55%)';
-    if(NVA.desenhar(id,x,h,a,emo?EMO.limpa(emo):null,fala===id&&falandoAgora(now),now)){cx.restore();continue}
-    const img=achaImg(emo?id+' '+emo:null,c.e?id+' '+c.e:null,id);
-    if(pronta(img)){const w=h*img.naturalWidth/img.naturalHeight;cx.drawImage(img,x-w/2,H-h+(1-a)*18,w,h)}
-    else{const w=h*.38,p=G.prog.chars[id];rr(x-w/2,H-h,w,h,[w*.46,w*.46,8,8]);cx.fillStyle=p?.cor||'#7d8597';cx.fill();
-      cx.fillStyle='#fff';cx.textAlign='center';cx.textBaseline='middle';cx.font='700 '+Math.round(w*.16)+'px "Chakra Petch",sans-serif';
-      cx.fillText(p?.nome||id,x,H-h*.55);if(c.e){cx.font='500 '+Math.round(w*.12)+'px "Chakra Petch",sans-serif';cx.fillText(c.e,x,H-h*.55+w*.2)}}
-    cx.restore();
+    if(c.m&&mont)continue; // este fica no lugar montado (desenhado junto com a cena)
+    umPersonagem(id,c,now,(POS[c.pos]??50)/100*W,H,H*(vert()?.58:.86));
   }
 }
 function quebra(txt,maxW){
@@ -955,7 +1065,7 @@ function quadro(now){
   }
   const pisca=G.modo==='fala'&&Math.floor(now/450)%2;if(pisca!==G.pisca){G.pisca=pisca;sujo=true}
   const anima=G.rec||V.trans||V.flash||(V.shake&&now<V.shake.t0+V.shake.dur)||(V.cam&&now<V.cam.t0+V.cam.dur)||(G.modo==='explorar'&&now<V.pulso)||
-    (G.modo==='fala'&&!falaCompleta(now))||Object.values(V.entra).some(t=>now-t<300)||NVA.ativo();
+    (G.modo==='fala'&&!falaCompleta(now))||Object.values(V.entra).some(t=>now-t<300)||NVA.ativo()||!!(G.st&&G.st.mmap&&Object.keys(G.st.mmap).length);
   if(!anima&&!sujo)return;
   if(now-ultimo<(G.rec?30:16))return;ultimo=now;sujo=false;
   desenha(now);
@@ -1452,6 +1562,172 @@ $('#mAtores').onclick=abreAtores;$('#eAtores').onclick=abreAtores;
 $('#atRecarrega').onclick=()=>{NVA.recarregar();setTimeout(listaAtores,900)};
 $('#atRoteiro').onclick=()=>abreEditor();$('#atVoltar').onclick=()=>abreMenu();
 $('#mAjustes').onclick=abreAjustes;
+
+/* ---------- 🎬 Montar cena ---------- */
+const mcv=$('#mcv'),mcx=mcv.getContext('2d');
+const MC={chave:null,sel:null,fala:false,deEditor:null,toques:new Map(),arr:null};
+const TIPO={cenario:['🏞','Cenário'],ator:['🎭','Ator'],item:['📦','Item']};
+const novoIdC=()=>'c'+Math.random().toString(36).slice(2,8);
+const cenaAberta=()=>MC.chave?CENAS[MC.chave]:null;
+const camSel=()=>{const m=cenaAberta();return m&&m.camadas.find(c=>c.id===MC.sel)||null};
+let tSalvaC;function mudou(){clearTimeout(tSalvaC);tSalvaC=setTimeout(salvaCenas,300)}
+function nomeCenaLivre(base){let n=base,i=2;while(CENAS[norm(n)])n=base+' '+i++;return n}
+async function abreMontar(nome){
+  if(G.tela==='editor'){guardaParte();MC.deEditor={parte:PROJ.atual,cursor:ta.selectionStart}}else MC.deEditor=null;
+  if(!Object.keys(ART).length)await carregaArtes();
+  CENAS=LS.get('nv_cenas',{});
+  // do editor: abre a cena da última linha "cena …" antes do cursor
+  if(!nome&&MC.deEditor){const antes=ta.value.slice(0,ta.selectionStart).split('\n').reverse();
+    for(const l of antes){const m=l.trim().match(/^cena\s+(.+?)(?:\s+com\s+\w+)?$/);if(m){nome=m[1];break}}}
+  if(nome&&!CENAS[norm(nome)]){CENAS[norm(nome)]={nome:norm(nome),camadas:[]};
+    if(ART[norm(nome)]||ART['fundo '+norm(nome)])CENAS[norm(nome)].camadas.push({id:novoIdC(),tipo:'cenario',ref:ART[norm(nome)]?norm(nome):'fundo '+norm(nome),nome:'Cenário',x:50,y:50,s:1,r:0,flip:false,alpha:1,vis:true,lock:false});
+    salvaCenas()}
+  const chaves=Object.keys(CENAS);
+  MC.chave=nome?norm(nome):(MC.chave&&CENAS[MC.chave]?MC.chave:chaves[0]||null);
+  if(!MC.chave){const n=(prompt('Nome da primeira cena (é o que vai no roteiro: cena nome). Ex.: praca, ninho, sala_de_aula',nomeCenaLivre('cena1'))||'').trim();if(!n){if(MC.deEditor)abreEditor();return}
+    CENAS[norm(n)]={nome:norm(n),camadas:[]};MC.chave=norm(n);salvaCenas()}
+  MC.sel=null;[mcv.width,mcv.height]=[W,H];
+  for(const L of cenaAberta().camadas)if(L.tipo==='ator'){const id=NVA.idDe(L.ref);if(id)NVA.garante(id)}
+  tela('montar');listaCenas();renderMC();if(!MC.rodando){MC.rodando=true;requestAnimationFrame(loopMC)}
+}
+function listaCenas(){
+  $('#mcLista').innerHTML=Object.keys(CENAS).sort().map(k=>'<option value="'+esc(k)+'"'+(k===MC.chave?' selected':'')+'>🎬 '+esc(CENAS[k].nome)+'</option>').join('');
+}
+$('#mcLista').onchange=e=>{MC.chave=e.target.value;MC.sel=null;for(const L of cenaAberta().camadas)if(L.tipo==='ator'){const id=NVA.idDe(L.ref);if(id)NVA.garante(id)}renderMC()};
+$('#mcNova').onclick=()=>{const n=(prompt('Nome da cena nova (é o que vai no roteiro: cena nome):',nomeCenaLivre('cena'))||'').trim();if(!n)return;
+  if(CENAS[norm(n)])return toast('Já existe uma cena com esse nome.');CENAS[norm(n)]={nome:norm(n),camadas:[]};MC.chave=norm(n);MC.sel=null;salvaCenas();listaCenas();renderMC()};
+$('#mcNome').onclick=()=>{const m=cenaAberta();if(!m)return;const n=(prompt('Novo nome da cena:',m.nome)||'').trim();if(!n||norm(n)===MC.chave)return;
+  if(CENAS[norm(n)])return toast('Já existe uma cena com esse nome.');delete CENAS[MC.chave];m.nome=norm(n);CENAS[norm(n)]=m;MC.chave=norm(n);salvaCenas();listaCenas();
+  toast('Nome trocado. No roteiro, use: cena '+m.nome,3000)};
+$('#mcApagar').onclick=()=>{const m=cenaAberta();if(!m||!confirm('Apagar a cena montada “'+m.nome+'”? (As artes e os atores continuam.)'))return;
+  delete CENAS[MC.chave];salvaCenas();MC.chave=Object.keys(CENAS)[0]||null;MC.sel=null;if(!MC.chave)return abreMontar();listaCenas();renderMC()};
+$('#mcFala').onclick=()=>{MC.fala=!MC.fala;$('#mcFala').classList.toggle('on',MC.fala)};
+$('#mcVoltar').onclick=()=>{salvaCenas();if(MC.deEditor){abreEditor();vaiParte(MC.deEditor.parte);ta.selectionStart=ta.selectionEnd=MC.deEditor.cursor}else abreMenu()};
+$('#mcRoteiro').onclick=()=>{
+  const m=cenaAberta();if(!m)return;salvaCenas();
+  // atores da cena que ainda não são personagens do roteiro
+  const chars=personagensDoRoteiro(roteiroAtual()),ligados=new Set(chars.map(c=>c.ator&&NVA.idDe(c.ator)).filter(Boolean));
+  const faltam=[...new Set(m.camadas.filter(L=>L.tipo==='ator'&&L.vis).map(L=>L.ref))].map(n=>NVA.atores().find(a=>a.id===NVA.idDe(n))).filter(a=>a&&!ligados.has(a.id));
+  if(faltam.length&&confirm('Estes atores ainda não são personagens do roteiro: '+faltam.map(a=>a.nome).join(', ')+'.\nCriar agora? (Sem isso eles ficam só de figurantes e não falam.)'))faltam.forEach(criarPersonagem);
+  const de=MC.deEditor;abreEditor();
+  if(de){vaiParte(de.parte);ta.selectionStart=ta.selectionEnd=de.cursor}else{ta.selectionStart=ta.selectionEnd=ta.value.length}
+  insereLinhas(['cena '+m.nome+' com fade']);toast('Pus “cena '+m.nome+' com fade” no roteiro.',2500)};
+
+/* camadas */
+function fotoCamada(L){
+  if(L.tipo==='ator'){const d=NVA.dados(NVA.idDe(L.ref)),i=d&&(L.emo&&d.emo[L.emo]&&d.emo[L.emo].idle||d.im.idle||d.im.talk);return i?i.src:''}
+  const a=ART[norm(L.ref)]||ART[norm('fundo '+L.ref)];return a&&a.img?a.url:'';
+}
+function renderMC(){renderCamadas();renderProps()}
+function renderCamadas(){
+  const m=cenaAberta(),box=$('#mcCamadas');if(!m){box.innerHTML='';return}
+  if(!m.camadas.length){box.innerHTML='<div class="tit"><span>Camadas</span></div><p class="nota">Cena vazia. Toque em <b>＋ 🏞 Cenário</b>, <b>＋ 🎭 Ator</b> ou <b>＋ 📦 Item</b>.</p>';return}
+  box.innerHTML='<div class="tit"><span>Camadas</span><span>frente ↑</span></div>'+[...m.camadas].reverse().map(L=>{const f=fotoCamada(L);
+    return '<div class="cam'+(L.id===MC.sel?' on':'')+(L.vis?'':' off')+'" data-c="'+L.id+'"><div class="th" style="'+(f?'background-image:url('+f+')':'')+'">'+(f?'':TIPO[L.tipo][0])+'</div>'
+      +'<div class="nm">'+esc(L.nome)+'<small>'+TIPO[L.tipo][0]+' '+TIPO[L.tipo][1]+(L.emo?' · '+esc(L.emo):'')+'</small></div>'
+      +'<button data-x="vis" aria-label="'+(L.vis?'Esconder':'Mostrar')+'">'+(L.vis?'👁':'🚫')+'</button>'
+      +'<button data-x="lock" aria-label="'+(L.lock?'Destravar':'Travar')+'">'+(L.lock?'🔒':'🔓')+'</button></div>'}).join('');
+}
+$('#mcCamadas').onclick=e=>{const row=e.target.closest('[data-c]');if(!row)return;const m=cenaAberta(),L=m.camadas.find(c=>c.id===row.dataset.c);if(!L)return;
+  const b=e.target.closest('[data-x]');if(b){L[b.dataset.x]=!L[b.dataset.x];mudou()}else MC.sel=L.id;renderMC()};
+function faixa(id,rot,v,min,max,step,suf){return '<div class="campo"><label for="'+id+'"><span>'+rot+'</span><b id="'+id+'V">'+(+v).toFixed(step<1?2:0)+(suf||'')+'</b></label><input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+v+'"></div>'}
+async function renderProps(){
+  const L=camSel(),box=$('#mcProps');
+  if(!L){box.innerHTML='<p class="nota">Toque numa camada (na lista ou na cena) para mexer nela.</p><p class="nota">Dica: dê à cena o mesmo nome que vai no roteiro. <b>cena '+esc(cenaAberta()?.nome||'')+'</b> já traz tudo no lugar.</p>';return}
+  const cen=L.tipo==='cenario';let emos='';
+  if(L.tipo==='ator'){const id=NVA.idDe(L.ref),d=id&&await NVA.garante(id);const lista=d?Object.keys(d.emo).filter(e=>d.emo[e].idle||d.emo[e].talk):[];
+    emos='<div class="campo"><label for="pEmo">Sentimento</label><select id="pEmo"><option value="">🙂 normal</option>'+lista.map(e=>'<option'+(e===L.emo?' selected':'')+'>'+esc(e)+'</option>').join('')+'</select></div>'
+      +(id?'':'<p class="nota" style="color:#ffb3ad">⚠ O ator “'+esc(L.ref)+'” não existe mais na aba Atriz.</p>')}
+  if(camSel()!==L)return;
+  box.innerHTML='<h3>'+TIPO[L.tipo][0]+' '+esc(L.nome)+'</h3>'
+    +'<div class="campo"><label for="pNome">Nome da camada</label><input type="text" id="pNome" value="'+esc(L.nome)+'"></div>'+emos
+    +faixa('pS',cen?'Zoom':'Tamanho',L.s,cen?.5:3,cen?3:160,cen?.05:1,cen?'×':'%')
+    +faixa('pX','Para os lados',L.x,0,100,1,'%')
+    +faixa('pY',cen?'Para cima e para baixo':'Altura dos pés',L.y,0,cen?100:130,1,'%')
+    +faixa('pR','Girar',L.r||0,-180,180,1,'°')
+    +faixa('pA','Transparência',L.alpha==null?1:L.alpha,.1,1,.05,'')
+    +'<div class="lin"><button id="pFlip"'+(L.flip?' class="on"':'')+'>⇋ Espelhar</button>'+(L.tipo!=='ator'?'<button id="pTroca">🖼 Trocar imagem</button>':'')+'</div>'
+    +'<div class="lin"><button id="pFrente">⬆ Para frente</button><button id="pTras">⬇ Para trás</button></div>'
+    +'<div class="lin"><button id="pDup">⧉ Duplicar</button><button id="pDel">🗑 Tirar</button></div>'
+    +(L.tipo==='ator'?'<p class="nota">Se um personagem do roteiro usa este ator, ele fala e pisca aqui. Senão, fica de figurante.</p>':'');
+  const liga=(id,k)=>{const el=$('#'+id);el.oninput=()=>{L[k]=+el.value;$('#'+id+'V').textContent=(+el.value).toFixed(+el.step<1?2:0)+({pS:L.tipo==='cenario'?'×':'%',pX:'%',pY:'%',pR:'°'}[id]||'');mudou()}};
+  liga('pS','s');liga('pX','x');liga('pY','y');liga('pR','r');liga('pA','alpha');
+  $('#pNome').onchange=e=>{L.nome=e.target.value.trim()||L.nome;mudou();renderCamadas()};
+  if($('#pEmo'))$('#pEmo').onchange=e=>{L.emo=e.target.value||null;mudou();renderCamadas()};
+  $('#pFlip').onclick=()=>{L.flip=!L.flip;mudou();renderProps()};
+  if($('#pTroca'))$('#pTroca').onclick=()=>escolheMC(L.tipo,L);
+  const m=cenaAberta(),mexe=d=>{const i=m.camadas.indexOf(L),j=i+d;if(j<0||j>=m.camadas.length)return;m.camadas.splice(i,1);m.camadas.splice(j,0,L);mudou();renderCamadas()};
+  $('#pFrente').onclick=()=>mexe(1);$('#pTras').onclick=()=>mexe(-1);
+  $('#pDup').onclick=()=>{const n={...L,id:novoIdC(),nome:L.nome+' 2',x:Math.min(100,L.x+6)};m.camadas.splice(m.camadas.indexOf(L)+1,0,n);MC.sel=n.id;mudou();renderMC()};
+  $('#pDel').onclick=()=>{m.camadas=m.camadas.filter(c=>c!==L);MC.sel=null;mudou();renderMC()};
+}
+function atualizaFaixas(L){for(const [id,k] of [['pS','s'],['pX','x'],['pY','y']]){const el=$('#'+id);if(el){el.value=L[k];$('#'+id+'V').textContent=(+L[k]).toFixed(+el.step<1?2:0)+(id==='pS'&&L.tipo==='cenario'?'×':'%')}}}
+
+/* escolher arte ou ator */
+async function escolheMC(tipo,trocar){
+  MC.esc={tipo,trocar};const box=$('#esLista');
+  $('#esTit').textContent=tipo==='ator'?'🎭 Escolha o ator':tipo==='cenario'?'🏞 Escolha o cenário':'📦 Escolha o item';
+  $('#esNota').textContent=tipo==='ator'?'Os atores da aba Atriz (Palco Animação).':'As imagens das 🖼 Artes da Novel. Itens ficam melhores com fundo transparente (PNG).';
+  $('#esEnviar').hidden=tipo==='ator';
+  if(tipo==='ator'){const todos=NVA.atores(),html=[];
+    for(const a of todos){const d=await NVA.garante(a.id),r=d&&(d.im.idle||d.im.talk);html.push('<button data-v="'+esc(a.nome)+'"><div class="th" style="'+(r?'background-image:url('+r.src+')':'')+'">'+(r?'':'🎭')+'</div><small>'+esc(a.nome)+'</small></button>')}
+    box.innerHTML=html.join('')||'<p class="nota">Nenhum ator ainda.</p>'}
+  else{const imgs=Object.values(ART).filter(a=>a.tipo==='imagem').sort((a,b)=>a.nome.localeCompare(b.nome));
+    box.innerHTML=imgs.map(a=>'<button data-v="'+esc(a.nome)+'"><div class="th" style="background-image:url('+a.url+')"></div><small>'+esc(a.nome)+'</small></button>').join('')||'<p class="nota">Nenhuma imagem nas Artes ainda. Toque em ＋ Imagem do aparelho.</p>'}
+  if(!$('#dEscolhe').open)$('#dEscolhe').showModal();
+}
+$('#mcAdd').onclick=e=>{const b=e.target.closest('[data-add]');if(b)escolheMC(b.dataset.add,null)};
+$('#esFechar').onclick=()=>$('#dEscolhe').close();
+$('#esEnviar').onclick=()=>$('#esArquivo').click();
+$('#esArquivo').onchange=async ev=>{const fs=[...ev.target.files];ev.target.value='';if(!fs.length)return;toast('Guardando nas Artes…',6000);
+  for(const f of fs)if(f.type.startsWith('image/'))await guardaArte(f,f.name);await carregaArtes();toast('Pronto. Agora escolha a imagem.');escolheMC(MC.esc.tipo,MC.esc.trocar)};
+$('#esLista').onclick=async e=>{const b=e.target.closest('[data-v]');if(!b)return;const v=b.dataset.v,{tipo,trocar}=MC.esc,m=cenaAberta();$('#dEscolhe').close();
+  if(trocar){trocar.ref=v;if(TIPO[trocar.tipo][1]===trocar.nome||trocar.tipo!=='cenario')trocar.nome=trocar.tipo==='cenario'?trocar.nome:v;mudou();return renderMC()}
+  const L={id:novoIdC(),tipo,ref:v,nome:tipo==='cenario'?'Cenário':v,x:50,y:tipo==='cenario'?50:tipo==='ator'?100:85,s:tipo==='cenario'?1:25,r:0,flip:false,alpha:1,vis:true,lock:false};
+  if(tipo==='ator'){const id=NVA.idDe(v),d=id&&await NVA.garante(id);L.s=Math.round((vert()?58:86)*((d&&+d.S.size)||1));
+    const n=m.camadas.filter(c=>c.tipo==='ator').length;L.x=[50,28,72,15,85,40,60][n%7];}
+  if(tipo==='cenario')m.camadas.unshift(L);else m.camadas.push(L);
+  MC.sel=L.id;mudou();renderMC()};
+
+/* desenho da cena montada no Montar cena */
+function caixaCamada(L){ // retângulo para tocar e para a seleção (em pixels da cena)
+  const Wc=mcv.width,Hc=mcv.height,x=L.x/100*Wc,y=L.y/100*Hc;
+  let w,h,img=null;
+  if(L.tipo==='ator'){const d=NVA.dados(NVA.idDe(L.ref));img=d&&(d.im.idle||d.im.talk);h=L.s/100*Hc;w=pronta(img)?h*img.naturalWidth/img.naturalHeight:h*.38;return{x:x-w/2,y:y-h,w,h,cx:x,cy:y-h/2}}
+  img=L.tipo==='cenario'?achaImg('fundo '+L.ref,L.ref):achaImg(L.ref);
+  if(L.tipo==='cenario'){const k=pronta(img)?Math.max(Wc/img.naturalWidth,Hc/img.naturalHeight)*(L.s||1):1;w=pronta(img)?img.naturalWidth*k:Wc;h=pronta(img)?img.naturalHeight*k:Hc;return{x:x-w/2,y:y-h/2,w,h,cx:x,cy:y}}
+  h=L.s/100*Hc;w=pronta(img)?h*img.naturalWidth/img.naturalHeight:Hc*.18;return{x:x-w/2,y:y-h,w,h,cx:x,cy:y-h/2};
+}
+let ultMC=0;
+function loopMC(now){
+  if(G.tela!=='montar'){MC.rodando=false;return}requestAnimationFrame(loopMC);
+  if(now-ultMC<33)return;ultMC=now;
+  const m=cenaAberta(),Wc=mcv.width,Hc=mcv.height;mcx.setTransform(1,0,0,1,0,0);mcx.fillStyle='#11141d';mcx.fillRect(0,0,Wc,Hc);if(!m)return;
+  for(const L of m.camadas){if(!L.vis)continue;const ga=L.alpha==null?1:L.alpha;
+    pintaCamada(mcx,L,Wc,Hc,ga,now,(x,y,h)=>{const aid=NVA.idDe(L.ref);mcx.save();mcx.globalAlpha=ga;
+      if(!(aid&&NVA.desenharId(aid,'mc/'+L.id,x,y,h,1,L.emo||null,now,L.flip,L.r,mcx,MC.fala&&L.id===MC.sel))){
+        mcx.translate(x,y);mcx.fillStyle='#7d8597';mcx.fillRect(-h*.19,-h,h*.38,h);mcx.fillStyle='#fff';mcx.textAlign='center';mcx.font='700 '+Math.round(h*.06)+'px "Chakra Petch",sans-serif';mcx.fillText(L.ref,0,-h*.5)}
+      mcx.restore()});
+  }
+  const L=camSel();if(L&&L.vis){const b=caixaCamada(L);mcx.save();mcx.translate(b.cx,L.tipo==='cenario'?b.cy:L.y/100*Hc);if(L.r)mcx.rotate(L.r*Math.PI/180);
+    const oy=L.tipo==='cenario'?-b.h/2:-b.h;mcx.setLineDash([14,9]);mcx.lineWidth=4;mcx.strokeStyle=L.lock?'#a9adb8':'#e3b448';mcx.strokeRect(-b.w/2,oy,b.w,b.h);mcx.restore()}
+}
+const pontoMC=e=>{const r=mcv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*mcv.width,y:(e.clientY-r.top)/r.height*mcv.height}};
+function quemAqui(p){const m=cenaAberta();if(!m)return null;
+  for(let i=m.camadas.length-1;i>=0;i--){const L=m.camadas[i];if(!L.vis||L.lock||L.tipo==='cenario')continue;const b=caixaCamada(L);if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h)return L}
+  const s=camSel();return s&&s.tipo==='cenario'&&!s.lock?s:null}
+mcv.addEventListener('pointerdown',e=>{mcv.setPointerCapture(e.pointerId);const p=pontoMC(e);MC.toques.set(e.pointerId,p);
+  if(MC.toques.size===1){const L=quemAqui(p);if(L&&L.id!==MC.sel){MC.sel=L.id;renderMC()}if(!L&&camSel()&&camSel().tipo!=='cenario'){MC.sel=null;renderMC()}
+    const s=camSel();MC.arr=s&&!s.lock?{L:s,p0:p,x0:s.x,y0:s.y}:null}
+  else if(MC.toques.size===2){const s=camSel();if(s&&!s.lock){const [a,b]=[...MC.toques.values()];MC.arr={L:s,pinca:Math.hypot(a.x-b.x,a.y-b.y),s0:s.s}}}});
+mcv.addEventListener('pointermove',e=>{if(!MC.toques.has(e.pointerId))return;const p=pontoMC(e);MC.toques.set(e.pointerId,p);const a=MC.arr;if(!a)return;
+  if(a.pinca&&MC.toques.size>=2){const [q,r]=[...MC.toques.values()],d=Math.hypot(q.x-r.x,q.y-r.y);const k=d/Math.max(10,a.pinca);
+    a.L.s=a.L.tipo==='cenario'?Math.max(.5,Math.min(3,+(a.s0*k).toFixed(2))):Math.max(3,Math.min(160,Math.round(a.s0*k)))}
+  else if(!a.pinca){a.L.x=Math.max(0,Math.min(100,Math.round((a.x0+(p.x-a.p0.x)/mcv.width*100)*10)/10));a.L.y=Math.max(0,Math.min(130,Math.round((a.y0+(p.y-a.p0.y)/mcv.height*100)*10)/10))}
+  atualizaFaixas(a.L)});
+const soltaMC=e=>{MC.toques.delete(e.pointerId);if(!MC.toques.size){if(MC.arr)mudou();MC.arr=null}else if(MC.arr&&MC.arr.pinca){MC.arr=null}};
+mcv.addEventListener('pointerup',soltaMC);mcv.addEventListener('pointercancel',soltaMC);
+$('#mMontar').onclick=()=>abreMontar();$('#eMontar').onclick=()=>abreMontar();
 
 /* ---------- senha (opcional) ---------- */
 function montaTrava(){
