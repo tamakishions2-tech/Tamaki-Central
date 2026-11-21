@@ -297,14 +297,61 @@
  {
   "nome": "Haru",
   "pasta": "atores/haru",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): corpo único e rosto trocado; piscar = só os olhos trocados; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Haru.webp",
+   "Haru_bravo.webp",
+   "Haru_bravo_fala.webp",
+   "Haru_bravo_fala2.webp",
+   "Haru_bravo_fala_pisca.webp",
+   "Haru_bravo_pisca.webp",
    "Haru_fala.webp",
    "Haru_fala2.webp",
+   "Haru_fala_pisca.webp",
+   "Haru_feliz.webp",
+   "Haru_feliz_fala.webp",
+   "Haru_feliz_fala2.webp",
+   "Haru_feliz_fala_pisca.webp",
+   "Haru_feliz_pisca.webp",
    "Haru_pisca.webp",
-   "Haru_fala_pisca.webp"
-  ]
+   "Haru_surpreso.webp",
+   "Haru_surpreso_fala.webp",
+   "Haru_surpreso_fala2.webp",
+   "Haru_surpreso_fala_pisca.webp",
+   "Haru_surpreso_pisca.webp",
+   "Haru_triste.webp",
+   "Haru_triste_fala.webp",
+   "Haru_triste_fala2.webp",
+   "Haru_triste_fala_pisca.webp",
+   "Haru_triste_pisca.webp"
+  ],
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Tamaki criança",
