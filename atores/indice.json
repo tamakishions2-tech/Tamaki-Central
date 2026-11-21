@@ -403,14 +403,61 @@
  {
   "nome": "Tamaki criança",
   "pasta": "atores/tamaki-crianca",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia), 4 anos: corpo único e rosto trocado; piscar = só os olhos trocados; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Tamaki.webp",
+   "Tamaki_bravo.webp",
+   "Tamaki_bravo_fala.webp",
+   "Tamaki_bravo_fala2.webp",
+   "Tamaki_bravo_fala_pisca.webp",
+   "Tamaki_bravo_pisca.webp",
    "Tamaki_fala.webp",
    "Tamaki_fala2.webp",
+   "Tamaki_fala_pisca.webp",
+   "Tamaki_feliz.webp",
+   "Tamaki_feliz_fala.webp",
+   "Tamaki_feliz_fala2.webp",
+   "Tamaki_feliz_fala_pisca.webp",
+   "Tamaki_feliz_pisca.webp",
    "Tamaki_pisca.webp",
-   "Tamaki_fala_pisca.webp"
+   "Tamaki_surpreso.webp",
+   "Tamaki_surpreso_fala.webp",
+   "Tamaki_surpreso_fala2.webp",
+   "Tamaki_surpreso_fala_pisca.webp",
+   "Tamaki_surpreso_pisca.webp",
+   "Tamaki_triste.webp",
+   "Tamaki_triste_fala.webp",
+   "Tamaki_triste_fala2.webp",
+   "Tamaki_triste_fala_pisca.webp",
+   "Tamaki_triste_pisca.webp"
   ],
-  "tamanho": 0.55
+  "tamanho": 0.55,
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  }
 ]
