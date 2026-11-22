@@ -366,15 +366,62 @@
  {
   "nome": "Kaname",
   "pasta": "atores/kaname",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Kaname.webp",
+   "Kaname_bravo.webp",
+   "Kaname_bravo_fala.webp",
+   "Kaname_bravo_fala2.webp",
+   "Kaname_bravo_fala_pisca.webp",
+   "Kaname_bravo_pisca.webp",
    "Kaname_fala.webp",
    "Kaname_fala2.webp",
+   "Kaname_fala_pisca.webp",
+   "Kaname_feliz.webp",
+   "Kaname_feliz_fala.webp",
+   "Kaname_feliz_fala2.webp",
+   "Kaname_feliz_fala_pisca.webp",
+   "Kaname_feliz_pisca.webp",
    "Kaname_pisca.webp",
-   "Kaname_fala_pisca.webp"
+   "Kaname_surpreso.webp",
+   "Kaname_surpreso_fala.webp",
+   "Kaname_surpreso_fala2.webp",
+   "Kaname_surpreso_fala_pisca.webp",
+   "Kaname_surpreso_pisca.webp",
+   "Kaname_triste.webp",
+   "Kaname_triste_fala.webp",
+   "Kaname_triste_fala2.webp",
+   "Kaname_triste_fala_pisca.webp",
+   "Kaname_triste_pisca.webp"
   ],
-  "tamanho": 0.75
+  "tamanho": 0.75,
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Kaede",
