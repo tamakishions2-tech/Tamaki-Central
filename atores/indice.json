@@ -1129,5 +1129,65 @@
     "mentira"
    ]
   }
+ },
+ {
+  "nome": "Aoi",
+  "pasta": "aoi",
+  "nota": "estilo novo (bíblia), gêmeo da Momo, família Utagawa (marcas tribais douradas, olhos inteiros verdes, cabelo azul-petróleo, leitor e planejador): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
+  "arquivos": [
+   "Aoi.webp",
+   "Aoi_bravo.webp",
+   "Aoi_bravo_fala.webp",
+   "Aoi_bravo_fala2.webp",
+   "Aoi_bravo_fala_pisca.webp",
+   "Aoi_bravo_pisca.webp",
+   "Aoi_fala.webp",
+   "Aoi_fala2.webp",
+   "Aoi_fala_pisca.webp",
+   "Aoi_feliz.webp",
+   "Aoi_feliz_fala.webp",
+   "Aoi_feliz_fala2.webp",
+   "Aoi_feliz_fala_pisca.webp",
+   "Aoi_feliz_pisca.webp",
+   "Aoi_pisca.webp",
+   "Aoi_surpreso.webp",
+   "Aoi_surpreso_fala.webp",
+   "Aoi_surpreso_fala2.webp",
+   "Aoi_surpreso_fala_pisca.webp",
+   "Aoi_surpreso_pisca.webp",
+   "Aoi_triste.webp",
+   "Aoi_triste_fala.webp",
+   "Aoi_triste_fala2.webp",
+   "Aoi_triste_fala_pisca.webp",
+   "Aoi_triste_pisca.webp"
+  ],
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  },
+  "tamanho": 0.72
  }
 ]
