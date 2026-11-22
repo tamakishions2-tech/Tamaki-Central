@@ -194,14 +194,61 @@
  {
   "nome": "Kiyoshi",
   "pasta": "atores/kiyoshi",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): corpo único e cabeça trocada; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Kiyoshi.webp",
+   "Kiyoshi_bravo.webp",
+   "Kiyoshi_bravo_fala.webp",
+   "Kiyoshi_bravo_fala2.webp",
+   "Kiyoshi_bravo_fala_pisca.webp",
+   "Kiyoshi_bravo_pisca.webp",
    "Kiyoshi_fala.webp",
    "Kiyoshi_fala2.webp",
+   "Kiyoshi_fala_pisca.webp",
+   "Kiyoshi_feliz.webp",
+   "Kiyoshi_feliz_fala.webp",
+   "Kiyoshi_feliz_fala2.webp",
+   "Kiyoshi_feliz_fala_pisca.webp",
+   "Kiyoshi_feliz_pisca.webp",
    "Kiyoshi_pisca.webp",
-   "Kiyoshi_fala_pisca.webp"
-  ]
+   "Kiyoshi_surpreso.webp",
+   "Kiyoshi_surpreso_fala.webp",
+   "Kiyoshi_surpreso_fala2.webp",
+   "Kiyoshi_surpreso_fala_pisca.webp",
+   "Kiyoshi_surpreso_pisca.webp",
+   "Kiyoshi_triste.webp",
+   "Kiyoshi_triste_fala.webp",
+   "Kiyoshi_triste_fala2.webp",
+   "Kiyoshi_triste_fala_pisca.webp",
+   "Kiyoshi_triste_pisca.webp"
+  ],
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Midori",
@@ -277,7 +324,7 @@
  {
   "nome": "Yuzu",
   "pasta": "atores/yuzu",
-  "nota": "estilo novo (bíblia): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
+  "nota": "estilo novo (bíblia): corpo único e cabeça trocada; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Yuzu.webp",
    "Yuzu_bravo.webp",
@@ -305,7 +352,7 @@
    "Yuzu_triste_fala_pisca.webp",
    "Yuzu_triste_pisca.webp"
   ],
-  "versao": 2,
+  "versao": 3,
   "palavras": {
    "feliz": [
     "que bom",
@@ -336,7 +383,7 @@
  {
   "nome": "Tetsuo",
   "pasta": "atores/tetsuo",
-  "nota": "estilo novo (bíblia): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
+  "nota": "estilo novo (bíblia): corpo único e cabeça trocada; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Tetsuo.webp",
    "Tetsuo_bravo.webp",
@@ -364,7 +411,7 @@
    "Tetsuo_triste_fala_pisca.webp",
    "Tetsuo_triste_pisca.webp"
   ],
-  "versao": 2,
+  "versao": 3,
   "palavras": {
    "feliz": [
     "que bom",
