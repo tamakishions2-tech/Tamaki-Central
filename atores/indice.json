@@ -776,7 +776,7 @@
  {
   "nome": "Momo",
   "pasta": "atores/momo",
-  "nota": "estilo novo (bíblia), elfa de sangue puro (olhos inteiros verdes, listras): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
+  "nota": "estilo novo (bíblia), elfa da família Utagawa (marcas tribais douradas, olhos inteiros verdes): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Momo.webp",
    "Momo_bravo.webp",
@@ -805,7 +805,7 @@
    "Momo_triste_pisca.webp"
   ],
   "tamanho": 0.72,
-  "versao": 2,
+  "versao": 3,
   "palavras": {
    "feliz": [
     "que bom",
