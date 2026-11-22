@@ -183,14 +183,61 @@
  {
   "nome": "Yuzu",
   "pasta": "atores/yuzu",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Yuzu.webp",
+   "Yuzu_bravo.webp",
+   "Yuzu_bravo_fala.webp",
+   "Yuzu_bravo_fala2.webp",
+   "Yuzu_bravo_fala_pisca.webp",
+   "Yuzu_bravo_pisca.webp",
    "Yuzu_fala.webp",
    "Yuzu_fala2.webp",
+   "Yuzu_fala_pisca.webp",
+   "Yuzu_feliz.webp",
+   "Yuzu_feliz_fala.webp",
+   "Yuzu_feliz_fala2.webp",
+   "Yuzu_feliz_fala_pisca.webp",
+   "Yuzu_feliz_pisca.webp",
    "Yuzu_pisca.webp",
-   "Yuzu_fala_pisca.webp"
-  ]
+   "Yuzu_surpreso.webp",
+   "Yuzu_surpreso_fala.webp",
+   "Yuzu_surpreso_fala2.webp",
+   "Yuzu_surpreso_fala_pisca.webp",
+   "Yuzu_surpreso_pisca.webp",
+   "Yuzu_triste.webp",
+   "Yuzu_triste_fala.webp",
+   "Yuzu_triste_fala2.webp",
+   "Yuzu_triste_fala_pisca.webp",
+   "Yuzu_triste_pisca.webp"
+  ],
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Tetsuo",
