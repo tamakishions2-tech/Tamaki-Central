@@ -111,14 +111,61 @@
  {
   "nome": "Goro",
   "pasta": "atores/goro",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): senhor forte de uns 55 anos, trabalha no frigorífico e cria animais; corpo único e cabeça trocada; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Goro.webp",
+   "Goro_bravo.webp",
+   "Goro_bravo_fala.webp",
+   "Goro_bravo_fala2.webp",
+   "Goro_bravo_fala_pisca.webp",
+   "Goro_bravo_pisca.webp",
    "Goro_fala.webp",
    "Goro_fala2.webp",
+   "Goro_fala_pisca.webp",
+   "Goro_feliz.webp",
+   "Goro_feliz_fala.webp",
+   "Goro_feliz_fala2.webp",
+   "Goro_feliz_fala_pisca.webp",
+   "Goro_feliz_pisca.webp",
    "Goro_pisca.webp",
-   "Goro_fala_pisca.webp"
-  ]
+   "Goro_surpreso.webp",
+   "Goro_surpreso_fala.webp",
+   "Goro_surpreso_fala2.webp",
+   "Goro_surpreso_fala_pisca.webp",
+   "Goro_surpreso_pisca.webp",
+   "Goro_triste.webp",
+   "Goro_triste_fala.webp",
+   "Goro_triste_fala2.webp",
+   "Goro_triste_fala_pisca.webp",
+   "Goro_triste_pisca.webp"
+  ],
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Reika",
