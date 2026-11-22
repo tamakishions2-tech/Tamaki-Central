@@ -99,14 +99,61 @@
  {
   "nome": "Tora",
   "pasta": "atores/tora",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): guarda tigre; corpo único e rosto trocado (orelhas do corpo); piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Tora.webp",
+   "Tora_bravo.webp",
+   "Tora_bravo_fala.webp",
+   "Tora_bravo_fala2.webp",
+   "Tora_bravo_fala_pisca.webp",
+   "Tora_bravo_pisca.webp",
    "Tora_fala.webp",
    "Tora_fala2.webp",
+   "Tora_fala_pisca.webp",
+   "Tora_feliz.webp",
+   "Tora_feliz_fala.webp",
+   "Tora_feliz_fala2.webp",
+   "Tora_feliz_fala_pisca.webp",
+   "Tora_feliz_pisca.webp",
    "Tora_pisca.webp",
-   "Tora_fala_pisca.webp"
-  ]
+   "Tora_surpreso.webp",
+   "Tora_surpreso_fala.webp",
+   "Tora_surpreso_fala2.webp",
+   "Tora_surpreso_fala_pisca.webp",
+   "Tora_surpreso_pisca.webp",
+   "Tora_triste.webp",
+   "Tora_triste_fala.webp",
+   "Tora_triste_fala2.webp",
+   "Tora_triste_fala_pisca.webp",
+   "Tora_triste_pisca.webp"
+  ],
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Goro",
