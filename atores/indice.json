@@ -135,14 +135,61 @@
  {
   "nome": "Yoru",
   "pasta": "atores/yoru",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Yoru.webp",
+   "Yoru_bravo.webp",
+   "Yoru_bravo_fala.webp",
+   "Yoru_bravo_fala2.webp",
+   "Yoru_bravo_fala_pisca.webp",
+   "Yoru_bravo_pisca.webp",
    "Yoru_fala.webp",
    "Yoru_fala2.webp",
+   "Yoru_fala_pisca.webp",
+   "Yoru_feliz.webp",
+   "Yoru_feliz_fala.webp",
+   "Yoru_feliz_fala2.webp",
+   "Yoru_feliz_fala_pisca.webp",
+   "Yoru_feliz_pisca.webp",
    "Yoru_pisca.webp",
-   "Yoru_fala_pisca.webp"
-  ]
+   "Yoru_surpreso.webp",
+   "Yoru_surpreso_fala.webp",
+   "Yoru_surpreso_fala2.webp",
+   "Yoru_surpreso_fala_pisca.webp",
+   "Yoru_surpreso_pisca.webp",
+   "Yoru_triste.webp",
+   "Yoru_triste_fala.webp",
+   "Yoru_triste_fala2.webp",
+   "Yoru_triste_fala_pisca.webp",
+   "Yoru_triste_pisca.webp"
+  ],
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Kiyoshi",
