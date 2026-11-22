@@ -233,15 +233,62 @@
  {
   "nome": "Shun",
   "pasta": "atores/shun",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Shun.webp",
+   "Shun_bravo.webp",
+   "Shun_bravo_fala.webp",
+   "Shun_bravo_fala2.webp",
+   "Shun_bravo_fala_pisca.webp",
+   "Shun_bravo_pisca.webp",
    "Shun_fala.webp",
    "Shun_fala2.webp",
+   "Shun_fala_pisca.webp",
+   "Shun_feliz.webp",
+   "Shun_feliz_fala.webp",
+   "Shun_feliz_fala2.webp",
+   "Shun_feliz_fala_pisca.webp",
+   "Shun_feliz_pisca.webp",
    "Shun_pisca.webp",
-   "Shun_fala_pisca.webp"
+   "Shun_surpreso.webp",
+   "Shun_surpreso_fala.webp",
+   "Shun_surpreso_fala2.webp",
+   "Shun_surpreso_fala_pisca.webp",
+   "Shun_surpreso_pisca.webp",
+   "Shun_triste.webp",
+   "Shun_triste_fala.webp",
+   "Shun_triste_fala2.webp",
+   "Shun_triste_fala_pisca.webp",
+   "Shun_triste_pisca.webp"
   ],
-  "tamanho": 0.72
+  "tamanho": 0.72,
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Kenichi",
