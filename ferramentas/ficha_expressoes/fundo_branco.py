@@ -10,7 +10,7 @@ bg=np.isin(lab,borda[borda>0])
 ar=nd.sum(W,lab,range(1,n+1))
 puro=nd.mean(mn,lab,range(1,n+1))
 fech=np.zeros(n+1,bool); cx=nd.center_of_mass(W,lab,range(1,n+1)); cxs=np.array([c[1] for c in cx])
-fech[1:]=((ar>=120)|((ar>=8)&(cxs<480)))&(puro>242)
+fech[1:]=(((ar>=600)|((ar>=8)&(cxs<480)))&(puro>242))
 bg|=fech[lab]
 fg=~bg
 

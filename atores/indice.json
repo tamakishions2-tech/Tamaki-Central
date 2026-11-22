@@ -195,14 +195,61 @@
  {
   "nome": "Tetsuo",
   "pasta": "atores/tetsuo",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Tetsuo.webp",
+   "Tetsuo_bravo.webp",
+   "Tetsuo_bravo_fala.webp",
+   "Tetsuo_bravo_fala2.webp",
+   "Tetsuo_bravo_fala_pisca.webp",
+   "Tetsuo_bravo_pisca.webp",
    "Tetsuo_fala.webp",
    "Tetsuo_fala2.webp",
+   "Tetsuo_fala_pisca.webp",
+   "Tetsuo_feliz.webp",
+   "Tetsuo_feliz_fala.webp",
+   "Tetsuo_feliz_fala2.webp",
+   "Tetsuo_feliz_fala_pisca.webp",
+   "Tetsuo_feliz_pisca.webp",
    "Tetsuo_pisca.webp",
-   "Tetsuo_fala_pisca.webp"
-  ]
+   "Tetsuo_surpreso.webp",
+   "Tetsuo_surpreso_fala.webp",
+   "Tetsuo_surpreso_fala2.webp",
+   "Tetsuo_surpreso_fala_pisca.webp",
+   "Tetsuo_surpreso_pisca.webp",
+   "Tetsuo_triste.webp",
+   "Tetsuo_triste_fala.webp",
+   "Tetsuo_triste_fala2.webp",
+   "Tetsuo_triste_fala_pisca.webp",
+   "Tetsuo_triste_pisca.webp"
+  ],
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Banji",
