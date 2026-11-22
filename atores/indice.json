@@ -253,14 +253,61 @@
  {
   "nome": "Midori",
   "pasta": "atores/midori",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia), elfa pura da família Utagawa (marcas tribais douradas, olhos inteiros verdes): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Midori.webp",
+   "Midori_bravo.webp",
+   "Midori_bravo_fala.webp",
+   "Midori_bravo_fala2.webp",
+   "Midori_bravo_fala_pisca.webp",
+   "Midori_bravo_pisca.webp",
    "Midori_fala.webp",
    "Midori_fala2.webp",
+   "Midori_fala_pisca.webp",
+   "Midori_feliz.webp",
+   "Midori_feliz_fala.webp",
+   "Midori_feliz_fala2.webp",
+   "Midori_feliz_fala_pisca.webp",
+   "Midori_feliz_pisca.webp",
    "Midori_pisca.webp",
-   "Midori_fala_pisca.webp"
-  ]
+   "Midori_surpreso.webp",
+   "Midori_surpreso_fala.webp",
+   "Midori_surpreso_fala2.webp",
+   "Midori_surpreso_fala_pisca.webp",
+   "Midori_surpreso_pisca.webp",
+   "Midori_triste.webp",
+   "Midori_triste_fala.webp",
+   "Midori_triste_fala2.webp",
+   "Midori_triste_fala_pisca.webp",
+   "Midori_triste_pisca.webp"
+  ],
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Gen",
