@@ -220,15 +220,62 @@
  {
   "nome": "Hiyori",
   "pasta": "atores/hiyori",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): corpo único e rosto trocado (óculos vêm com o rosto); piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Hiyori.webp",
+   "Hiyori_bravo.webp",
+   "Hiyori_bravo_fala.webp",
+   "Hiyori_bravo_fala2.webp",
+   "Hiyori_bravo_fala_pisca.webp",
+   "Hiyori_bravo_pisca.webp",
    "Hiyori_fala.webp",
    "Hiyori_fala2.webp",
+   "Hiyori_fala_pisca.webp",
+   "Hiyori_feliz.webp",
+   "Hiyori_feliz_fala.webp",
+   "Hiyori_feliz_fala2.webp",
+   "Hiyori_feliz_fala_pisca.webp",
+   "Hiyori_feliz_pisca.webp",
    "Hiyori_pisca.webp",
-   "Hiyori_fala_pisca.webp"
+   "Hiyori_surpreso.webp",
+   "Hiyori_surpreso_fala.webp",
+   "Hiyori_surpreso_fala2.webp",
+   "Hiyori_surpreso_fala_pisca.webp",
+   "Hiyori_surpreso_pisca.webp",
+   "Hiyori_triste.webp",
+   "Hiyori_triste_fala.webp",
+   "Hiyori_triste_fala2.webp",
+   "Hiyori_triste_fala_pisca.webp",
+   "Hiyori_triste_pisca.webp"
   ],
-  "tamanho": 0.72
+  "tamanho": 0.72,
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Shun",
