@@ -1070,5 +1070,64 @@
     "mentira"
    ]
   }
+ },
+ {
+  "nome": "Raika",
+  "pasta": "raika",
+  "nota": "estilo novo (bíblia), elfa pura da família Utagawa, versão musculosa de cabelo chanel (marcas tribais douradas, olhos inteiros verdes): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
+  "arquivos": [
+   "Raika.webp",
+   "Raika_bravo.webp",
+   "Raika_bravo_fala.webp",
+   "Raika_bravo_fala2.webp",
+   "Raika_bravo_fala_pisca.webp",
+   "Raika_bravo_pisca.webp",
+   "Raika_fala.webp",
+   "Raika_fala2.webp",
+   "Raika_fala_pisca.webp",
+   "Raika_feliz.webp",
+   "Raika_feliz_fala.webp",
+   "Raika_feliz_fala2.webp",
+   "Raika_feliz_fala_pisca.webp",
+   "Raika_feliz_pisca.webp",
+   "Raika_pisca.webp",
+   "Raika_surpreso.webp",
+   "Raika_surpreso_fala.webp",
+   "Raika_surpreso_fala2.webp",
+   "Raika_surpreso_fala_pisca.webp",
+   "Raika_surpreso_pisca.webp",
+   "Raika_triste.webp",
+   "Raika_triste_fala.webp",
+   "Raika_triste_fala2.webp",
+   "Raika_triste_fala_pisca.webp",
+   "Raika_triste_pisca.webp"
+  ],
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  }
 ]
