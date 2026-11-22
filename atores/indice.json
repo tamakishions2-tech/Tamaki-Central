@@ -171,14 +171,61 @@
  {
   "nome": "Gen",
   "pasta": "atores/gen",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): corpo único e cabeça trocada (óculos vêm com a cabeça); piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Gen.webp",
+   "Gen_bravo.webp",
+   "Gen_bravo_fala.webp",
+   "Gen_bravo_fala2.webp",
+   "Gen_bravo_fala_pisca.webp",
+   "Gen_bravo_pisca.webp",
    "Gen_fala.webp",
    "Gen_fala2.webp",
+   "Gen_fala_pisca.webp",
+   "Gen_feliz.webp",
+   "Gen_feliz_fala.webp",
+   "Gen_feliz_fala2.webp",
+   "Gen_feliz_fala_pisca.webp",
+   "Gen_feliz_pisca.webp",
    "Gen_pisca.webp",
-   "Gen_fala_pisca.webp"
-  ]
+   "Gen_surpreso.webp",
+   "Gen_surpreso_fala.webp",
+   "Gen_surpreso_fala2.webp",
+   "Gen_surpreso_fala_pisca.webp",
+   "Gen_surpreso_pisca.webp",
+   "Gen_triste.webp",
+   "Gen_triste_fala.webp",
+   "Gen_triste_fala2.webp",
+   "Gen_triste_fala_pisca.webp",
+   "Gen_triste_pisca.webp"
+  ],
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Yuzu",
