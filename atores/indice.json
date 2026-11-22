@@ -207,15 +207,62 @@
  {
   "nome": "Banji",
   "pasta": "atores/banji",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Banji.webp",
+   "Banji_bravo.webp",
+   "Banji_bravo_fala.webp",
+   "Banji_bravo_fala2.webp",
+   "Banji_bravo_fala_pisca.webp",
+   "Banji_bravo_pisca.webp",
    "Banji_fala.webp",
    "Banji_fala2.webp",
+   "Banji_fala_pisca.webp",
+   "Banji_feliz.webp",
+   "Banji_feliz_fala.webp",
+   "Banji_feliz_fala2.webp",
+   "Banji_feliz_fala_pisca.webp",
+   "Banji_feliz_pisca.webp",
    "Banji_pisca.webp",
-   "Banji_fala_pisca.webp"
+   "Banji_surpreso.webp",
+   "Banji_surpreso_fala.webp",
+   "Banji_surpreso_fala2.webp",
+   "Banji_surpreso_fala_pisca.webp",
+   "Banji_surpreso_pisca.webp",
+   "Banji_triste.webp",
+   "Banji_triste_fala.webp",
+   "Banji_triste_fala2.webp",
+   "Banji_triste_fala_pisca.webp",
+   "Banji_triste_pisca.webp"
   ],
-  "tamanho": 0.85
+  "tamanho": 0.85,
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Hiyori",
