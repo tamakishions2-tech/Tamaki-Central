@@ -306,15 +306,62 @@
  {
   "nome": "Momo",
   "pasta": "atores/momo",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia), elfa de sangue puro (olhos inteiros verdes, listras): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Momo.webp",
+   "Momo_bravo.webp",
+   "Momo_bravo_fala.webp",
+   "Momo_bravo_fala2.webp",
+   "Momo_bravo_fala_pisca.webp",
+   "Momo_bravo_pisca.webp",
    "Momo_fala.webp",
    "Momo_fala2.webp",
+   "Momo_fala_pisca.webp",
+   "Momo_feliz.webp",
+   "Momo_feliz_fala.webp",
+   "Momo_feliz_fala2.webp",
+   "Momo_feliz_fala_pisca.webp",
+   "Momo_feliz_pisca.webp",
    "Momo_pisca.webp",
-   "Momo_fala_pisca.webp"
+   "Momo_surpreso.webp",
+   "Momo_surpreso_fala.webp",
+   "Momo_surpreso_fala2.webp",
+   "Momo_surpreso_fala_pisca.webp",
+   "Momo_surpreso_pisca.webp",
+   "Momo_triste.webp",
+   "Momo_triste_fala.webp",
+   "Momo_triste_fala2.webp",
+   "Momo_triste_fala_pisca.webp",
+   "Momo_triste_pisca.webp"
   ],
-  "tamanho": 0.72
+  "tamanho": 0.72,
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Kaname",
