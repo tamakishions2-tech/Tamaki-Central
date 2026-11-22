@@ -123,14 +123,61 @@
  {
   "nome": "Reika",
   "pasta": "atores/reika",
-  "nota": "poses normais (parada, falando, falando 2, piscando, fala piscando), sem fundo",
+  "nota": "estilo novo (bíblia), elfa pura da família Utagawa (marcas tribais douradas, olhos inteiros verde-claros): corpo único e rosto trocado; piscar = só os olhos; sentimentos feliz, bravo, triste, surpreso",
   "arquivos": [
    "Reika.webp",
+   "Reika_bravo.webp",
+   "Reika_bravo_fala.webp",
+   "Reika_bravo_fala2.webp",
+   "Reika_bravo_fala_pisca.webp",
+   "Reika_bravo_pisca.webp",
    "Reika_fala.webp",
    "Reika_fala2.webp",
+   "Reika_fala_pisca.webp",
+   "Reika_feliz.webp",
+   "Reika_feliz_fala.webp",
+   "Reika_feliz_fala2.webp",
+   "Reika_feliz_fala_pisca.webp",
+   "Reika_feliz_pisca.webp",
    "Reika_pisca.webp",
-   "Reika_fala_pisca.webp"
-  ]
+   "Reika_surpreso.webp",
+   "Reika_surpreso_fala.webp",
+   "Reika_surpreso_fala2.webp",
+   "Reika_surpreso_fala_pisca.webp",
+   "Reika_surpreso_pisca.webp",
+   "Reika_triste.webp",
+   "Reika_triste_fala.webp",
+   "Reika_triste_fala2.webp",
+   "Reika_triste_fala_pisca.webp",
+   "Reika_triste_pisca.webp"
+  ],
+  "versao": 2,
+  "palavras": {
+   "feliz": [
+    "que bom",
+    "amei",
+    "haha",
+    "eba"
+   ],
+   "bravo": [
+    "aff",
+    "droga",
+    "que raiva",
+    "chato"
+   ],
+   "triste": [
+    "poxa",
+    "que pena",
+    "saudade"
+   ],
+   "surpreso": [
+    "nossa",
+    "caramba",
+    "o que",
+    "?!",
+    "mentira"
+   ]
+  }
  },
  {
   "nome": "Yoru",
