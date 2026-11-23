@@ -1072,6 +1072,22 @@ async function atoresProntos(){
 }
 const salvo = localStorage.getItem("central_aba");
 const atoresOk = atoresProntos().catch(() => false);
+// textos prontos do Claude (projetos/biblioteca-escrita/prontos/) viram nota da Escrita mesmo com a aba usando código guardado no aparelho
+async function textosProntosEscrita(){ try {
+  const base = "projetos/biblioteca-escrita/prontos/", v = "?v=" + Date.now().toString(36), r = await fetch(base + "indice.json" + v, {cache: "no-store"}); if (!r.ok) return;
+  const lista = await r.json(); let feitos = []; try { feitos = JSON.parse(localStorage.getItem("escrita-prontos")) || []; } catch (e) {}
+  const pend = lista.filter(it => it && it.id && !feitos.includes(it.id)); if (!pend.length) return;
+  let D = {}; try { D = JSON.parse(localStorage.getItem("kurogane:data")) || {}; } catch (e) { return; }
+  D.notas = D.notas || []; D.pastas = D.pastas || []; const cores = ["#f7871e", "#e2557b", "#3aa675", "#4f8ef7", "#9b6bdf", "#d6a400", "#00a3b4", "#9a9a9a"], nomes = [];
+  for (const it of pend) { const t = await fetch(base + it.arquivo + v, {cache: "no-store"}); if (!t.ok) continue; const html = await t.text();
+    let pasta = "notas"; if (it.pasta) { let pp = D.pastas.find(x => x.nome == it.pasta); if (!pp) { pp = {id: "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), nome: it.pasta, cor: cores[D.pastas.length % cores.length]}; D.pastas.push(pp); } pasta = pp.id; }
+    const agora = Date.now(); D.notas.push({id: agora.toString(36) + Math.random().toString(36).slice(2, 6), order: D.notas.length, criado: agora, editado: agora, fav: false, papel: "", titulo: String(it.titulo || "Texto do Claude"), html, pasta});
+    feitos.push(it.id); nomes.push(it.titulo); }
+  if (!nomes.length) return;
+  localStorage.setItem("kurogane:data", JSON.stringify(D)); localStorage.setItem("escrita-prontos", JSON.stringify(feitos));
+  aviso("📥 Chegou do Claude na Escrita: " + nomes.join(", "));
+} catch (e) {} }
+textosProntosEscrita();
 // se demorou e a aba já abriu, recarrega o Palco Animação e o Palco para o ator novo aparecer
 atoresOk.then(novo => { if (novo) for (const k of ["palcoanim", "palco"]) if (frames[k]) frames[k].src = frames[k].src; });
 Promise.race([atoresOk, new Promise(ok => setTimeout(() => ok(false), 8000))])
