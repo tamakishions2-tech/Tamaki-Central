@@ -894,7 +894,22 @@ $("#fWord").onchange = async e => { const fs = [...e.target.files]; e.target.val
   tudo(); toast((novas.length == 1 ? "“" + novas[0].titulo + "” adicionado" : novas.length + " documentos adicionados") + " em " + pastaDe(pasta).nome + (semImg ? " (sem as imagens, por falta de espaço)" : ""));
   if (novas.length == 1) abrir(novas[0].id); };
 document.addEventListener("keydown", e => { if (atual && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() == "s") { e.preventDefault(); $("#salvar").click(); } if (e.key == "Escape") fecharPop(); });
+/* ---------- textos prontos do Claude: prontos/indice.json no GitHub vira nota sozinha (uma vez por id) ---------- */
+async function textosProntos(){ try {
+  const v = "?v=" + Date.now().toString(36), r = await fetch("prontos/indice.json" + v, {cache: "no-store"}); if (!r.ok) return;
+  const lista = await r.json(); let feitos = []; try { feitos = JSON.parse(localStorage.getItem("escrita-prontos")) || []; } catch (e) {}
+  const novos = [];
+  for (const it of lista) { if (!it || !it.id || feitos.includes(it.id)) continue;
+    const t = await fetch("prontos/" + it.arquivo + v, {cache: "no-store"}); if (!t.ok) continue; const html = await t.text();
+    let pasta = "notas"; if (it.pasta) { let p = D.pastas.find(x => x.nome == it.pasta); if (!p) { p = {id: "p" + uid(), nome: it.pasta, cor: CORES_PASTA[D.pastas.length % CORES_PASTA.length]}; D.pastas.push(p); } pasta = p.id; }
+    N.push({id: uid(), pasta, titulo: String(it.titulo || "Texto do Claude"), html, criado: Date.now(), editado: Date.now(), fav: false, papel: "", ordem: N.length});
+    feitos.push(it.id); novos.push(it.titulo); }
+  if (!novos.length) return;
+  if (!guardar()) return; try { localStorage.setItem("escrita-prontos", JSON.stringify(feitos)); } catch (e) {}
+  if (!atual) tudo(); toast("📥 Chegou do Claude: " + novos.join(", "));
+} catch (e) {} }
 tudo();
+textosProntos();
 })();
 </script>
 </body>
