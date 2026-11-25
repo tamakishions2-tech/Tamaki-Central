@@ -7,6 +7,7 @@
 #
 # ARTES (envie em 🖼 Artes com estes nomes; sem arte aparece um molde)
 # Fundos: estrada_noite, estrada_noite_lampioes, pais_alivio e pais_medo (prólogo), ninhos_manha (cena 1), casa_shion, estrada, taverna, escola, sala_aula, muro,
+#   riacho_pedras, beco (cena 4), quarto e cozinha (cena 1),
 #   patio, praca, cozinha, quarto, cercado, moinho, delegacia,
 #   casa_utagawa, celeiro, casa_reika, porao, biblioteca
 #   (preto e branco já existem)
@@ -54,6 +55,7 @@ var ovos = 0
 var ninho1 = False
 var pluma = False
 var zul = False
+var trouxa = False
 
 ### PARTE: Prólogo · A árvore da curva
 label inicio:
@@ -109,163 +111,455 @@ label inicio:
     "Cinco anos depois."
     jump manha
 
-### PARTE: Cena 1 · A manhã dos ovos
+### PARTE: Cena 1 · A cozinha e os ninhos
 label manha:
-    cena casa_shion com fade
+    cena quarto com fade
     musica manha
-    "Primeiro dia de aula do outono."
-    "A mãe diz que Tufona sente quando a gente está com pressa."
-    "Hoje eu estou com muita pressa."
-    mostra kaede centro
-    kaede "Seis ovos para a Yuzu, na Taverna. Inteiros, Kaoro. Inteiros."
-    haru "E volta antes de escurecer! Primeiro dia de aula!"
-    "A voz do meu pai vem da cozinha, junto com o cheiro do pão."
+    "O chão do quarto está frio. Frio de outono."
+    "A madeira passa a noite guardando o sereno e devolve tudo na sola do pé."
+    "Hoje as aulas voltam. Acabaram as férias do festival."
+    "Desço a escada na ponta dos dedos. Pulo o quarto degrau. Ele range."
+    cena cozinha com fade
+    "A casa ainda está azul por dentro. Só a cozinha tem cor."
+    "Cheiro de lenha. E alguém cantarolando sem letra."
+    mostra haru centro
+    "O pai está de costas, curvado no forno. Tem farinha até na ponta da orelha."
+    "O manjericão da janela está todo torto pro lado dele. Sempre fica, quando ele canta."
+    haru "Pulou o quarto degrau."
+    kaoro "Ele range."
+    haru "Range desde antes de você nascer. Nunca te incomodou nas férias."
+    "Ele abre o forno. O cheiro de pão sai feito bicho solto."
+    haru "Achei que, depois de um verão inteiro de festival, você ia dormir até o meio-dia."
+    kaoro "As aulas voltam hoje."
+    haru (feliz) "Eu sei. Eu é que estava torcendo pra você esquecer."
+    "Ele corta uma fatia grossa e passa manteiga de Mansola até a beirada."
+    "Eu como de pé."
+    som porta
+    "A porta dos fundos abre. O frio entra primeiro. Depois a mãe."
+    mostra haru esquerda
+    mostra kaede direita
+    "Ela traz o quintal inteiro grudado nela. Pena nos cachos, barro na saia, cheiro de vento."
+    "Tira as luvas com os dentes, uma de cada vez."
+    "Olha pra mim comendo de pé. Pra mochila na porta. Pras botas desamarradas."
+    "Não diz nada sobre nenhuma dessas coisas."
+    kaede "A Yuzu mandou recado. A Taverna volta a servir almoço hoje. Ela quer seis."
+    menu:
+        "Inteiros. Eu sei.":
+            kaede "Eu não falei nada."
+            kaoro "Mas ia falar."
+            "A boca dela faz aquela coisa de quando ela não quer rir e ri por dentro."
+            kaede (feliz) "Ia."
+        "Seis? Na volta às aulas?":
+            kaede "Seis. Inteiros."
+            kaoro "Eu sabia que você ia falar."
+            kaede (feliz) "E eu sabia que você ia reclamar."
+    "Ela põe a cesta de vime em cima da mesa. Eu enfio o resto do pão na boca."
+    haru "Volta antes de escurecer."
+    "Ele fala brincando. Mas olha pela janela, pra estrada lá fora."
+    "A mãe aperta a mão dele por cima da pia. Rapidinho. E solta."
+    "Na porta, o pai se abaixa como quem ajeita minha gola."
+    "E enfia uma casca de pão quentinha no meu bolso."
+    haru "Pro caminho. Não conta pra sua mãe."
+    kaede "Eu estou ouvindo."
+    haru "Ela está ouvindo. Corre."
+    esconde haru
     esconde kaede
+
     cena ninhos_manha com fade
-    "No galinheiro, as Tufonas ainda estão sonolentas."
+    musica ninhos
+    "O galinheiro é maior que a nossa casa. Ninguém lá em casa acha isso estranho."
+    "As Tufonas dormem em ninhos fundos de palha. Cada uma do tamanho de um barril deitado."
+    "De longe, parecem galinhas que alguém esqueceu de parar de encher."
+    "Mão aberta e tempo. É o que a mãe diz. Bicho com pressa se assusta com gente com pressa."
     "Toque nos ninhos para recolher os ovos."
     explorar:
-        "Ninho da esquerda" 4 52 26 30:
+        "Tufona velha" 4 52 26 30:
             se not ninho1:
                 $ ninho1 = True
                 $ ovos += 3
-                "Três ovos mornos. Fácil."
+                "Ela abre um olho, vê que sou eu e fecha de novo."
+                "Três ovos. Mornos, pesados, pintadinhos de marrom."
             senao:
-                "Vazio. Já peguei tudo daqui."
+                "Ela ronca. Melhor deixar."
         "Madame Pluma" 34 30 30 45:
             se not pluma:
                 $ pluma = True
+                "A Madame Pluma já está acordada. O topete em leque. Um olho redondo em mim, sem piscar."
+                "É a campeã da mãe. E sabe disso."
                 treme fraco
-                "A Madame Pluma arrepia o topete e me encara."
-                "Eu respiro fundo e ando devagar. Sem pressa. Sem pressa nenhuma."
+                "Dou um passo. Ela eriça o pescoço."
+                menu:
+                    "Contar até cinco, devagar":
+                        "Um, Madame. Dois, Madame. Três."
+                        "As penas baixam."
+                    "Estender a mão aberta":
+                        "Palma pra cima. Ela olha. Olha muito tempo."
+                "Ela solta um resmungo do fundo do peito e se ergue meio palmo."
                 $ ovos += 2
-                "Ela deixa eu pegar dois. De olho em mim o tempo todo."
+                kaoro "Obrigado, Madame."
+                "Dois ovos. Ela fecha o olho, como quem já fez favor demais pra uma manhã."
             senao:
-                "A Madame Pluma ainda me olha torto. Melhor não abusar."
+                "A Madame Pluma me ignora com muita dignidade."
         "Zulado" 68 48 26 32:
             se not zul:
                 $ zul = True
-                "O Zulado está sentado em cima de um ovo. E não sai."
-                kaoro "Zulado, sai. Por favor."
+                "O Zulado está sentado num ovo que não é dele."
+                "Ele me olha de lado, com um olho só. O outro deve estar ocupado com coisa mais importante."
+                kaoro "Zulado. Esse não é seu."
+                "Ele afofa a barriga em cima do ovo e vira o bico pra parede."
                 menu:
-                    "Pegar o ovo mesmo assim":
-                        "Enfio a mão por baixo dele, rapidinho."
-                    "Oferecer o resto do pão":
-                        kaoro "Eu te dou o resto do meu pão."
-                        "Ele olha o pão. Pensa. Desce do ovo."
+                    "Oferecer a casca de pão do pai":
+                        "O olho dele sai da parede. Desce pra minha mão. Volta pro meu rosto."
+                        kaoro "É seu. Se você sair."
+                        "Ele pensa. Pensa de verdade. Depois desce do ninho com toda a dignidade do mundo."
+                        "E come o pão numa bicada só."
+                    "Enfiar a mão por baixo, rapidinho":
+                        "Ele nem se mexe. Só me encara."
+                        "No fim, eu desisto e ofereço o pão do pai. Ele desce na hora."
                 som bicada
                 treme
-                "E bica o meu dedo."
+                "A segunda bicada é no meu dedo."
                 kaoro "Ai!"
+                "Ele se afasta dois passos e fica admirando o trabalho."
                 $ ovos += 1
             senao:
-                "O Zulado vira de costas pra mim. Está ofendido."
+                "O Zulado está de costas pra mim. Satisfeito."
         "Sair com a cesta" 38 4 24 14 se ovos >= 6:
             sai
-    "Seis ovos na cesta. Inteiros. Por enquanto."
+    "Seis ovos. Inteiros."
+    "Na porta, eu olho pra trás uma vez."
+    "O Zulado veio até a porta. Não passa dela. Fica ali, me olhando ir embora."
+
+    cena estrada com fade
+    musica estrada
+    "A estrada desce rente ao riacho. A névoa ainda está deitada em cima da água."
+    "Na curva fica a árvore grande. A maior de Yotsuji."
+    "Passo por baixo dela, como todo dia."
+    "Do outro lado, a estrada se divide. Pra direita, a vila. Pra esquerda, os morros."
+    "Pra esquerda ninguém lá de casa vai. Não tem nada lá. Só mais estrada."
+    menu:
+        "Olhar para a esquerda":
+            "A estrada sobe, faz uma curva atrás do morro e some."
+            "Às vezes eu imagino o mar depois dela. Às vezes, uma cidade de torres."
+            "Às vezes, outra estrada. E outra. Sem fim. Essa é a que eu mais gosto."
+        "Seguir para a vila":
+            "Eu não olho. Quase."
+    som sino
+    "O sino do moinho toca lá embaixo. Eu aperto o passo."
+    jump carroca
 
 ### PARTE: Cena 2 · A carroça
 label carroca:
-    cena estrada com fade
-    "O sol ainda nem passou do moinho, e eu já estou atrasado."
     som carroca
-    "Uma carroça para do meu lado, rangendo."
+    "Ouço a carroça antes de ver. Uma roda que pede graxa faz três invernos."
+    "Tump, tump, tump. O Lavrudo sai da névoa. Parece uma montanha que aprendeu a andar."
     mostra goro direita
     mostra shun esquerda
-    shun "Ei! Você é o filho das Tufonas, né? Sobe aí!"
-    shun "Essa carroça já correu mais que um cavalo da capital. Sério."
-    goro "Ela já perdeu uma roda numa poça. Também é sério."
+    "No banco, o senhor Goro. Avental de couro, mão vermelha de água fria."
+    "Ele olha pra mim, olha pra cesta e cumprimenta com o queixo."
+    shun (feliz) "Filho das Tufonas! Sobe! A gente vai passar na praça de qualquer jeito. Né, pai?"
+    "O senhor Goro não responde. Mas também não faz o Lavrudo andar."
     menu:
         "Subir na carroça":
-            "Subo com cuidado, a cesta no colo."
-        "Andar do lado, segurando a cesta":
-            "Ando do lado. O Shun desce e anda junto, falando sem parar."
-            shun "Se você não sobe, eu desço. Assim a gente conta igual."
-            "No fim, a cesta pesa demais e eu subo mesmo assim."
-    jump ovos
-
-label ovos:
-    shun "Lá na capital tem ponte de vidro. E peixe que voa. E..."
-    som buraco
-    treme
-    "A carroça cai num buraco."
-    "Ouço um craque que não é a carroça."
-    zoom 1.4 50 70
-    "Dois ovos. Quebrados."
-    zoom 1
-    mostra shun assustado esquerda
-    shun "Fui eu? Fui eu. Desculpa. Eu estava contando da ponte e..."
+            "Subo e me ajeito atrás, entre os sacos de ração, a cesta no colo."
+        "Agradecer e ir a pé":
+            kaoro "Tô bem a pé."
+            shun "Tá nada. Você tá atrasado. Todo mundo sabe que a aula volta hoje."
+            "Ele tem razão. Eu subo."
+    "O Shun pula o encosto e cai do meu lado. De costas pra estrada."
+    goro "Senta virado pra frente."
+    shun "Já vou."
+    "Não vai."
+    shun "Você viu o festival? Eu vi a corrida de cima da torre do moinho."
+    shun "Me deixa ver um ovo? Dizem que ovo de Tufona é do tamanho de uma cabeça de criança."
     menu:
-        "Tudo bem, Shun. Sobraram quatro.":
+        "Abrir a tampa um pouquinho":
             $ laco_shun += 1
-            shun "...Sério? Meu pai teria gritado."
-            goro "Eu não teria gritado."
-            shun "Teria sim."
-        "Você não para de falar nem quando a carroça cai!":
-            $ laco_shun -= 1
-            shun "...Desculpa."
-            "Ele fica quieto até a vila. Fica estranho, ele quieto."
+            "Ele se debruça em cima da cesta, os olhos enormes."
+        "Segurar a tampa fechada":
+            shun "Só uma espiadinha!"
+            "Ele levanta a ponta da tampa com o dedo e se debruça mesmo assim."
+    shun (surpreso) "É do tamanho da mão do meu pai. Mãe do céu. Imagina a galinha."
+    goro "Shun. Pra frente."
+    shun "Já vou, pai. Sabia que na capital tem um ovo desses de ouro, num museu, com um guarda que não pode piscar, porque se piscar..."
+    "Ele está apoiado na cesta com as duas mãos. Só na cesta."
+    som buraco
+    treme forte
+    flash
+    "A roda afunda num buraco."
+    "O balde sobe. O saco escorrega. O Shun vai pra frente com o corpo inteiro."
+    "O peso dele cai em cima dos meus braços. Em cima do vime."
+    espera 0.6
+    "Um estalo pequeno. Quase delicado."
+    "Depois outro."
+    zoom 1.4 50 70
+    "Dois ovos. Afundados bem onde a mão dele caiu."
+    zoom 1
+    mostra shun triste esquerda
+    "O Shun olha pra própria mão. Está amarela de gema."
+    "O senhor Goro amarra as rédeas e desce. Dá a volta na carroça sem pressa."
+    "O Shun encolhe os ombros até as orelhas. Fica esperando."
+    "Eu conheço essa espera. É a cara de quem já sabe que vai levar bronca."
+    goro "Limpa a mão."
+    "Ele estende um pano. O Shun pega. Não limpa nada. Só olha o pai."
+    goro "Fala pra Kaede que os dois são meus. Eu acerto com ela na feira."
+    kaoro "Não precisa, senhor Goro."
+    goro "Precisa."
+    "Foi tudo. Ele volta pro banco e a carroça volta a ranger."
+    "O Shun limpa os dedos, devagar. Senta virado pra frente."
+    "Fica quieto até a ponte. Não é um silêncio bom."
+    menu:
+        "Tudo bem. Sobraram quatro.":
+            $ laco_shun += 1
+            "Ele me olha por cima do ombro."
+            shun "Ele não gritou."
+            "Fala baixinho. Como quem conta uma coisa estranha que viu no céu."
+        "Ficar quieto também":
+            "Ninguém fala nada até a primeira casa da vila."
+            shun "...Ele não gritou."
+            "Eu não sei o que responder. Então não respondo."
+    "Quando a vila aparece, o Shun volta a falar. Mas agora virado pra frente."
+    esconde shun
+    esconde goro
     jump taverna_manha
 
 ### PARTE: Cena 3 · A Taverna
 label taverna_manha:
     cena taverna com fade
     musica taverna
+    "A Taverna Meia-Lua. Eu empurro a porta com o ombro, como toda semana."
+    "Cheira à sopa de ontem, cera de vela e madeira velha de tanta conversa."
     mostra yuzu centro
-    yuzu "Quatro? A Kaede disse seis."
+    "A dona Yuzu lava pratos e cantarola desafinado. Nem olha."
+    "Só estica a mão molhada por cima do balcão, como quem pega uma coisa que sempre chega na mesma hora."
+    "Eu ponho a cesta na mão dela. Ela levanta a tampa com um dedo. A cantoria para."
+    yuzu "Dois quebraram, então."
+    "A crista sobe um dedo. Ela me olha com um olho só."
+    yuzu (feliz) "Pra você, esse é o recorde."
     menu:
-        "Contar a verdade: dois quebraram na carroça":
-            yuzu "Carroça do Goro? Então foram só dois. Sorte sua."
-        "Dizer que caiu sozinho":
-            yuzu "Hm. Ovo não cai sozinho, menino. Mas tudo bem."
-    yuzu "Agora vai acordar aquele lá no banco, que eu não aguento mais."
-    mostra yuzu esquerda
+        "Foi o buraco da curva do moinho":
+            yuzu "Aquele buraco me deve uma dúzia de ovos e dois jarros de leite."
+        "Foi o Shun":
+            yuzu "O filho do Goro? Então foi o buraco da curva, com ajuda."
+    yuzu "Carroça do Goro? Então ele vai querer pagar."
+    kaoro "Ele vai pagar."
+    yuzu "Claro que vai. Aquele homem não deixa nem a chuva cair de graça no telhado dele."
+    "Ela inclina a cabeça pro canto. O tom não muda nada. Mas muda alguma coisa."
+    yuzu "Já que você está aqui. Vai ver se aquele ali está vivo."
+    esconde yuzu
+    "Toque no que chamar atenção."
+    explorar:
+        "O banco do canto" 8 50 40 34:
+            "Alguém esparramado de qualquer jeito, embaixo de um casaco escuro grande demais."
+            "Uma crista vermelha amassada. A bandana de sempre, frouxa no pescoço."
+            "É o Kenichi. Dormiu aqui."
+            "Alguém pôs uma almofada embaixo da cabeça dele. Alguém dobrou o casaco nos pés, pro vento não entrar."
+            sai
+        "A ponta do balcão" 62 40 26 22:
+            $ trouxa = True
+            "Uma trouxinha de pano com nó duplo, apertado. Nó que ninguém da vila dá. Só quem aprendeu na guarda."
+            "Do lado, a mochila da escola do Kenichi. Ela não veio sozinha até aqui."
+        "As lanternas" 30 4 40 18:
+            "As Lumíolas dormem nas lanternas. A luz verde pisca devagar, no ritmo de quem respira."
+        "O Bigodim no balcão" 46 34 14 14:
+            "O Bigodim gordo abre um olho, me reconhece e fecha de novo."
+        "A dona Yuzu" 70 20 26 40:
+            "Ela está de costas, esfregando com força um prato que já está limpo."
     mostra kenichi dormindo direita
-    "No banco do canto, enrolado num casaco grande demais, está o Kenichi."
-    "Dormiu aqui. De novo."
-    mostra kenichi bravo direita
-    kenichi "Que foi? Nunca viu ninguém dormir em taverna?"
-    kenichi "Briguei com meu pai. Não pergunta."
-    kenichi "Aposto que chego na escola antes de você."
-    yuzu "Quem perder lava a minha louça?"
-    kenichi "Quem perder faz o que o outro mandar."
+    "Cutuco o pé pendurado com a ponta da bota."
+    kenichi "Some."
+    "Cutuco de novo."
+    mostra kenichi convencido direita
+    "Ele puxa o casaco do rosto. Abre um olho. Vê que sou eu. Sobe o canto do bico, preguiçoso."
+    kenichi "Orelhudo. Chegou cedo. Caiu da cama?"
+    kaoro "Já é dia."
+    kenichi "Pra você. Eu tinha decidido que hoje não era."
+    se not trouxa:
+        "Na ponta do balcão, uma trouxinha com nó duplo, apertado. Nó de quem aprendeu na guarda."
+    "Eu não pergunto por que ele dormiu aqui. Nem de quem é o casaco. Nem da trouxinha."
+    "Ele sabe que eu não vou perguntar. É um acordo antigo, que ninguém nunca precisou dizer."
+    "Empurro o pé dele e sento na ponta do banco."
+    kenichi "Sua cesta voltou leve. Quebrou quantos?"
+    kaoro "Dois."
+    mostra kenichi rindo direita
+    kenichi "Dois! Tufona chocadeira, perdendo ovo na estrada!"
+    "Ele ri alto. Um pouco alto demais. Um pouco comprido demais."
+    "E a risada acaba de repente, como vela soprada."
+    som barriga
+    "A barriga dele ronca. Atravessa a taverna inteira."
+    mostra yuzu esquerda
+    "Um prato pousa na mesa. Toc. Dois bolinhos de milho, soltando fumaça."
+    yuzu "Um é pelos ovos que sobraram. O outro é porque eu fiz demais."
+    esconde yuzu
+    mostra kenichi centro
+    "O Kenichi olha o prato. Olha a trouxinha. Olha as costas da mãe."
+    "Abre o bico. Acho que vai dizer alguma coisa. Uma coisa presa desde ontem."
+    "Fecha o bico."
+    mostra kenichi convencido centro
+    "E pega o meu bolinho em vez do dele. Inteiro na boca."
+    kaoro "Ei!"
+    kenichi "Taxa. Por me acordar."
+    "Ele come o dele também. Levanta. Deixa o casaco no banco."
+    "Na saída, pega a trouxinha e a mochila. Rápido. Como quem não liga."
+    kenichi "E aí? Ainda corre igual Tufona choca, ou as férias te deixaram mais lerdo?"
+    "É provocação. Eu sei que é. E mesmo assim minhas orelhas esquentam até a ponta."
+    menu:
+        "Mais lerdo que você não tem como ficar.":
+            $ laco_kenichi += 1
+        "Eu nem vou responder isso.":
+            kenichi "Respondeu."
+    mostra kenichi rindo centro
+    kenichi "Até o portão da Hikari. Quem perder faz o que o outro mandar."
+    yuzu "Quem perder lava minha louça!"
+    "O Kenichi já saiu."
+    esconde kenichi
     jump corrida
 
-### PARTE: Cena 4 · A corrida
+### PARTE: Cena 4 · O caminho da escola
 label corrida:
-    cena estrada com fade
+    cena praca com fade
     musica corrida
-    "O Kenichi sai correndo antes de terminar de falar."
-    "Ele é mais rápido que eu. Mas eu conheço a vila."
+    "O Kenichi é mais rápido. Isso não é opinião. É fato."
+    "Quando eu chego na porta, a bandana vermelha já está do outro lado da praça."
+    "A praça acorda em volta do poço. O ferreiro sobe a porta. Uma Correira passa voando com uma carta."
+    "Ele vai pelo caminho de todo mundo: Rua dos Ofícios, ponte de pedra, Ladeira das Escadinhas."
+    "É o caminho que as mães mandam. Plano, seguro. E longo."
     menu:
-        "Cortar pelo muro da Biblioteca":
-            $ venceu_corrida = True
-            "Pulo o muro, escorrego na hera, caio do outro lado..."
+        "Cortar pelo beco":
+            "Eu não vou por ele."
+        "Ir atrás dele pela ponte":
+            "Corro pela Rua dos Ofícios. Na padaria, a bandana já sumiu."
+            "Não dá. Dou meia-volta e me enfio no beco."
+    cena beco com fade
+    "O beco entre a casa de chá e o armazém é tão estreito que eu passo de lado."
+    "Fundos da padaria. O cheiro de massa é tão forte que dá pra mastigar."
+    "Pulo a cerca da dona Hisa. Lençol molhado na cara. Um Bigodim me olha ofendido de cima de um balde."
+    cena riacho_pedras com fade
+    "Lá embaixo, o riacho. Sete pedras escuras atravessando a água."
+    "A quarta balança. A sexta tem limo. Só as crianças mais teimosas usam."
+    menu:
+        "Pular de pedra em pedra":
+            "Primeira, segunda, terceira. Na quarta, só a ponta do pé."
             treme
-            "...e chego no portão primeiro."
-        "Correr pela rua principal":
-            "Corro pela rua. As costas do Kenichi ficam cada vez menores."
-            "Ele chega no portão com folga e ri da minha cara."
+            "Na sexta, o pé escorrega. Abro os braços. O riacho entra gelado na bota."
+            "Sétima. Margem."
+        "Atravessar pela água rasa":
+            "Enfio os dois pés. A água bate no tornozelo, gelada."
+            "Duas botas encharcadas. Pelo menos não escorreguei."
+    cena biblioteca com fade
+    "Do outro lado, o muro da Biblioteca. Hera até em cima."
+    "Na janela, um dos irmãos coelhos abre a cortina. Para. As orelhas em pé, olhando pra mim."
+    menu:
+        "Acenar":
+            "Ele não acena de volta. Fecha a cortina devagar, como quem não quer ser testemunha."
+        "Fingir que não viu":
+            "Ele também finge. Fecha a cortina devagar."
+    "Jogo a mochila por cima do muro. Subo. A hera escorrega. O dedo bicado lateja."
+    zoom 1.3 50 30 3
+    "Lá de cima, a vila inteira: telhados de barro, fumaça, o moinho girando."
+    "E, em cima da ponte, uma bandana vermelha correndo."
+    zoom 1
+    treme forte
+    "A hera cede."
+    cena preto com flash
+    "Uf."
+    cena escola com fade
+    "Caio de costas num canteiro de couve. O céu está azul limpo."
+    "Tiro uma folha de couve do cabelo. Pego a mochila. Corro."
+    $ venceu_corrida = True
+    "Chego no portão da Escola Hikari primeiro."
+    som sino
+    "E, no mesmo instante, o sino toca."
     jump portao
 
+### PARTE: Cena 5 · O portão
 label portao:
-    cena escola com flash
+    musica yoru
+    "Três badaladas. Na terceira, o portão começa a fechar."
     mostra yoru direita
-    se venceu_corrida:
-        mostra kenichi bravo esquerda
-        kenichi "Isso não valeu! Você pulou o muro!"
-        yoru "Aposta é aposta, Kenichi. Você limpa o pátio comigo depois da aula."
-        kenichi "Comigo?!"
-        yoru "Eu também gosto de pátio limpo."
-    senao:
-        mostra kenichi rindo esquerda
-        kenichi "Perdeu! Agora você limpa o pátio."
-        yoru "Ouvi aposta? Então o perdedor limpa. Comigo. Depois da aula."
-        kenichi "Ah, eu ajudo. Não tem graça rir sozinho."
-    "O Yoru sorri de um jeito que eu não sei ler."
+    "Alguém empurra. Devagar. Com uma mão só."
+    "O Yoru. O assistente do diretor Tenma."
+    "Cabelo preto desgrenhado caindo no rosto. Pele pálida. Gola alta fechada até o queixo, até no verão."
+    "Os olhos são grandes, escuros, parados. Ficam em você um pouco mais do que deviam."
+    "Os pequenos dizem que ele não pisca. Eu já tentei contar. Desisti no quarenta."
+    "Olho pra trás. Lá embaixo, a bandana vermelha sobe a ladeira de três em três degraus."
+    som portao
+    "O portão fecha com um estalo de ferro. O Yoru passa o trinco."
+    mostra kenichi cansado esquerda
+    "O Kenichi chega um segundo depois. Do lado de fora. Agarrado nas grades."
+    kenichi "Não... vale... ele pulou... o muro..."
+    "O Yoru só olha pra ele. O Kenichi para no meio da frase."
+    "Eu conheço esse silêncio. É o da Madame Pluma antes de decidir se bica."
+    menu:
+        "Usar a lábia":
+            "Ponho as mãos pra trás, igual o pai faz com o fiscal da feira."
+        "Ficar quieto":
+            "O Kenichi me olha pelas grades. Olhos de Tufona abandonada."
+            "Tá bom. Ponho as mãos pra trás, igual o pai faz com o fiscal da feira."
+    kaoro "Senhor Yoru. Ele não está atrasado. Tecnicamente."
+    "O Yoru vira a cabeça pra mim. Só a cabeça."
+    kaoro "A gente saiu junto da Taverna. Ele veio pelo caminho certo, que as mães mandam."
+    kaoro "Eu vim pelo caminho... menos certo."
+    kaoro "Então, se alguém está atrasado, é o caminho. Ele só obedeceu as mães."
+    "Atrás das grades, o Kenichi faz que sim com a cabeça. Muito rápido. Muito sério."
+    "O Yoru me olha. Me olha tanto que um Farejo, lá na ladeira, para de latir."
+    som portao
+    "Então ele puxa o trinco. E abre o portão. Só o bastante pro Kenichi passar."
+    mostra kenichi surpreso esquerda
+    "A gente se olha. Ninguém acredita. A gente dobrou o Yoru."
+    mostra kenichi rindo esquerda
+    "Isso vai ser contado no recreio. Até a formatura."
+    yoru "Pátio."
+    mostra kenichi surpreso esquerda
+    yoru "Depois da aula. Você limpa o pátio. Inteiro."
+    kenichi "Mas... você abriu o..."
+    mostra yoru sorriso direita
+    treme fraco
+    "O Yoru sorri."
+    "Não é sorriso de verdade. É a boca abrindo de um canto a outro, larga demais, dentes demais."
+    "E os olhos continuam parados. Iguais. Escuros."
+    yoru "E, depois do pátio limpo, os dois correm uma volta na quadra."
+    "Ele levanta um dedo."
+    mostra kenichi bravo esquerda
+    kenichi "Os dois?! Ele chegou primeiro! Ele pulou o muro! Ele..."
+    zoom 1.25 70 45 2
+    "O segundo dedo começa a subir. Devagar. Junta por junta."
+    menu:
+        "Tapar o bico do Kenichi e aceitar":
+            $ laco_kenichi += 1
+            zoom 1
+            "Agarro ele pela bandana e tapo o bico dele com a mão."
+            kaoro "Aceitamos! Uma volta. Os dois. Obrigado, senhor Yoru."
+            "O segundo dedo para no meio. Fica ali, pensando."
+            "Depois desce. Devagar."
+            yoru "Uma."
+        "Deixar o Kenichi terminar":
+            zoom 1
+            kenichi "...e eu nem atrasei tanto assim!"
+            "O segundo dedo termina de subir."
+            yoru "Duas."
+            "Eu tapo o bico dele antes que vire três."
+            kaoro "Aceitamos! Duas. Obrigado, senhor Yoru."
+    "O Yoru vira e vai embora pelo pátio, sem pressa."
+    "O sorriso continua no rosto dele. A gola escura corta a luz da manhã como uma sombra andando sozinha."
+    esconde yoru
+    "Só solto o Kenichi quando ele dobra a esquina."
+    mostra kenichi bravo centro
+    kenichi "Eu ia ganhar aquela discussão."
+    kaoro "Você ia ganhar mais voltas."
+    mostra kenichi centro
+    kenichi "Ele não pisca. Você reparou? Ele não pisca."
+    kaoro "Quarenta. Eu contei até quarenta uma vez."
+    "O eco do sino ainda está morrendo lá em cima."
+    "O Kenichi me empurra no ombro."
+    kenichi "Você ganhou a corrida. O que você quer?"
+    "Penso na trouxinha de nó apertado. No casaco caído no banco. No bolinho roubado."
+    kaoro "Depois eu cobro."
+    "E a gente entra junto."
+    esconde kenichi
     jump sorteio
 
-### PARTE: Cena 5 · O sorteio
+### PARTE: Cena 6 · O sorteio
 label sorteio:
     cena sala_aula com fade
     musica escola
@@ -304,12 +598,12 @@ label sorteio:
     $ laco_momo += 1
     jump recreio
 
-### PARTE: Cena 6 · O recreio e o pátio
+### PARTE: Cena 7 · O recreio e o pátio
 label recreio:
     cena muro com fade
     musica recreio
     "No recreio, levo o meu lanche para o muro."
-    "O Kenichi está lá em cima, sem lanche nenhum."
+    "O Kenichi está lá em cima, sem lanche nenhum. A trouxinha do pai do lado dele. Fechada."
     mostra kenichi centro
     menu:
         "Dividir o lanche":
@@ -348,11 +642,12 @@ label patio:
     "Depois da aula, a gente varre o pátio com o Yoru."
     "Folha, folha, folha. O outono não acaba nunca."
     yoru "Vocês varrem bem quando não estão brigando."
+    "Depois, a volta na quadra. O Yoru conta de longe, sem piscar."
     "Terminamos quando o sol já está baixo."
     "Eu ainda tenho que recolher as Tufonas. Vou chegar atrasado."
     jump praca
 
-### PARTE: Cena 7 · A praça
+### PARTE: Cena 8 · A praça
 label praca:
     cena praca com fade
     musica tensao
@@ -382,7 +677,7 @@ label praca:
     tetsuo "Agora eu levo os dois pra casa."
     jump casa_noite
 
-### PARTE: Cena 8 · Em casa
+### PARTE: Cena 9 · Em casa
 label casa_noite:
     cena estrada com preto
     musica fim_de_tarde
@@ -432,7 +727,7 @@ label zulado_noite:
     "De manhã, o Zulado está dormindo nos meus pés."
     jump primeiro_treino
 
-### PARTE: Cena 9 · O primeiro treino
+### PARTE: Cena 10 · O primeiro treino
 label primeiro_treino:
     cena estrada com preto
     musica madrugada
@@ -466,7 +761,7 @@ label primeiro_treino:
     tetsuo "...Mas não pararam. Amanhã, mesma hora."
     jump tufonas
 
-### PARTE: Cena 10 · As Tufonas
+### PARTE: Cena 11 · As Tufonas
 label tufonas:
     cena cercado com fade
     musica tufonas
@@ -511,7 +806,7 @@ label tufonas:
     $ laco_kenichi += 1
     jump jantar_estrada
 
-### PARTE: Cena 11 · O jantar
+### PARTE: Cena 12 · O jantar
 label jantar_estrada:
     cena cozinha com fade
     musica casa
@@ -543,7 +838,7 @@ label jantar_estrada:
             kenichi "...Boa noite, Kaoro."
     jump entrevista
 
-### PARTE: Cena 12 · O senhor Gen
+### PARTE: Cena 13 · O senhor Gen
 label entrevista:
     cena taverna com fade
     musica taverna
@@ -599,7 +894,7 @@ label entrevista:
     momo "Sábado a gente passa a limpo. Na casa da minha avó."
     jump midori
 
-### PARTE: Cena 13 · A Midori e o celeiro
+### PARTE: Cena 14 · A Midori e o celeiro
 label midori:
     cena casa_utagawa com fade
     musica tensao
@@ -661,7 +956,7 @@ label noite_haru:
     "Acordo na minha cama."
     jump fugir
 
-### PARTE: Cena 14 · Fugir de casa
+### PARTE: Cena 15 · Fugir de casa
 label fugir:
     cena quarto com preto
     musica madrugada
@@ -749,7 +1044,7 @@ label sino:
     "Guardo o sino na caixinha de tesouros, debaixo da cama."
     jump verdade_momo
 
-### PARTE: Cena 15 · A verdade e o sábado
+### PARTE: Cena 16 · A verdade e o sábado
 label verdade_momo:
     cena casa_utagawa com fade
     musica tensao
@@ -795,7 +1090,7 @@ label sabado:
     "E eu preciso levar outra história. De verdade."
     jump livro_delegacia
 
-### PARTE: Cena 16 · O livro da delegacia
+### PARTE: Cena 17 · O livro da delegacia
 label livro_delegacia:
     cena cercado com fade
     musica tufonas
@@ -838,7 +1133,7 @@ label livro_delegacia:
     "Castigo: a louça do domingo."
     jump o_que_quer
 
-### PARTE: Cena 17 · O que o Kaoro quer
+### PARTE: Cena 18 · O que o Kaoro quer
 label o_que_quer:
     cena porao com preto
     musica fim
