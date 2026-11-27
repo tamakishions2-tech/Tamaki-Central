@@ -984,9 +984,9 @@ window.TamakiPalcoGravar = async dados => {
   prodSinal({etapa: "info", texto: `Abrindo a aba ${ABAS[k].n}…` + ((await cGet("o-" + k)) ? " (com código guardado no aparelho)" : "")});
   // a aba Palco com código guardado no aparelho e sem o gravador: troca pela versão do GitHub (mesma cena, mesmos PNGs: os dados ficam no aparelho)
   const a = ABAS[k], guardado = a.extra ? (a.extra.tipo == "html" ? await cGet("x-" + a.extra.id) : null) : await cGet("o-" + k);
-  if (guardado && !guardado.includes("__tamakiGravar")) {
+  if (guardado && (!guardado.includes("__tamakiGravar") || !guardado.includes("__ninguem"))) { // __ninguem = versão que entende [Kaoro_feliz]: no roteiro
     let novo = null; try { const r = await fetch("palco.html?v=" + Date.now(), {cache: "no-store"}); if (r.ok) novo = await r.text(); } catch (e) {}
-    if (novo && novo.includes("__tamakiGravar") && confirm(`Atualizar a aba ${a.n} para a versão com o gravador automático?\n\nA cena, os PNGs e as configurações continuam. A versão antiga fica guardada no ↺ Desfazer.`)) {
+    if (novo && novo.includes("__tamakiGravar") && confirm(`Atualizar a aba ${a.n} para a versão nova do gravador (narradora + atores: [Kaoro_feliz]: no roteiro)?\n\nA cena, os PNGs e as configurações continuam. A versão antiga fica guardada no ↺ Desfazer.`)) {
       if (a.extra) { await cPut("x-" + a.extra.id + "-antes", guardado); await cPut("x-" + a.extra.id, novo); } else { await cPut("o-" + k + "-antes", guardado); await cPut("o-" + k, novo); }
       esqueceFrame(k); prodSinal({etapa: "info", texto: `Aba ${a.n} atualizada com o gravador.`});
     }
