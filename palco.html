@@ -304,6 +304,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
 function quemDe(n){ const k = EMO.limpa(n), at = ATRIZ.atores(), a = at.find(a => EMO.limpa(a.nome) == k) || at.find(a => EMO.limpa(a.nome).split("_")[0] == k); return a ? a.id : null; }
 const atoresNaCena = () => [...new Set(cfg.layers.filter(L => L.tipo == "atriz" && L.vis).map(L => L.ator || "principal"))];
 function emoDaFrase(f){
+  if (f.quem == "__ninguem") return null; // nome do roteiro que não é ator: ninguém troca de pose
   const ids = f.quem ? [f.quem] : atoresNaCena();
   if (f.emo) { if (f.emo == "normal") return null; if (ids.some(id => ATRIZ.temEmo(id, f.emo))) return f.emo; }
   const lista = []; for (const id of ids) if (ATRIZ.dados(id).S.emoAuto !== false) lista.push(...ATRIZ.emocoes(id));
@@ -710,15 +711,18 @@ const EMO = (() => {
     const out = [];
     for (let linha of String(texto || "").split(/\n+/)) {
       linha = linha.trim(); if (!linha) continue;
-      let quem = null, pend = null; const m = quemDe && linha.match(/^([^:\[\]()"]{1,30}?)\s*:\s*(.+)$/);
+      let quem = null, pend = null, daLinha = null; const m = quemDe && linha.match(/^([^:\[\]()"]{1,30}?)\s*:\s*(.+)$/);
       if (m) { const q = quemDe(m[1].trim()); if (q) { quem = q; linha = m[2]; } }
+      // "[Kaoro_feliz]: — Bom dia, tia Yuzu!" → só o Kaoro fala, feliz na linha inteira (nome que não é ator = ninguém mexe)
+      const tg = !m || !quem ? linha.match(/^\[\s*([^\]]{1,40}?)\s*\]\s*:\s*(.+)$/) : null;
+      if (tg) { const [nome, ...e] = tg[1].split(",")[0].trim().split(/[_\s]+/); if (quemDe) quem = quemDe(nome) || "__ninguem"; daLinha = limpa(e.join("_")) || null; linha = tg[2].replace(/^[-–—]\s*/, ""); }
       const antes = out.length;
       for (const p of linha.match(/[^.!?…]+[.!?…]*["”')]*|[.!?…]+/g) || []) {
         let emo = null;
         let s = p.replace(/\[([^\]]{1,40})\]/g, (a, n) => { emo = limpa(n.split(",")[0]); return " "; });
         s = s.replace(/^\s*\(([^)]{1,40})\)/, (a, n) => { emo = limpa(n.split(",")[0]); return " "; }).replace(/\s+/g, " ").trim();
         if (!/[\p{L}\p{N}]/u.test(s)) { if (emo) pend = emo; if (s && out.length > antes) out[out.length - 1].texto += s; continue; }
-        out.push({texto: s, emo: emo || pend, quem, fimLinha: false}); pend = null;
+        out.push({texto: s, emo: emo || pend || daLinha, quem, fimLinha: false}); pend = null;
       }
       if (out.length > antes) out[out.length - 1].fimLinha = true;
     }
@@ -914,7 +918,7 @@ function painelAtriz(L, modo){
   const sents = ATRIZ.emocoes(L.ator || "principal"), chipsE = sents.length ? `<div class="f"><b>Sentimentos (toque para mostrar por 2,5 s)</b><div class="chips"><button data-sentir="normal">🙂 normal</button>${sents.map(e => `<button data-sentir="${esc(e.id)}">${esc(e.id)}</button>`).join("")}</div></div>` : `<p class="dica">😮 Este ator ainda não tem sentimentos. Ponha as PNGs em Atriz › 😮 Sentimentos.</p>`;
   if (modo == "anim") return `<div class="g"><div class="f"><b>Ações do ator (toque para fazer uma vez)</b>${botoes}</div>${chipsE}
     <div class="btns"><button class="bt pri" data-a="teste">▶ Testar fala</button></div></div>
-    <p class="dica">${esc(ATRIZ.resumo(L.ator))} Os movimentos e as poses vêm da aba Atriz: o que você muda lá aparece aqui na hora.</p><p class="dica">Na fala, <b>[surpresa] Bicha, nem te conto!</b> troca o sentimento até o ponto final. Com vários atores, <b>${esc(ATRIZ.nome(L.ator || "principal"))}: [brava] Aff.</b> escolhe quem fala.</p>`;
+    <p class="dica">${esc(ATRIZ.resumo(L.ator))} Os movimentos e as poses vêm da aba Atriz: o que você muda lá aparece aqui na hora.</p><p class="dica">Na fala, <b>[surpresa] Bicha, nem te conto!</b> troca o sentimento até o ponto final. Com vários atores, <b>${esc(ATRIZ.nome(L.ator || "principal"))}: [brava] Aff.</b> ou <b>[${esc(ATRIZ.nome(L.ator || "principal"))}_brava]: Aff.</b> escolhe quem fala.</p>`;
   const lista = ATRIZ.atores().map(a => [a.id, a.nome]);
   if (!lista.some(a => a[0] == (L.ator || "principal"))) lista.push([L.ator, "(ator apagado)"]);
   return `<fieldset${tr ? " disabled" : ""}><div class="g">${sl("k", "ator", "Qual ator aparece", lista, L.ator || "principal")}${cabecalhoCamada(L)}</div><div class="g">
@@ -1517,7 +1521,9 @@ window.__tamakiGravar = async function (d, sinal) {
     await espera((d.ini ?? .2) * 1000);
     for (const [i, ab] of bufs.entries()) {
       sinal(`Palco: fala ${i + 1} de ${bufs.length}`);
-      FALA.quem = null; FALA.emo = emoDaFrase({texto: (d.textos || [])[i] || "", emo: EMO.limpa((d.emos || [])[i] || "") || null}); // a emoção da linha do roteiro vira pose
+      // "[Kaoro_feliz]: …" no roteiro: só o Kaoro mexe a boca (a voz é da narradora); nome que não é ator = ninguém mexe
+      const qn = String((d.quems || [])[i] || "").trim(); FALA.quem = qn ? (quemDe(qn) || "__ninguem") : null;
+      FALA.emo = emoDaFrase({texto: (d.textos || [])[i] || "", emo: EMO.limpa((d.emos || [])[i] || "") || null, quem: FALA.quem == "__ninguem" ? null : FALA.quem}); // a emoção da linha do roteiro vira pose
       await tocarBuffer(ab, (d.textos || [])[i] || "");
       FALA.emo = null;
       await espera(((d.pausas || [])[i] ?? .3) * 1000);

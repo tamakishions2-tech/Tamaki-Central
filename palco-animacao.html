@@ -1015,15 +1015,18 @@ const EMO = (() => {
     const out = [];
     for (let linha of String(texto || "").split(/\n+/)) {
       linha = linha.trim(); if (!linha) continue;
-      let quem = null, pend = null; const m = quemDe && linha.match(/^([^:\[\]()"]{1,30}?)\s*:\s*(.+)$/);
+      let quem = null, pend = null, daLinha = null; const m = quemDe && linha.match(/^([^:\[\]()"]{1,30}?)\s*:\s*(.+)$/);
       if (m) { const q = quemDe(m[1].trim()); if (q) { quem = q; linha = m[2]; } }
+      // "[Kaoro_feliz]: — Bom dia, tia Yuzu!" → só o Kaoro fala, feliz na linha inteira (nome que não é ator = ninguém mexe)
+      const tg = !m || !quem ? linha.match(/^\[\s*([^\]]{1,40}?)\s*\]\s*:\s*(.+)$/) : null;
+      if (tg) { const [nome, ...e] = tg[1].split(",")[0].trim().split(/[_\s]+/); if (quemDe) quem = quemDe(nome) || "__ninguem"; daLinha = limpa(e.join("_")) || null; linha = tg[2].replace(/^[-–—]\s*/, ""); }
       const antes = out.length;
       for (const p of linha.match(/[^.!?…]+[.!?…]*["”')]*|[.!?…]+/g) || []) {
         let emo = null;
         let s = p.replace(/\[([^\]]{1,40})\]/g, (a, n) => { emo = limpa(n.split(",")[0]); return " "; });
         s = s.replace(/^\s*\(([^)]{1,40})\)/, (a, n) => { emo = limpa(n.split(",")[0]); return " "; }).replace(/\s+/g, " ").trim();
         if (!/[\p{L}\p{N}]/u.test(s)) { if (emo) pend = emo; if (s && out.length > antes) out[out.length - 1].texto += s; continue; }
-        out.push({texto: s, emo: emo || pend, quem, fimLinha: false}); pend = null;
+        out.push({texto: s, emo: emo || pend || daLinha, quem, fimLinha: false}); pend = null;
       }
       if (out.length > antes) out[out.length - 1].fimLinha = true;
     }

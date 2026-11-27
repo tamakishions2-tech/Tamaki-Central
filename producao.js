@@ -19,9 +19,17 @@
         let cena = null, close = false; const c = s.match(/^\[\s*(?:(\d+):)?(\d{1,2}):(\d{2})\s*\]\s*/);
         if (c) { cena = (+c[1] || 0) * 3600 + +c[2] * 60 + +c[3]; s = s.slice(c[0].length); }
         const cl = s.match(/^\[\s*(close|intro|fim|perto)\s*\]\s*/i); if (cl) { close = true; s = s.slice(cl[0].length); } // close na Tamaki (abertura e final)
-        const m = s.match(/^\(([^)]{2,80})\)\s*(.*)$/); return Object.assign(m ? tomDe(m[1]) : {emo: "", tom: {}}, {texto: (m ? m[2] : s).trim(), linha: s, cena, close}); })
+        // "[Kaoro_feliz]: — Bom dia, tia Yuzu!" → a voz é sempre a da narradora; o ator Kaoro aparece falando com a pose feliz
+        let quem = "", pose = "", dentro = ""; const at = s.match(/^\[\s*([^\]]{1,60}?)\s*\]\s*:\s*/);
+        if (at) { const [cab, ...resto] = at[1].split(","), [nome, ...emo] = cab.trim().split(/[_\s]+/); quem = nome || ""; pose = emo.join("_"); dentro = [pose.replace(/_/g, " "), ...resto].filter(Boolean).join(","); s = s.slice(at[0].length); }
+        const m = s.match(/^\(([^)]{2,80})\)\s*(.*)$/); if (m) dentro = [dentro, m[1]].filter(Boolean).join(",");
+        let texto = (m ? m[2] : s).trim(); if (quem) texto = texto.replace(/^[-–—]\s*/, "");
+        const narra = !quem || NARRADOR.test(norm(quem)), legenda = narra ? texto : `${quem.charAt(0).toUpperCase() + quem.slice(1)}: ${texto}`;
+        return Object.assign(dentro ? tomDe(dentro) : {emo: "", tom: {}}, {texto, legenda, quem, pose, linha: s, cena, close}); })
       .filter(l => l.texto);
   }
+  // quem conta a história: estas linhas não ganham nome na caixa de diálogo
+  const NARRADOR = /^(tamaki|narrador|narradora|mestre|mestra)$/;
   /* Tom de cada fala, dentro dos parênteses, separado por vírgula: (brava, forte, rápida, pausa)
      intensidade: suave · normal · forte · exagerada        → exaggeration
      ritmo:       lenta · rápida                             → cfg_weight
@@ -163,9 +171,9 @@
       const pausas = linhas.map(l => (l.tom || {}).pausa ?? .3);
       let durTot = 0; for (const id of ids) { const it = await bib("readonly", s => s.get(id)); try { const c = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, 44100); durTot += (await c.decodeAudioData(await it.blob.arrayBuffer())).duration; } catch (e) { durTot += 4; } }
       sinal("palco", "🎭 Abrindo o Palco…");
-      const pr = await palco({ids, textos: linhas.map(l => l.texto), emos: linhas.map(l => l.emo || ""), pausas, ini: .2, semBalao: true, titulo: nota.titulo, pasta: pasta.id, duracao: durTot + pausas.reduce((a, b) => a + b, 0)}, aviso);
+      const pr = await palco({ids, textos: linhas.map(l => l.texto), emos: linhas.map(l => l.pose || l.emo || ""), quems: linhas.map(l => l.quem || ""), pausas, ini: .2, semBalao: true, titulo: nota.titulo, pasta: pasta.id, duracao: durTot + pausas.reduce((a, b) => a + b, 0)}, aviso);
       if (pr.erro) aviso(`⚠ Sem a cena do Palco (${pr.erro}). Monto só com o jogo.`);
-      const r = await editor({palco: pr.id || null, palcoDur: pr.dur || null, layout: "palco", pausasFinais: pausas, titulo: nota.titulo || "", final: nota.final || "", legendas: linhas.map(l => l.texto), emos: linhas.map(l => l.emo), tons: linhas.map(l => l.tom || {}), falas: ids, pausas: linhas.map(l => (l.tom || {}).pausa ?? null), cenas: linhas.map(l => l.cena), closes: linhas.map(l => !!l.close), redes: nota.redes || "", video: nota.video && todos.some(it => it.id === nota.video) ? nota.video : vids[0] ? vids[0].id : null}, aviso);
+      const r = await editor({palco: pr.id || null, palcoDur: pr.dur || null, layout: "palco", pausasFinais: pausas, titulo: nota.titulo || "", final: nota.final || "", legendas: linhas.map(l => l.legenda || l.texto), emos: linhas.map(l => l.emo), tons: linhas.map(l => l.tom || {}), falas: ids, pausas: linhas.map(l => (l.tom || {}).pausa ?? null), cenas: linhas.map(l => l.cena), closes: linhas.map(l => !!l.close), redes: nota.redes || "", video: nota.video && todos.some(it => it.id === nota.video) ? nota.video : vids[0] ? vids[0].id : null}, aviso);
       const extra = semEmo.size ? ` · sem emoção treinada: ${[...semEmo].join(", ")}` : "";
       if (r.erro) return aviso(`As ${ids.length} falas estão na pasta “${pasta.nome}”, mas ${r.erro}.${extra}`);
       abrirAba("editor", false);

@@ -24,7 +24,9 @@ window.__tamakiGravar = async function (d, sinal) {
     await espera((d.ini ?? .2) * 1000);
     for (const [i, ab] of bufs.entries()) {
       sinal(`Palco: fala ${i + 1} de ${bufs.length}`);
+      try { const qn = String((d.quems || [])[i] || "").trim(); if (typeof FALA !== "undefined") { FALA.quem = qn && typeof quemDe === "function" ? (quemDe(qn) || "__ninguem") : null; if (typeof emoDaFrase === "function") FALA.emo = emoDaFrase({texto: (d.textos || [])[i] || "", emo: (EMO.limpa((d.emos || [])[i] || "") || null), quem: FALA.quem == "__ninguem" ? null : FALA.quem}); } } catch (e) {}
       await tocarBuffer(ab, (d.textos || [])[i] || "");
+      try { if (typeof FALA !== "undefined") { FALA.quem = null; FALA.emo = null; } } catch (e) {}
       await espera(((d.pausas || [])[i] ?? .3) * 1000);
     }
     await espera(400); r.stop(); await fim; cap = "";
